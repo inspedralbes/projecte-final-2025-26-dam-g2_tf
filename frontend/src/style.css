@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+html, body, #app, #app-container {
+  background-color: #804f7f
+
+!important;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
