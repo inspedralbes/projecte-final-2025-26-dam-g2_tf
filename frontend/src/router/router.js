@@ -7,6 +7,8 @@ import Cercador from '../pages/cercador.vue'
 import Mapa from '../pages/mapa.vue'
 import Perfil from '../pages/perfil.vue'
 import Peticions from '../pages/peticions.vue'
+import DetallLloc from '../pages/detallLloc.vue'
+import IniciJoc from '../pages/iniciJoc.vue'
 
 const routes = [
   { 
@@ -38,6 +40,17 @@ const routes = [
     path: '/peticions', 
     name: 'peticions',
     component: Peticions 
+  },
+ { 
+    path: '/joc/:id', 
+    name: 'inici-joc', 
+    component: IniciJoc 
+  },
+  { 
+    path: '/lloc/:id', 
+    name: 'detall-lloc', 
+    component: DetallLloc,
+    props: true // Això permet passar l'id directament com a prop
   }
 ]
 
