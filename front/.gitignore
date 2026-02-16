@@ -1,0 +1,9 @@
+# Ignorar carpetes de dependències
+node_modules/
+front/node_modules/
+back/node_modules/
+
+# Ignorar fitxers de configuració local
+.env
+.DS_Store
+dist/
