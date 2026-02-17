@@ -62,8 +62,7 @@ const scrollContainer = ref(null);
 
 onMounted(async () => {
   try {
-    const res = await fetch('http://localhost:8088/api/mapa/punts');
-    llistaLlocs.value = await res.json();
+const res = await fetch('http://localhost:8088/api/mapa/punts');    llistaLlocs.value = await res.json();
   } catch (err) {
     console.error("Error cargando rutas:", err);
   }

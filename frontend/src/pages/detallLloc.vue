@@ -59,9 +59,21 @@ const route = useRoute()
 const router = useRouter() 
 const lloc = ref(null)
 
-// IMPORTANT: Revisa que aquesta funció estigui EXACTAMENT així
+// MODIFICACIÓ AQUÍ:
 function comencarJoc() {
-  console.log("Botó polsat! Anant al joc...");
+  const usuariGuardat = localStorage.getItem('user');
+
+  if (!usuariGuardat) {
+    // 1. Avisem l'usuari
+    alert("Per seguretat i per guardar el teu progrés, has d'iniciar sessió abans de començar la ruta.");
+    
+    // 2. Disparem un esdeveniment global que App.vue escoltarà per obrir el modal
+    window.dispatchEvent(new CustomEvent('obrir-login'));
+    return;
+  }
+
+  // Si hi ha usuari, procedim normalment
+  console.log("Usuari detectat. Anant al joc...");
   router.push({ name: 'inici-joc', params: { id: route.params.id } });
 }
 
@@ -69,7 +81,6 @@ onMounted(async () => {
   try {
     const response = await fetch(`http://localhost:8088/api/mapa/punts`);
     const dades = await response.json();
-    // Busquem el lloc per ID
     lloc.value = dades.find(item => item._id === route.params.id);
   } catch (err) {
     console.error("Error carregant el detall:", err);

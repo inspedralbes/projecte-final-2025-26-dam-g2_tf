@@ -24,5 +24,9 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
+    # AQUESTA ÉS LA CLAU: Docker carregarà el .env de l'arrel
+    env_file:
+      - .env
     environment:
       - NODE_ENV=development
+      - PORT=8088

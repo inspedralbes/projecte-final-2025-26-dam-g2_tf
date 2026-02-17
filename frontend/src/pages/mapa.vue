@@ -64,9 +64,8 @@ async function iniciarMapa(lat, lng) {
 
 async function carregarPuntsDeLaBD() {
   try {
-    const resposta = await fetch('http://localhost:8088/api/mapa/punts');
-    const llocs = await resposta.json();
-
+const res = await fetch('http://localhost:8088/api/mapa/punts');
+const llocs = await db.collection('locations').find({}).toArray();
     llocs.forEach(lloc => {
       const lng = lloc.ubicacio.coordinates[0];
       const lat = lloc.ubicacio.coordinates[1];
