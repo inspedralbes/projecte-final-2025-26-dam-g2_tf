@@ -9,48 +9,54 @@ import Perfil from '../pages/perfil.vue'
 import Peticions from '../pages/peticions.vue'
 import DetallLloc from '../pages/detallLloc.vue'
 import IniciJoc from '../pages/iniciJoc.vue'
+import SalaEspera from '../pages/SalaEspera.vue'
 
 const routes = [
-  { 
-    path: '/', 
+  {
+    path: '/',
     name: 'home',
     component: Index  // Aquest carregarà el teu menú principal
   },
-  { 
-    path: '/social', 
+  {
+    path: '/social',
     name: 'social',
-    component: Social 
+    component: Social
   },
-  { 
-    path: '/cercador', 
+  {
+    path: '/cercador',
     name: 'cercador',
-    component: Cercador 
+    component: Cercador
   },
-  { 
-    path: '/mapa', 
+  {
+    path: '/mapa',
     name: 'mapa',
-    component: Mapa 
+    component: Mapa
   },
-  { 
-    path: '/perfil', 
+  {
+    path: '/perfil',
     name: 'perfil',
-    component: Perfil 
+    component: Perfil
   },
-  { 
-    path: '/peticions', 
+  {
+    path: '/peticions',
     name: 'peticions',
-    component: Peticions 
+    component: Peticions
   },
- { 
-    path: '/joc/:id', 
-    name: 'inici-joc', 
-    component: IniciJoc 
+  {
+    path: '/joc/:id',
+    name: 'inici-joc',
+    component: IniciJoc
   },
-  { 
-    path: '/lloc/:id', 
-    name: 'detall-lloc', 
+  {
+    path: '/lloc/:id',
+    name: 'detall-lloc',
     component: DetallLloc,
     props: true // Això permet passar l'id directament com a prop
+  },
+  {
+    path: '/sala-espera/:id',
+    name: 'sala-espera',
+    component: SalaEspera
   }
 ]
 
