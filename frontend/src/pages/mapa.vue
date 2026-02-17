@@ -26,7 +26,7 @@ import 'leaflet/dist/leaflet.css';
 const router = useRouter();
 const BCN_CENTRE = [41.3871, 2.1701];
 const laMevaPosicio = ref(BCN_CENTRE);
-const cargando = ref(true); // Estado reactivo de carga
+const cargando = ref(true); 
 let mapa = null;
 
 onMounted(async () => {
@@ -34,10 +34,8 @@ onMounted(async () => {
 
   await nextTick();
 
-  // 1. Inicializamos el mapa con posición base
   iniciarMapa(BCN_CENTRE[0], BCN_CENTRE[1]);
 
-  // 2. Pedimos ubicación
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       const { latitude, longitude } = pos.coords;
@@ -51,18 +49,18 @@ onMounted(async () => {
           fillOpacity: 0.8 
         }).addTo(mapa).bindPopup("<b>Ets aquí</b>");
       }
-      cargando.value = false; // Finaliza carga
+      cargando.value = false; 
     },
     (error) => {
       console.warn("GPS denegat:", error);
-      cargando.value = false; // También quitamos el loading si falla
+      cargando.value = false; 
     }
   );
 });
 
 onUnmounted(() => {
   delete window.anarADetall;
-  if (mapa) mapa.remove(); // Limpieza de memoria
+  if (mapa) mapa.remove(); 
 });
 
 async function iniciarMapa(lat, lng) {
@@ -84,10 +82,25 @@ async function carregarPuntsDeLaBD() {
       const [lng, lat] = lloc.ubicacio.coordinates;
       
       const popupContent = `
-        <div class="p-1 w-[180px]">
-          <img src="${lloc.imatge_referencia || 'https://via.placeholder.com/150'}" class="w-full h-24 object-cover rounded-md mb-2" />
-          <h3 class="font-bold text-[#402749]">${lloc.nom}</h3>
-          <button onclick="anarADetall('${lloc._id}')" class="w-full mt-2 bg-[#9f6795] text-white py-2 rounded-md text-sm font-bold">
+        <div class="custom-popup p-1">
+          <img 
+            src="${lloc.imatge_referencia || 'https://via.placeholder.com/150'}" 
+            class="w-full h-24 object-cover rounded-md mb-2" 
+          />
+          <h3 class="text-base font-bold text-[#402749] mb-1">${lloc.nom}</h3>
+          
+          <p class="text-[10px] font-bold text-[#9f6795] uppercase mb-1">
+            ${lloc.tags ? lloc.tags.join(' • ') : ''}
+          </p>
+          
+          <div class="bg-[#fdf6ff] p-2 rounded-md text-[11px] mb-2 border border-[#f0e0f5]">
+            <span><b>Dificultat:</b> ${lloc.dificultat || 'N/A'}</span>
+          </div>
+
+          <button 
+            onclick="anarADetall('${lloc._id}')" 
+            class="w-full bg-[#9f6795] text-white py-2 rounded-md font-bold text-sm hover:bg-[#8a5982] transition-colors"
+          >
             Més info
           </button>
         </div>
