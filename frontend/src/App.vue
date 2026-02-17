@@ -15,11 +15,13 @@
       <button 
         v-else 
         @click="$router.push('/perfil')" 
-        class="bg-[#402749] text-white w-12 h-12 rounded-full flex items-center justify-center font-black border-2 border-[#f5cbdd] shadow-lg cursor-pointer uppercase"
+        class="w-12 h-12 rounded-full flex items-center justify-center font-black border-2 border-[#f5cbdd] shadow-lg cursor-pointer uppercase overflow-hidden bg-[#402749]"
       >
-        {{ usuariLoguejat.nom.charAt(0) }}
+        <img v-if="usuariLoguejat.avatar" :src="usuariLoguejat.avatar" class="w-full h-full object-cover">
+        <span v-else class="text-white">{{ (usuariLoguejat.nom_usuari || usuariLoguejat.nom || '?').charAt(0) }}</span>
       </button>
     </div>
+
 
     <main class="flex-grow overflow-y-auto">
       <router-view />

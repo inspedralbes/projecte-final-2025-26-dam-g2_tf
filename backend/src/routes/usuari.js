@@ -76,4 +76,22 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// GET /:id - Obtenir info pública d'un usuari
+router.get('/:id', async (req, res) => {
+    try {
+        const db = getDB();
+        const { ObjectId } = require('mongodb');
+        const usuari = await db.collection('usuaris').findOne({ _id: new ObjectId(req.params.id) });
+
+        if (!usuari) return res.status(404).json({ message: "Usuari no trobat" });
+
+        // Només retornem dades públiques
+        const { contrasenya, correu, ...dadesPubliques } = usuari;
+        res.json(dadesPubliques);
+    } catch (error) {
+        console.error("Error al carregar perfil públic:", error);
+        res.status(500).json({ message: "Error al carregar perfil" });
+    }
+});
+
 module.exports = router;

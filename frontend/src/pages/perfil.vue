@@ -304,6 +304,48 @@
           </div>
         </div>
 
+        <!-- SECCIÓ MIS POSTS (NOVA) -->
+        <div v-else-if="activeTab === 'posts'" class="space-y-4">
+          <div class="flex justify-between items-end px-1">
+            <h3 class="text-xl font-bold text-white">Les meves Publicacions</h3>
+            <span class="text-xs text-[#bc85ab] font-mono">{{ misPosts.length }} POSTS</span>
+          </div>
+
+          <div v-if="misPosts.length === 0" class="text-center py-12 bg-[#2d1b33] rounded-2xl border border-white/5 opacity-50">
+            <p class="text-sm text-[#f5cbdd]/60 italic">Encara no has publicat res. Comparteix la teva experiència!</p>
+          </div>
+
+          <div v-else class="space-y-3">
+            <div v-for="post in misPosts" :key="post._id" class="bg-[#2d1b33] rounded-2xl p-4 border border-white/5 hover:border-[#bc85ab]/30 transition-all group">
+              <div class="flex justify-between items-start gap-3 mb-3">
+                <div class="flex-1">
+                  <p class="font-bold text-white text-sm">{{ post.text?.substring(0, 50) }}{{ post.text?.length > 50 ? '...' : '' }}</p>
+                  <p class="text-xs text-[#f5cbdd]/60 mt-1">{{ formatarData(post.timestamp) }}</p>
+                </div>
+                <button 
+                  @click="confirmarEliminarPost(post._id)"
+                  class="p-2 rounded-lg hover:bg-red-500/20 text-red-400 hover:text-red-300 font-bold transition-colors opacity-0 group-hover:opacity-100"
+                  title="Eliminar publicació"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <!-- Vista previa de imatge -->
+              <div v-if="post.imatge_post" class="rounded-xl overflow-hidden border border-white/5 mb-3 h-24 bg-black/20">
+                <img :src="post.imatge_post" class="w-full h-full object-cover">
+              </div>
+
+              <!-- Tags -->
+              <div v-if="post.tags && post.tags.length > 0" class="flex flex-wrap gap-1.5">
+                <span v-for="(tag, idx) in post.tags" :key="idx" class="inline-block bg-[#5d3962]/30 text-[#f5cbdd] text-[9px] px-2 py-1 rounded-full font-bold border border-[#5d3962]/50">
+                  #{{ tag }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- SECCIÓ CONFIGURACIÓ -->
         <div v-else-if="activeTab === 'config'" class="space-y-6">
           <div class="bg-[#2d1b33] rounded-2xl p-5 border border-white/5 space-y-6 shadow-inner">
@@ -497,6 +539,7 @@ function tancarSessio() {
 const tabs = [
   { id: 'cromos', label: 'Cromos' },
   { id: 'stats', label: 'Progrés' },
+  { id: 'posts', label: 'Mis Posts' },
   { id: 'amics', label: 'Amics' },
   { id: 'config', label: 'Ajustos' }
 ];
@@ -544,11 +587,58 @@ const settings = ref({
   notificacions: false
 });
 
+// MIS POSTS
+const misPosts = ref([]);
+
+async function carregarMisPosts() {
+  try {
+    const res = await fetch('http://localhost:8088/api/social/posts');
+    const allPosts = await res.json();
+    const userId = user.value?._id || user.value?.id;
+    misPosts.value = allPosts.filter(post => post.id_usuari === userId || post.autor_id === userId);
+  } catch (err) {
+    console.error("Error carregar mis posts", err);
+  }
+}
+
+function formatarData(timestamp) {
+  if (!timestamp) return "Ara";
+  const date = new Date(timestamp);
+  return date.toLocaleDateString('ca-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+function confirmarEliminarPost(postId) {
+  if (confirm('Estàs segur que vols eliminar aquesta publicació?')) {
+    eliminarPost(postId);
+  }
+}
+
+async function eliminarPost(postId) {
+  try {
+    const res = await fetch(`http://localhost:8088/api/social/posts/${postId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id_usuari: user.value?._id || user.value?.id
+      })
+    });
+
+    if (res.ok) {
+      await carregarMisPosts();
+    } else {
+      alert('Error al eliminar la publicació');
+    }
+  } catch (err) {
+    console.error("Error al eliminar post", err);
+  }
+}
+
 onMounted(() => {
   const saved = localStorage.getItem('user');
   if (saved) {
     user.value = JSON.parse(saved);
     if (!user.value.titol) user.value.titol = titolLogic.value;
+    carregarMisPosts();
   }
 });
 </script>
