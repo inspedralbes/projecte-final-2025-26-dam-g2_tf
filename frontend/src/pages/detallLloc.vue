@@ -76,17 +76,27 @@ function obrirGoogleMaps() {
 
 function comencarJoc() {
   console.log("Iniciando ruta para:", route.params.id);
+  
+  const usuariGuardat = localStorage.getItem('user');
+
+  if (!usuariGuardat) {
+    
+    alert("Per seguretat i per guardar el teu progrés, has d'iniciar sessió abans de començar la ruta.");
+    
+    
+    window.dispatchEvent(new CustomEvent('obrir-login'));
+    return;
+  }
+
+  console.log("Usuari detectat. Anant al joc...");
   router.push({ name: 'inici-joc', params: { id: route.params.id } });
-}
+} 
 
 onMounted(async () => {
   try {
-    const response = await fetch(`http://localhost:8088/api/mapa/punts/${route.params.id}`);
-    if (response.ok) {
-        lloc.value = await response.json();
-    } else {
-        console.error("No s'ha trobat el lloc");
-    }
+    const response = await fetch(`http://localhost:8088/api/mapa/punts`);
+    const dades = await response.json();
+    lloc.value = dades.find(item => item._id === route.params.id);
   } catch (err) {
     console.error("Error carregant el detall:", err);
   }

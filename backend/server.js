@@ -7,7 +7,11 @@ const { connectDB, getDB } = require('./src/config/db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173', // El port on corre el teu Vite
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 app.use(express.json());
 
 async function startServer() {
