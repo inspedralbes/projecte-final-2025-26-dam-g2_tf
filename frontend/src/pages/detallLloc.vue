@@ -13,13 +13,25 @@
 
     <div class="relative bg-white -mt-8 rounded-t-[40px] p-8 flex-1 pb-32 z-10 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
       
-      <div class="mb-6">
-        <h1 class="text-3xl font-black text-gray-800 leading-tight">{{ lloc.nom }}</h1>
-        <div class="inline-block bg-purple-100 px-3 py-1 rounded-lg mt-2">
-          <p class="text-purple-700 font-bold text-xs uppercase tracking-widest">
-            {{ lloc.dificultat }}
-          </p>
+      <div class="flex justify-between items-start mb-6">
+        <div class="flex-1">
+          <h1 class="text-3xl font-black text-gray-800 leading-tight">{{ lloc.nom }}</h1>
+          <div class="inline-block bg-purple-100 px-3 py-1 rounded-lg mt-2">
+            <p class="text-purple-700 font-bold text-xs uppercase tracking-widest">
+              {{ lloc.dificultat }}
+            </p>
+          </div>
         </div>
+
+        <button 
+          @click="obrirGoogleMaps"
+          class="animate-pulse-subtle bg-blue-50 text-blue-600 p-4 rounded-2xl shadow-sm border border-blue-100 active:scale-90 transition-all flex flex-col items-center justify-center gap-1 min-w-[80px]"
+        >
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/>
+          </svg>
+          <span class="text-[10px] font-bold uppercase tracking-tighter">Maps</span>
+        </button>
       </div>
       
       <div class="space-y-8">
@@ -28,16 +40,6 @@
           <p class="text-gray-700 leading-relaxed text-base">
             {{ lloc.explicacio_historica }}
           </p>
-        </section>
-
-        <section class="bg-purple-50 p-6 rounded-[25px] border border-purple-100">
-          <h3 class="font-black text-purple-900 text-sm mb-4">Pistes per a la teva ruta</h3>
-          <ul class="space-y-3">
-            <li v-for="(pista, index) in lloc.pistes" :key="index" class="flex items-start gap-3 text-purple-800 text-sm">
-              <span class="text-purple-400 mt-1">•</span>
-              {{ pista }}
-            </li>
-          </ul>
         </section>
       </div>
 
@@ -59,18 +61,32 @@ const route = useRoute()
 const router = useRouter() 
 const lloc = ref(null)
 
-// IMPORTANT: Revisa que aquesta funció estigui EXACTAMENT així
+function obrirGoogleMaps() {
+  if (!lloc.value?.ubicacio?.coordinates) {
+    console.error("No hay coordenadas disponibles");
+    return;
+  }
+  
+  const [lng, lat] = lloc.value.ubicacio.coordinates;
+  
+  const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
+  
+  window.open(url, '_blank');
+}
+
 function comencarJoc() {
-  console.log("Botó polsat! Anant al joc...");
+  console.log("Iniciando ruta para:", route.params.id);
   router.push({ name: 'inici-joc', params: { id: route.params.id } });
 }
 
 onMounted(async () => {
   try {
-    const response = await fetch(`http://localhost:8088/api/mapa/punts`);
-    const dades = await response.json();
-    // Busquem el lloc per ID
-    lloc.value = dades.find(item => item._id === route.params.id);
+    const response = await fetch(`http://localhost:8088/api/mapa/punts/${route.params.id}`);
+    if (response.ok) {
+        lloc.value = await response.json();
+    } else {
+        console.error("No s'ha trobat el lloc");
+    }
   } catch (err) {
     console.error("Error carregant el detall:", err);
   }

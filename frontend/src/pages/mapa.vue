@@ -12,7 +12,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref,nextTick,onUnmounted} from 'vue';
 import { useRouter } from 'vue-router';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -23,22 +23,26 @@ let mapa = null;
 const laMevaPosicio = ref(BCN_CENTRE);
 
 onMounted(() => {
-  // 1. Configuració del GPS
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      laMevaPosicio.value = [lat, lng];
-      iniciarMapa(lat, lng);
-    },
-    () => iniciarMapa(BCN_CENTRE[0], BCN_CENTRE[1])
-  );
-
-  // 2. EXPOSAR FUNCIÓ DE NAVEGACIÓ AL WINDOW
-  // Això permet que el botó "onclick" de Leaflet parli amb el router de Vue
   window.anarADetall = (id) => {
     router.push(`/lloc/${id}`);
   };
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      laMevaPosicio.value = [lat, lng];
+
+      await nextTick(); 
+      iniciarMapa(lat, lng);
+    },
+    async () => {
+      await nextTick();
+      iniciarMapa(BCN_CENTRE[0], BCN_CENTRE[1]);
+    }
+  );
+});
+onUnmounted(() => {
+  delete window.anarADetall;
 });
 
 async function iniciarMapa(lat, lng) {
@@ -46,12 +50,10 @@ async function iniciarMapa(lat, lng) {
 
   mapa = L.map('map', { zoomControl: false }).setView([lat, lng], 15);
   
-  // Afegim control de zoom a la dreta inferior per no molestar
   L.control.zoom({ position: 'bottomright' }).addTo(mapa);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapa);
 
-  // Marcador d'usuari
   L.circleMarker([lat, lng], {
     color: '#3b82f6',
     fillColor: '#3b82f6',
@@ -71,7 +73,6 @@ async function carregarPuntsDeLaBD() {
       const lng = lloc.ubicacio.coordinates[0];
       const lat = lloc.ubicacio.coordinates[1];
 
-      // El botó ara té un onclick que crida a la funció global window.anarADetall
       const popupContent = `
         <div class="custom-popup p-1">
           <img src="${lloc.imatge_referencia || 'https://via.placeholder.com/150'}" class="w-full h-24 object-cover rounded-md mb-2" />

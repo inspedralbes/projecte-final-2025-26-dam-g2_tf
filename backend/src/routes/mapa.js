@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getDB } = require('../config/db');
+const { ObjectId } = require('mongodb');
 
 // Obtenir tots els llocs
 router.get('/punts', async (req, res) => {
@@ -13,7 +14,7 @@ router.get('/punts', async (req, res) => {
     }
 });
 
-// Ruta per afegir (per si fas el Seed o el formulari)
+/* Ruta per afegir 
 router.post('/afegir', async (req, res) => {
     try {
         const db = getDB();
@@ -21,7 +22,7 @@ router.post('/afegir', async (req, res) => {
             nom: req.body.nom,
             ubicacio: {
                 type: "Point",
-                coordinates: [req.body.lng, req.body.lat] // MongoDB usa [Long, Lat]
+                coordinates: [req.body.lng, req.body.lat] 
             },
             imatge_referencia: req.body.imatge_referencia,
             descripcio: req.body.descripcio,
@@ -36,6 +37,25 @@ router.post('/afegir', async (req, res) => {
         res.status(201).json({ missatge: "Lloc creat!" });
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+});*/
+
+// NUEVA RUTA: Obtenir un sol lloc per ID
+router.get('/punts/:id', async (req, res) => {
+    try {
+        const db = getDB();
+        const id = req.params.id;
+    
+        const lloc = await db.collection('locations').findOne({ _id: new ObjectId(id) });
+
+        if (!lloc) {
+            return res.status(404).json({ error: "Lloc no trobat" });
+        }
+
+        res.json(lloc);
+    } catch (error) {
+        console.error("Error al buscar el punt:", error);
+        res.status(500).json({ error: "ID no vàlid o error al servidor" });
     }
 });
 
