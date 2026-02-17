@@ -12,7 +12,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
-sapp.use(express.json());
+app.use(express.json());
 
 async function startServer() {
     try {
