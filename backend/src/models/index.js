@@ -73,6 +73,17 @@ const RessenyaSchema = new mongoose.Schema({
   comentari: String,
   data: { type: Date, default: Date.now }
 });
+const PostSchema = new mongoose.Schema({
+  id_usuari: { type: mongoose.Schema.Types.ObjectId, ref: 'Perfil', required: true },
+  nom_usuari: String,
+  avatar_usuari: String,
+  text: String,
+  imatge_post: String,
+  tags: [String],
+  timestamp: { type: Date, default: Date.now },
+  likes: [String],
+  comentaris: { type: Array, default: [] }
+});
 
 // Exportem forçant els teus noms de col·lecció
 module.exports = {
@@ -81,5 +92,6 @@ module.exports = {
   Lloc: mongoose.model('Lloc', LlocSchema, 'locations'),
   SessioJoc: mongoose.model('SessioJoc', SessioJocSchema, 'sessions'),
   PeticioRuta: mongoose.model('PeticioRuta', PeticioRutaSchema, 'peticions_rutes'),
-  Ressenya: mongoose.model('Ressenya', RessenyaSchema, 'ressenyes')
+  Ressenya: mongoose.model('Ressenya', RessenyaSchema, 'ressenyes'),
+  Post: mongoose.model('Post', PostSchema, 'posts')
 };

@@ -1,12 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { getDB } = require('../config/db');
-const { ObjectId } = require('mongodb');
+const { Post } = require('../models');  
 
-// GET /api/social/posts - Obtenir tots els posts del feed (amb filtres opcionals)
+// 1. Obtenir tots els posts
 router.get('/posts', async (req, res) => {
     try {
-        const db = getDB();
         const { tag } = req.query;
         let query = {};
 
@@ -14,106 +12,63 @@ router.get('/posts', async (req, res) => {
             query = { tags: tag };
         }
 
-        const posts = await db.collection('posts')
-            .find(query)
-            .sort({ timestamp: -1 })
-            .toArray();
+        // Mongoose: Busquem posts, ordenem per data descendent
+        const posts = await Post.find(query).sort({ timestamp: -1 });
         res.json(posts);
     } catch (error) {
-        console.error("Error obtenint posts:", error);
         res.status(500).json({ message: "Error al carregar el feed" });
     }
 });
 
-// POST /api/social/posts - Crear un nou post
+// 2. Crear un nou post
 router.post('/posts', async (req, res) => {
     try {
-        const db = getDB();
-        const { id_usuari, nom_usuari, avatar_usuari, text, lloc_nom, imatge_post, ubicacio, tags } = req.body;
+        const { id_usuari, nom_usuari, text, imatge_post, tags } = req.body;
 
-        if (!id_usuari || (!text && !imatge_post)) {
-            return res.status(400).json({ message: "La publicació ha de tenir text o una imatge" });
-        }
-
-        const nouPost = {
+        const nouPost = new Post({
             id_usuari,
-            nom_usuari: nom_usuari || "Explorador",
-            avatar_usuari: avatar_usuari || null,
+            nom_usuari,
             text,
-            lloc_nom: lloc_nom || null,
-            imatge_post: imatge_post || null,
-            ubicacio: ubicacio || null,
+            imatge_post,
             tags: tags || [],
-            timestamp: new Date(),
-            likes: [],
-            comentaris: []
-        };
+        });
 
-        const result = await db.collection('posts').insertOne(nouPost);
-        res.status(201).json({ ...nouPost, _id: result.insertedId });
+        await nouPost.save(); // Mongoose guarda el document
+        res.status(201).json(nouPost);
     } catch (error) {
-        console.error("Error creant post:", error);
         res.status(500).json({ message: "No s'ha pogut publicar" });
     }
 });
 
-// POST /api/social/posts/:postId/like - Gestionar Like
+// 3. Gestionar Like
 router.post('/posts/:postId/like', async (req, res) => {
     try {
-        const db = getDB();
         const { postId } = req.params;
         const { id_usuari } = req.body;
 
-        const post = await db.collection('posts').findOne({ _id: new ObjectId(postId) });
+        const post = await Post.findById(postId);
         if (!post) return res.status(404).json({ message: "Post no trobat" });
 
-        const likes = post.likes || [];
-        const index = likes.indexOf(id_usuari);
+        const index = post.likes.indexOf(id_usuari);
 
-        const update = index === -1
-            ? { $push: { likes: id_usuari } }
-            : { $pull: { likes: id_usuari } };
+        if (index === -1) {
+            post.likes.push(id_usuari); // Donar Like
+        } else {
+            post.likes.splice(index, 1); // Treure Like
+        }
 
-        await db.collection('posts').updateOne({ _id: new ObjectId(postId) }, update);
+        await post.save();
         res.json({ success: true, jaTeLike: index === -1 });
     } catch (error) {
         res.status(500).json({ message: "Error al gestionar el m'agrada" });
     }
 });
 
-// POST /api/social/posts/:postId/comment - Afegir comentari
-router.post('/posts/:postId/comment', async (req, res) => {
-    try {
-        const db = getDB();
-        const { postId } = req.params;
-        const { id_usuari, nom_usuari, avatar_usuari, perfil_privat, text } = req.body;
-
-        const nouComentari = {
-            id_comentari: new ObjectId(),
-            id_usuari,
-            nom_usuari,
-            avatar_usuari,
-            perfil_privat,
-            text,
-            timestamp: new Date()
-        };
-
-        await db.collection('posts').updateOne(
-            { _id: new ObjectId(postId) },
-            { $push: { comentaris: nouComentari } }
-        );
-
-        res.json(nouComentari);
-    } catch (error) {
-        res.status(500).json({ message: "Error al comentar" });
-    }
-});
-
-// DELETE /api/social/posts/:postId - Eliminar post
+// 4. Eliminar post
 router.delete('/posts/:postId', async (req, res) => {
     try {
-        const db = getDB();
-        await db.collection('posts').deleteOne({ _id: new ObjectId(req.params.postId) });
+        // Mongoose gestiona l'ObjectId sol
+        await Post.findByIdAndDelete(req.params.postId);
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ message: "Error al eliminar" });
