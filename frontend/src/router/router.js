@@ -44,7 +44,6 @@ const routes = [
     component: Peticions
   },
   {
-<<<<<<< HEAD
     path: '/perfil-visita/:id',
     name: 'perfil-visita',
     component: PerfilVisita
@@ -55,13 +54,6 @@ const routes = [
     component: IniciJoc
   },
   {
-=======
-    path: '/joc/:id',
-    name: 'inici-joc',
-    component: IniciJoc
-  },
-  {
->>>>>>> c2cf94603d09de2198622343740ba47b7d13f363
     path: '/lloc/:id',
     name: 'detall-lloc',
     component: DetallLloc,
