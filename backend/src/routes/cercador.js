@@ -1,9 +1,16 @@
 const express = require('express');
 const router = express.Router();
 
-// Ruta base para confirmar que el JS carga bien
-router.get('/', (req, res) => {
-    res.json({ message: "Connectat correctament a la API de mapa" });
+const { Lloc } = require('../models');
+
+// Obtener todos los lugares
+router.get('/', async (req, res) => {
+    try {
+        const llocs = await Lloc.find();
+        res.json(llocs);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 });
 
 module.exports = router;

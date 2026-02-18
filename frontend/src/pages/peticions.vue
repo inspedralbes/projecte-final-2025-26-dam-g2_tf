@@ -146,8 +146,6 @@ onMounted(() => {
     } catch (e) {
       console.error("Error llegint usuari:", e);
     }
-  } else {
-    alert("Atenció: No has iniciat sessió. Has d'estar loguejat per enviar peticions.");
   }
 
   nextTick(() => {
