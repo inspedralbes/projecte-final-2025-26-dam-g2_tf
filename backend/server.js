@@ -1,8 +1,9 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
-const { connectDB, getDB } = require('./src/config/db');
+const { connectDB } = require('./src/config/db');
 
 
 const app = express();
@@ -19,24 +20,16 @@ async function startServer() {
         await connectDB();
         console.log("MongoDB Connectat correctament");
 
+       // 3. Rutes (Ara aquestes rutes usaran els Models de Mongoose internament)
+        app.use('/api/cercador', require('./src/routes/cercador'));
+        app.use('/api/usuari', require('./src/routes/usuari'));
+        app.use('/api/social', require('./src/routes/social'));
+        app.use('/api/mapa', require('./src/routes/mapa'));
+        app.use('/api/peticions', require('./src/routes/peticions'));
 
-        const cercadorRoutes = require('./src/routes/cercador');
-        const usuariRoutes = require('./src/routes/usuari');
-        const socialRoutes = require('./src/routes/social');
-        const mapaRoutes = require('./src/routes/mapa');
-        const peticionsRoutes = require('./src/routes/peticions');
-
-        app.use('/api/cercador', cercadorRoutes);
-        app.use('/api/usuari', usuariRoutes);
-        app.use('/api/social', socialRoutes);
-        app.use('/api/mapa', mapaRoutes);
-        app.use('/api/peticions', peticionsRoutes);
-
-        // 4. Servir fitxers estàtics (com la carpeta public per a descàrregues)
-        const path = require('path');
         app.use('/download', express.static(path.join(__dirname, 'public')));
 
-        // 6. Configurar Socket.io
+        // 4. Configurar Socket.io
         const http = require('http');
         const { Server } = require('socket.io');
 
