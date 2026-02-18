@@ -185,7 +185,8 @@ async function eliminarPost(postId) {
 // 4. TANCAR SESSIÓ
 function tancarSessio() {
   localStorage.removeItem('user');
-  router.push('/login');
+  // Força la recàrrega total de la pàgina a l'índex
+  window.location.href = '/'; 
 }
 
 // INICI
