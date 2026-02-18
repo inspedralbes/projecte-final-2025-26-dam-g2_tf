@@ -1,95 +1,75 @@
 <template>
   <div v-if="isVisible" class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 relative border-t-8 border-[#402749]">
-      <button @click="$emit('close')" class="absolute top-4 right-4 text-gray-400 hover:text-black text-xl">✕</button>
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 relative border-t-8 border-indigo-600">
       
-      <h2 class="text-2xl font-black text-[#402749] mb-6 text-center italic">
-        {{ esRegistre ? 'CREA PERFIL' : 'HOLA DE NOU!' }}
+      <button @click="$emit('tancar')" class="absolute top-4 right-4 text-gray-400 hover:text-black text-xl">✕</button>
+      
+      <h2 class="text-2xl font-bold text-indigo-900 mb-6 text-center">
+        {{ esRegistre ? 'CREA UN COMPTE' : 'IDENTIFICA\'T' }}
       </h2>
 
-      <div v-if="missatge" :class="`mb-4 p-3 rounded-xl text-center text-sm font-bold ${error ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`">
-        {{ missatge }}
-      </div>
-
-      <form @submit.prevent="handleSubmit" class="space-y-4">
-        <input v-if="esRegistre" v-model="form.username" type="text" placeholder="Nom d'usuari" class="w-full border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-[#bc85ab]" required>
-        <input v-model="form.email" type="email" placeholder="Correu electrònic" class="w-full border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-[#bc85ab]" required>
-        <input v-model="form.password" type="password" placeholder="Contrasenya" class="w-full border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-[#bc85ab]" required>
+      <form @submit.prevent="executarAccio" class="space-y-4">
+        <input v-if="esRegistre" v-model="nomPublic" type="text" placeholder="Nom d'usuari" class="w-full border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-indigo-500" required>
         
-        <button type="submit" :disabled="carregant" class="w-full bg-[#5d3962] text-white py-4 rounded-2xl font-black shadow-lg hover:bg-[#402749] transition-all uppercase tracking-widest disabled:opacity-50">
-          {{ carregant ? 'PROCESSANT...' : (esRegistre ? 'Registrar-me' : 'Entrar') }}
+        <input v-model="correu" type="email" placeholder="Correu electrònic" class="w-full border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-indigo-500" required>
+        <input v-model="contrasenya" type="password" placeholder="Contrasenya" class="w-full border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-indigo-500" required>
+        
+        <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-indigo-700 transition-all uppercase">
+          {{ esRegistre ? 'Registrar-me' : 'Entrar' }}
         </button>
       </form>
 
-      <p class="mt-6 text-center text-sm font-bold text-gray-500">
-        {{ esRegistre ? 'Ja tens compte?' : 'Ets nou explorador?' }}
-        <span @click="esRegistre = !esRegistre; missatge = ''" class="text-[#9f6795] cursor-pointer underline ml-1">
-          {{ esRegistre ? 'Inicia sessió' : 'Crea un perfil' }}
-        </span>
+      <p @click="esRegistre = !esRegistre; error = ''" class="mt-6 text-center text-sm font-bold text-indigo-600 cursor-pointer underline">
+        {{ esRegistre ? 'Ja tens compte? Entra aquí' : 'Ets nou? Crea un perfil' }}
       </p>
+
+      <p v-if="error" class="text-red-500 mt-4 text-center font-bold">{{ error }}</p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+// Reben la propietat 'isVisible' per saber si s'ha de mostrar
 defineProps(['isVisible']);
-const emit = defineEmits(['close', 'login-success']);
+const emit = defineEmits(['tancar', 'exit']);
 
+const router = useRouter();
 const esRegistre = ref(false);
-const form = reactive({ username: '', email: '', password: '' });
-const missatge = ref('');
-const error = ref(false);
-const carregant = ref(false);
+const nomPublic = ref('');
+const correu = ref('');
+const contrasenya = ref('');
+const error = ref('');
 
-const handleSubmit = async () => {
-    carregant.value = true;
-    missatge.value = '';
-    error.value = false;
+async function executarAccio() {
+  const ruta = esRegistre.value ? '/register' : '/login';
+  const dades = {
+    nom_usuari: nomPublic.value,
+    correu: correu.value,
+    contrasenya: contrasenya.value
+  };
 
-    const endpoint = esRegistre.value ? '/register' : '/login';
-    const payload = esRegistre.value 
-        ? { username: form.username, email: form.email, password: form.password }
-        : { email: form.email, password: form.password };
+  try {
+    const resposta = await fetch(`http://localhost:3000/auth${ruta}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dades)
+    });
 
-    try {
-        const response = await fetch(`http://localhost:8088/api/usuari${endpoint}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+    const resultat = await resposta.json();
 
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.message || 'Error en el procés');
-        }
-
-        missatge.value = data.message;
-        
-        if (data.user) {
-            // Reformatem l'objecte usuari per assegurar compatibilitat amb el frontend existent
-            const usuariFrontend = {
-                nom: data.user.nom_usuari,
-                email: data.user.correu,
-                ...data.user
-            };
-            
-            localStorage.setItem('user', JSON.stringify(usuariFrontend));
-            
-            // Si és registre, donem un petit feedback abans de tancar
-            setTimeout(() => {
-                emit('login-success', usuariFrontend);
-                carregant.value = false;
-            }, 1000);
-        } else {
-            carregant.value = false;
-        }
-
-    } catch (err) {
-        missatge.value = err.message;
-        error.value = true;
-        carregant.value = false;
+    if (resultat.success) {
+      // Guardem el perfil a la memòria
+      localStorage.setItem('usuari', JSON.stringify(resultat.user));
+      emit('exit', resultat.user); // Avisem que tot ha anat bé
+      router.push('/social');
+    } else {
+      error.value = resultat.message;
     }
-};
+  } catch (err) {
+    error.value = "Error de connexió amb el servidor";
+  }
+}
 </script>

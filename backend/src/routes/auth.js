@@ -1,38 +1,71 @@
 const express = require('express');
 const router = express.Router();
-const { Usuario, Perfil } = require('../models');
+// Importem Usuari i Perfil segons el teu nou fitxer de models
+const { Usuari, Perfil } = require('../models');
 
-// 1. REGISTRE 
-router.post('/register', async (req, res) => {
+// 1. FUNCIÓ PER AL REGISTRE
+async function ferRegistre(peticio, resposta) {
     try {
-        const { username, email, password } = req.body;
-        const nouUsuari = new Usuario({ correu: email, contrasenya: password });
+        // Recollim les dades en català tal com les envies des del milogin.vue
+        const correuUsuari = peticio.body.correu;
+        const clauUsuari = peticio.body.contrasenya;
+        const nomPublic = peticio.body.nom_usuari;
+
+        // Creem l'usuari amb el model Usuari (abans Usuario)
+        const nouUsuari = new Usuari({ 
+            correu: correuUsuari, 
+            contrasenya: clauUsuari,
+            edat_verificada: false 
+        });
         const usuariGuardat = await nouUsuari.save();
 
+        // Creem el perfil lligat a l'id de l'usuari
         const nouPerfil = new Perfil({
             usuari_id: usuariGuardat._id,
-            nom_usuari: username
+            nom_usuari: nomPublic,
+            biografia: "Hola! Sóc nou aquí.",
+            punts: 0,
+            nivell: "Explorador Novell"
         });
         const perfilGuardat = await nouPerfil.save();
-        res.status(201).json({ success: true, user: perfilGuardat });
+
+        // Retornem 'user' perquè el frontend el guardi al localStorage
+        resposta.status(201).json({ success: true, user: perfilGuardat });
+        
     } catch (error) {
-        res.status(500).json({ message: "Error al registrar: " + error.message });
+        resposta.status(500).json({ success: false, message: "Error al registrar: " + error.message });
     }
-});
+}
 
-// 2. LOGIN
-router.post('/login', async (req, res) => {
+// 2. FUNCIÓ PER AL LOGIN
+async function ferLogin(peticio, resposta) {
     try {
-        const { email, password } = req.body;
-        const compte = await Usuario.findOne({ correu: email });
+        const correuEntrat = peticio.body.correu;
+        const clauEntrada = peticio.body.contrasenya;
 
-        if (!compte || compte.contrasenya !== password) {
-            return res.status(401).json({ message: "Dades incorrectes" });
+        // Busquem a la col·lecció 'usuaris' fent servir el camp 'correu'
+        const compte = await Usuari.findOne({ correu: correuEntrat });
+
+        if (!compte) {
+            return resposta.status(401).json({ success: false, message: "Aquest correu no existeix" });
         }
 
-        const perfil = await Perfil.findOne({ usuari_id: compte._id });
-        res.json({ success: true, user: perfil });
+        if (compte.contrasenya !== clauEntrada) {
+            return resposta.status(401).json({ success: false, message: "La contrasenya és incorrecta" });
+        }
+
+        // Si tot és correcte, busquem el perfil associat a 'perfils'
+        const perfilUsuari = await Perfil.findOne({ usuari_id: compte._id });
+        
+        resposta.json({ success: true, user: perfilUsuari });
+
     } catch (error) {
-        res.status(500).json({ message: "Error al login" });
+        resposta.status(500).json({ success: false, message: "Hi ha hagut un error al servidor" });
     }
-});
+}
+
+// Definició de les rutes
+router.post('/register', ferRegistre);
+router.post('/login', ferLogin);
+
+module.exports = router;
