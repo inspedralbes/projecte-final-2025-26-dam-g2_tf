@@ -1,43 +1,16 @@
-require('dotenv').config();
-const { MongoClient } = require('mongodb'); // [REQ] Driver oficial de MongoDB
-
-const uri = process.env.MONGODB_URI;
-const client = new MongoClient(uri);
-
-let database = null;
+const mongoose = require('mongoose');
 
 async function connectDB() {
     try {
-        await client.connect(); // [REQ] Obertura de connexió manual
-        console.log(' Connectat a MongoDB Atlas');
-
-
-        database = client.db('buscador');
-        return database;
+        const uri = process.env.MONGODB_URI; // La teva URL de MongoDB Atlas
+        
+        await mongoose.connect(uri);
+        
+        console.log('Connectat a MongoDB Atlas via Mongoose');
     } catch (error) {
-
         console.error(' Error connectant a MongoDB:', error);
-        throw error; // [REQ] Errors de connexió gestionats
+        process.exit(1);
     }
-}
-function getDB() {
-    if (!database) {
-        throw new Error(' Base de dades no connectada! Crida connectDB() primer.');
-    }
-    return database;
 }
 
-async function closeDB() {
-    try {
-        await client.close(); // [REQ] Tancament de connexió implementat
-        console.log(' Connexió tancada');
-    } catch (error) {
-        console.error(' Error tancant la connexió:', error);
-        throw error;
-    }
-}
-module.exports = {
-    connectDB,
-    getDB,
-    closeDB
-};
+module.exports = { connectDB };
