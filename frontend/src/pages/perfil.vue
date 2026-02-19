@@ -105,8 +105,10 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuth } from '../composables/useAuth';
 
 const router = useRouter();
+const { usuari: authUsuari, logout } = useAuth();
 
 const user = ref(null);
 const editantBio = ref(false);
@@ -140,7 +142,7 @@ const tabs = [
 const misPosts = ref([]);
 async function carregarMisPosts() {
   try {
-    const res = await fetch('http://localhost:8088/api/social/posts');
+    const res = await fetch(`${API_URL}/api/social/posts`);
     const dades = await res.json();
     const allPosts = Array.isArray(dades) ? dades : [];
     const userId = user.value?._id;
@@ -165,7 +167,7 @@ async function guardarBio() {
     if (res.ok) {
       const data = await res.json();
       user.value = data.user; 
-      localStorage.setItem('user', JSON.stringify(user.value));
+      localStorage.setItem('usuari', JSON.stringify(user.value));
       editantBio.value = false;
     }
   } catch (err) {
@@ -184,16 +186,15 @@ async function eliminarPost(postId) {
   }
 }
 
-// 4. TANCAR SESSIÓ
+// 4. TANCAR SESSIÓ — Usa el composable per netejar l'estat global
 function tancarSessio() {
-  localStorage.removeItem('usuari');
-  // Força la recàrrega total de la pàgina a l'índex
+  logout(); // Neteja l'estat reactiu global + localStorage
   window.location.href = '/'; 
 }
 
 // INICI
 onMounted(async () => {
-  const saved = localStorage.getItem('user');
+  const saved = localStorage.getItem('usuari');
   if (saved) {
     const localUser = JSON.parse(saved);
     

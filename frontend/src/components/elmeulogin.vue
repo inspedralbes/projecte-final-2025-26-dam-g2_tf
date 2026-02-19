@@ -34,11 +34,13 @@
 // judit 
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuth } from '../composables/useAuth';
 
 defineProps(['isVisible']);
 const emit = defineEmits(['tancar', 'exit']);
 
 const router = useRouter();
+const { login } = useAuth();
 const esRegistre = ref(false);
 const nomPublic = ref('');
 const correu = ref('');
@@ -65,9 +67,8 @@ async function executarAccio() {
     const resultat = await resposta.json();
 
     if (resultat.success) {
-      localStorage.setItem('usuari', JSON.stringify(resultat.user));
-      emit('exit', resultat.user); 
-      router.push('/social');
+      login(resultat.usuari); // Actualitza l'estat global reactiu + localStorage
+      emit('exit', resultat.usuari); 
     } else {
       error.value = resultat.message;
     }

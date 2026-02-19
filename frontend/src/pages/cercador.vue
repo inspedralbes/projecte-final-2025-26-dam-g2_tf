@@ -4,14 +4,8 @@
     <div class="flex items-center justify-between mb-8">
       <h1 class="text-3xl font-bold text-gray-900">Cercador</h1>
 
-      <button @click="router.push('/perfil')"
-        class="w-10 h-10 rounded-full bg-[#402749] flex items-center justify-center text-white shadow-md hover:bg-[#5a3766] transition-colors">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-          class="w-6 h-6">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-        </svg>
-      </button>
+      <!-- Botón Perfil / Login -->
+      <BotonPerfil @login="actualitzarUsuari" />
     </div>
 
     <!-- Buscador + Filtro -->
@@ -108,12 +102,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuth } from '../composables/useAuth';
+import BotonPerfil from '../components/BotonPerfil.vue';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
-
 const router = useRouter();
+const { login } = useAuth();
 
-// Variables de estado (datos)
 // Variables de estado (datos)
 const textBusqueda = ref('');
 const totsElsLlocs = ref([]);
@@ -121,9 +116,13 @@ const mostrarFiltros = ref(false);
 const filtreDificultat = ref('');
 const filtreBarri = ref('');
 
+// Login Logic removed: handled in BotonPerfil
+
 // Al iniciar la página
 onMounted(() => {
   carregarDades();
+  
+  // removed: user localStorage check (handled in BotonPerfil)
 });
 
 // Función para cargar los lugares desde el servidor
@@ -181,4 +180,8 @@ const llocsFiltrats = computed(() => {
 function anarALloc(id) {
   router.push(`/lloc/${id}`);
 }
+
+const actualitzarUsuari = (dadesUsuari) => {
+  login(dadesUsuari);
+};
 </script>

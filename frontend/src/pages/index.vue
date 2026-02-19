@@ -2,24 +2,7 @@
   <div class="bg-gradient-to-b from-[#1a0a1f] to-black min-h-screen flex flex-col text-white overflow-hidden">
 
     <div class="absolute top-5 right-5 z-[500]">
-      <button 
-        v-if="!usuariLoguejat" 
-        @click="mostrarModal = true" 
-        class="bg-[#402749] text-[#f5cbdd] p-3 rounded-full shadow-2xl active:scale-90 transition-all border-2 border-[#f5cbdd]/20"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-      </button>
-
-      <button 
-        v-else 
-        @click="$router.push('/perfil')" 
-        class="w-12 h-12 rounded-full flex items-center justify-center font-black border-2 border-[#f5cbdd] shadow-lg cursor-pointer uppercase overflow-hidden bg-[#402749]"
-      >
-        <img v-if="usuariLoguejat.avatar" :src="usuariLoguejat.avatar" class="w-full h-full object-cover">
-        <span v-else class="text-white">{{ (usuariLoguejat.nom_usuari || '?').charAt(0) }}</span>
-      </button>
+      <BotonPerfil />
     </div>
 
     <header class="p-6">
@@ -61,12 +44,6 @@
       </div> 
     <div class="flex-shrink-0 w-[40vw] h-10 pointer-events-none"></div>
 
-    <elmeulogin
-      :isVisible="mostrarModal" 
-      @tancar="mostrarModal = false" 
-      @exit="actualitzarUsuari" 
-    />
-
     </div> <div class="flex justify-center gap-2 py-8">
       <div 
         v-for="(_, index) in llistaLlocs" 
@@ -80,10 +57,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import elmeulogin from '../components/elmeulogin.vue';
+import BotonPerfil from '../components/BotonPerfil.vue';
+// removed: elmeulogin import
 
-const mostrarModal = ref(false);
-const usuariLoguejat = ref(null);
+// removed: mostrarModal, usuariLoguejat refs
 
 const llistaLlocs = ref([]);
 const activeIndex = ref(0);
@@ -92,11 +69,7 @@ const scrollContainer = ref(null);
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
 onMounted(async () => {
-  // 1. Verificar si ja hi ha un usuari al localStorage
-  const userSaved = localStorage.getItem('usuari');
-  if (userSaved) {
-    usuariLoguejat.value = JSON.parse(userSaved);
-  }
+  // removed: user localStorage check (handled in BotonPerfil)
 
   // 2. Carregar les rutes (el teu codi original)
   try {
@@ -107,11 +80,8 @@ onMounted(async () => {
   }
 });
 
-// Funció per quan el login té èxit
-const actualitzarUsuari = (dadesUsuari) => {
-  usuariLoguejat.value = dadesUsuari; // Actualitzem la UI (el botó canvia a avatar)
-  mostrarModal.value = false;         // Tanquem el modal
-};
+// removed: actualitzarUsuari function
+
 
 const handleScroll = () => {
   const container = scrollContainer.value;
@@ -145,6 +115,7 @@ const scrollToCard = (index) => {
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

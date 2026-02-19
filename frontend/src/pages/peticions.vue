@@ -1,10 +1,15 @@
 <template>
   <div class="p-4 max-w-lg mx-auto pb-32">
-    <div class="flex items-center gap-4 mb-8">
-      <button @click="router.push('/')" class="text-2xl hover:text-gray-600 transition">
-        ←
-      </button>
-      <h1 class="text-xl font-bold">NOVA PETICIÓ DE RUTA</h1>
+    <div class="flex items-center justify-between mb-8">
+      <div class="flex items-center gap-4">
+        <button @click="router.push('/')" class="text-2xl hover:text-gray-600 transition">
+          ←
+        </button>
+        <h1 class="text-xl font-bold">NOVA PETICIÓ DE RUTA</h1>
+      </div>
+
+       <!-- Botón Perfil / Login -->
+       <BotonPerfil @login="actualitzarUsuari" />
     </div>
     <div v-if="successMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
       {{ successMessage }}
@@ -107,15 +112,18 @@
         {{ isSubmitting ? 'Enviant...' : 'Enviar Petició' }}
       </button>
 
+
     </form>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, onMounted, nextTick, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuth } from '../composables/useAuth';
 import L from 'leaflet'; 
 import 'leaflet/dist/leaflet.css'; 
+import BotonPerfil from '../components/BotonPerfil.vue';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
@@ -127,6 +135,9 @@ const locationStatus = ref('Obtenir la meva ubicació actual');
 const metodeUbicacio = ref('mapa'); 
 const manualAddress = ref('');
 const imgInput = ref('');
+
+const { usuari, login } = useAuth();
+const usuariId = ref(null);
 
 let map = null;
 let marker = null;
@@ -142,20 +153,29 @@ const form = ref({
 });
 
 onMounted(() => {
-  const userString = localStorage.getItem('usuari');
-  if (userString) {
-    try {
-      const user = JSON.parse(userString);
-      form.value.id_usuari = user._id || user.id; 
-    } catch (e) {
-      console.error("Error llegint usuari:", e);
-    }
+  if (usuari.value) {
+    form.value.id_usuari = usuari.value._id || usuari.value.id; 
+    usuariId.value = usuari.value._id || usuari.value.id;
   }
 
   nextTick(() => {
     initMap();
   });
 });
+
+// Actualitzar form.id_usuari si l'usuari fa login després del mount
+watch(usuari, (nou) => {
+  if (nou) {
+    form.value.id_usuari = nou._id || nou.id;
+    usuariId.value = nou._id || nou.id;
+  }
+});
+
+const actualitzarUsuari = (dadesUsuari) => {
+  login(dadesUsuari);
+  form.value.id_usuari = dadesUsuari._id || dadesUsuari.id;
+  usuariId.value = dadesUsuari._id || dadesUsuari.id;
+};
 
 function initMap() {
   const barcelonaCoords = [41.3879, 2.16992];

@@ -7,13 +7,9 @@
           <h1 class="text-3xl font-black italic uppercase tracking-tighter">COMUNITAT</h1>
           <p class="text-[#f5cbdd] text-[10px] font-bold uppercase tracking-widest opacity-80">Explora Barcelona</p>
         </div>
-        <div class="flex gap-2">
-           <button @click="pestanyaActiva = 'feed'" :class="['p-3 rounded-2xl transition-all', pestanyaActiva === 'feed' ? 'bg-white/20 shadow-inner' : 'opacity-50']">
-             🏠
-           </button>
-           <button @click="pestanyaActiva = 'ranquing'" :class="['p-3 rounded-2xl transition-all', pestanyaActiva === 'ranquing' ? 'bg-white/20 shadow-inner' : 'opacity-50']">
-             🏆
-           </button>
+        <div class="flex gap-2 items-center">
+            <!-- Botón Perfil / Login -->
+            <BotonPerfil @login="actualitzarUsuari" />
         </div>
       </div>
 
@@ -37,11 +33,11 @@
       <div v-if="pestanyaActiva === 'feed'" class="space-y-6 animate-fade-in">
         
         <!-- Publicar nou post -->
-        <div v-if="usuariLoguejat" class="bg-white p-6 rounded-[40px] shadow-sm border border-white">
+        <div v-if="usuari" class="bg-white p-6 rounded-[40px] shadow-sm border border-white">
           <div class="flex gap-4 mb-4">
             <div class="w-12 h-12 rounded-2xl bg-[#f5cbdd] flex items-center justify-center font-black text-[#5d3962] overflow-hidden shrink-0 shadow-sm border-2 border-white">
-                <img v-if="usuariLoguejat.avatar" :src="usuariLoguejat.avatar" class="w-full h-full object-cover">
-                <span v-else>{{ usuariLoguejat.nom_usuari?.charAt(0) }}</span>
+                <img v-if="usuari.avatar" :src="usuari.avatar" class="w-full h-full object-cover">
+                <span v-else>{{ usuari.nom_usuari?.charAt(0) }}</span>
             </div>
             <div class="flex-1 space-y-3">
               <textarea 
@@ -145,7 +141,7 @@
               <div class="flex gap-4 items-center">
                 <button @click="ferLike(post._id)" class="flex items-center gap-2 group transition-all">
                   <span class="text-xl transform group-active:scale-150 transition-transform">
-                    {{ post.likes?.includes(usuariLoguejat?._id) ? '❤️' : '🤍' }}
+                    {{ post.likes?.includes(usuari?._id) ? '❤️' : '🤍' }}
                   </span>
                   <span class="text-xs font-black text-gray-400">{{ post.likes?.length || 0 }}</span>
                 </button>
@@ -191,9 +187,10 @@
          <!-- ... (mateix codi de rànquing que teníem) ... -->
          <div class="bg-[#402749] text-white p-8 rounded-[40px] shadow-2xl">
             <h2 class="text-4xl font-black italic">EL MEU TOP #4</h2>
-            <p class="text-xl font-black text-[#f5cbdd]">{{ usuariLoguejat?.punts || 0 }} pts</p>
+            <p class="text-xl font-black text-[#f5cbdd]">{{ usuari?.punts || 0 }} pts</p>
          </div>
       </div>
+
 
     </main>
 
@@ -201,19 +198,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuth } from '../composables/useAuth';
+import BotonPerfil from '../components/BotonPerfil.vue';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
 const router = useRouter();
-const usuariLoguejat = ref(null);
+const { usuari, login } = useAuth();
+
 const pestanyaActiva = ref('feed');
 const categories = ['Tots', 'Industrial', 'Gòtic', 'Parcs', 'Graffiti', 'Misteri'];
 const filtreActiu = ref('Tots');
 
-// Estats Feed
-const posts = ref([]);
+// Post creation refs
 const nouPostText = ref('');
 const nouPostImatge = ref(null);
 const nouPostUbicacio = ref('');
@@ -221,185 +220,173 @@ const nouPostTags = ref([]);
 const nouPostTagInput = ref('');
 const mostrantUbicacioInput = ref(false);
 const publicant = ref(false);
-const mostrantComentaris = ref(null);
-const nouComentariText = ref('');
 const fileInput = ref(null);
 
+// Feed refs
+const posts = ref([]);
+const mostrantComentaris = ref(null);
+const nouComentariText = ref('');
+
+const actualitzarUsuari = (dadesUsuari) => {
+  login(dadesUsuari);
+};
+
+// Carregar posts quan l'usuari està disponible
 onMounted(() => {
-  const user = localStorage.getItem('usuari');
-  if (user) {
-    usuariLoguejat.value = JSON.parse(user);
+  if (usuari.value) {
+    carregarPosts();
+  }
+});
+
+// Watch per si l'usuari fa login DESPRÉS que la pàgina ja estigui muntada
+watch(usuari, (nouUsuari) => {
+  if (nouUsuari && posts.value.length === 0) {
     carregarPosts();
   }
 });
 
 async function carregarPosts() {
   try {
-    const url = filtreActiu.value === 'Tots' 
-      ? `${API_URL}/api/social/posts` 
-      : `${API_URL}/api/social/posts?tag=${filtreActiu.value}`;
-    const res = await fetch(url);
-    posts.value = await res.json();
-  } catch (err) { console.error(err); }
+    const res = await fetch(`${API_URL}/api/social/posts`);
+    const dades = await res.json();
+    posts.value = Array.isArray(dades) ? dades : [];
+  } catch (err) {
+    console.error("Error carregant posts:", err);
+  }
 }
 
-function filtrarPerTag(tag) {
-  filtreActiu.value = tag;
-  carregarPosts();
+function filtrarPerTag(cat) {
+  filtreActiu.value = cat;
+}
+
+function filtrarData(timestamp) {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  return date.toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' });
+}
+
+function esAutor(post) {
+  return usuari.value && (post.usuari_id === usuari.value._id || post.id_usuari === usuari.value._id);
+}
+
+function visitarPerfil(item) {
+  if (item.usuari_id || item.id_usuari) {
+    const id = item.usuari_id || item.id_usuari;
+    if (usuari.value && id === usuari.value._id) {
+      router.push('/perfil');
+    } else {
+      router.push(`/perfil-visita/${id}`);
+    }
+  }
 }
 
 async function ferLike(postId) {
-  if (!usuariLoguejat.value) return;
+  if (!usuari.value) return;
   try {
-    const res = await fetch(`${API_URL}/api/social/posts/${postId}/like`, {
+    await fetch(`${API_URL}/api/social/posts/${postId}/like`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id_usuari: usuariLoguejat.value._id })
+      body: JSON.stringify({ userId: usuari.value._id })
     });
-    if (res.ok) carregarPosts();
-  } catch (err) { console.error(err); }
+    carregarPosts();
+  } catch (err) {
+    console.error("Error like:", err);
+  }
 }
 
-async function publicarPost() {
-  publicant.value = true;
-  try {
-    const res = await fetch(`${API_URL}/api/social/posts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id_usuari: usuariLoguejat.value._id,
-        nom_usuari: usuariLoguejat.value.nom_usuari,
-        avatar_usuari: usuariLoguejat.value.avatar,
-        text: nouPostText.value,
-        imatge_post: nouPostImatge.value,
-        ubicacio: nouPostUbicacio.value,
-        tags: nouPostTags.value
-      })
-    });
-    if (res.ok) {
-      nouPostText.value = ''; nouPostImatge.value = null; nouPostTags.value = [];
-      await carregarPosts();
-    }
-  } finally { publicant.value = false; }
+function toggleComentaris(postId) {
+  mostrantComentaris.value = mostrantComentaris.value === postId ? null : postId;
 }
 
 async function enviarComentari(postId) {
-  if (!nouComentariText.value.trim()) return;
+  if (!nouComentariText.value.trim() || !usuari.value) return;
   try {
-    const res = await fetch(`${API_URL}/api/social/posts/${postId}/comment`, {
+    await fetch(`${API_URL}/api/social/posts/${postId}/comentari`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        id_usuari: usuariLoguejat.value._id,
-        nom_usuari: usuariLoguejat.value.nom_usuari,
-        avatar_usuari: usuariLoguejat.value.avatar,
-        perfil_privat: usuariLoguejat.value.privat || false,
+        userId: usuari.value._id,
+        nom_usuari: usuari.value.nom_usuari,
         text: nouComentariText.value
       })
     });
-    if (res.ok) { nouComentariText.value = ''; await carregarPosts(); }
-  } catch (err) { console.error(err); }
-}
-
-function afegirTag() {
-  const val = nouPostTagInput.value.replace('#', '').trim();
-  if (val && !nouPostTags.value.includes(val)) nouPostTags.value.push(val);
-  nouPostTagInput.value = '';
-}
-
-function eliminarTag(idx) { nouPostTags.value.splice(idx, 1); }
-
-async function visitarPerfil(obj) {
-  const targetId = obj.id_usuari || obj._id;
-  if (!targetId) return;
-
-  // Si és el teu propi perfil, anem al perfil local
-  if (targetId === usuariLoguejat.value?._id) {
-    router.push('/perfil');
-    return;
-  }
-
-  // Intentem obtenir la informació actual del backend per validar privacitat
-  try {
-    const res = await fetch(`${API_URL}/api/usuari/${targetId}`);
-    if (res.ok) {
-      const perfil = await res.json();
-      if (perfil.perfil_privat) {
-        alert('Aquest usuari té el perfil privat. No pots veure més informació.');
-        return;
-      }
-      // Guardem l'objecte de visita (per a fallback) i naveguem
-      localStorage.setItem('usuari_visita', JSON.stringify({ id_usuari: targetId, ...perfil }));
-      router.push(`/perfil-visita/${targetId}`);
-      return;
-    }
+    nouComentariText.value = '';
+    carregarPosts();
   } catch (err) {
-    console.warn('No s\'ha pogut carregar perfil des del servidor, intentant fallback local', err);
-  }
-
-  // Fallback: si el comentari incloïa dades de perfil en localStorage o en l'objecte, revisem
-  const cached = localStorage.getItem('usuari_visita');
-  if (cached) {
-    try {
-      const parsed = JSON.parse(cached);
-      if (parsed.id_usuari === targetId && parsed.perfil_privat) {
-        alert('Aquest usuari té el perfil privat. No pots veure més informació.');
-        return;
-      }
-    } catch (e) {}
-  }
-
-  // Final: naveguem si no tenim evidència de privacitat
-  localStorage.setItem('usuari_visita', JSON.stringify({ id_usuari: targetId, nom_usuari: obj.nom_usuari, avatar_usuari: obj.avatar_usuari, perfil_privat: obj.perfil_privat }));
-  router.push(`/perfil-visita/${targetId}`);
-}
-
-function reportarLloc(post) {
-  if (confirm(`Vols reportar que el lloc "${post.ubicacio || 'aquest lloc'}" és perillós o inaccessible?`)) {
-    alert("Gràcies! Un administrador revisarà la ubicació de seguida seguint els protocols de seguretat.");
+    console.error("Error comentari:", err);
   }
 }
 
-async function reportPost(post) {
-  if (!confirm('Vols reportar aquesta publicació com a inapropiada?')) return;
-  // Intentem enviar un report al backend si existeix l'endpoint
+async function publicarPost() {
+  if (!usuari.value) return;
+  publicant.value = true;
   try {
-    const res = await fetch(`http://localhost:8088/api/social/reports`, {
+    await fetch(`${API_URL}/api/social/posts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ postId: post._id, reporter: usuariLoguejat.value?._id || null })
+      body: JSON.stringify({
+        id_usuari: usuari.value._id,
+        nom_usuari: usuari.value.nom_usuari,
+        avatar_usuari: usuari.value.avatar || '',
+        text: nouPostText.value,
+        imatge_post: nouPostImatge.value || '',
+        ubicacio: nouPostUbicacio.value || '',
+        tags: nouPostTags.value
+      })
     });
-    if (res.ok) {
-      alert('S\'ha enviat el report. Gràcies per ajudar a mantenir la comunitat segura.');
-      return;
-    }
+    nouPostText.value = '';
+    nouPostImatge.value = null;
+    nouPostUbicacio.value = '';
+    nouPostTags.value = [];
+    carregarPosts();
   } catch (err) {
-    console.warn('No s\'ha pogut enviar el report al servidor:', err);
+    console.error("Error publicant:", err);
+  } finally {
+    publicant.value = false;
   }
-
-  // Fallback local
-  alert('S\'ha registrat localment la denuncía. Si us plau, contacta amb administració si és urgent.');
 }
 
-function handleFileUpload(e) {
-  const file = e.target.files[0];
+async function eliminarPost(postId) {
+  if (!confirm('Eliminar post?')) return;
+  try {
+    await fetch(`${API_URL}/api/social/posts/${postId}`, { method: 'DELETE' });
+    carregarPosts();
+  } catch (err) {
+    console.error("Error eliminant:", err);
+  }
+}
+
+function triggerFileInput() {
+  fileInput.value?.click();
+}
+
+function handleFileUpload(event) {
+  const file = event.target.files[0];
   if (file) {
     const reader = new FileReader();
-    reader.onload = (v) => nouPostImatge.value = v.target.result;
+    reader.onload = (e) => { nouPostImatge.value = e.target.result; };
     reader.readAsDataURL(file);
   }
 }
-function triggerFileInput() { fileInput.value.click(); }
-function esAutor(p) { return p.id_usuari === usuariLoguejat.value?._id; }
-async function eliminarPost(id) {
-  if (confirm("Segur?")) {
-    await fetch(`http://localhost:8088/api/social/posts/${id}`, { method: 'DELETE' });
-    carregarPosts();
+
+function afegirTag() {
+  if (nouPostTagInput.value.trim()) {
+    nouPostTags.value.push(nouPostTagInput.value.trim().replace('#', ''));
+    nouPostTagInput.value = '';
   }
 }
-function filtrarData(t) { return new Date(t).toLocaleDateString('ca-ES', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}); }
-function toggleComentaris(id) { mostrantComentaris.value = mostrantComentaris.value === id ? null : id; }
 
+function eliminarTag(idx) {
+  nouPostTags.value.splice(idx, 1);
+}
+
+function reportarLloc(post) {
+  alert(`Reportat: ${post.nom_usuari || 'post'}`);
+}
+
+function reportPost(post) {
+  alert(`Publicació reportada: ${post._id}`);
+}
 </script>
 
 <style scoped>

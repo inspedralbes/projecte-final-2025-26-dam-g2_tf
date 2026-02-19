@@ -79,7 +79,7 @@ function obrirGoogleMaps() {
 function comencarJoc() {
   console.log("Iniciando ruta para:", route.params.id);
   
-  const usuariGuardat = localStorage.getItem('user');
+  const usuariGuardat = localStorage.getItem('usuari');
 
   if (!usuariGuardat) {
     
