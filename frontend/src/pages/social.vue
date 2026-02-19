@@ -304,6 +304,7 @@ function afegirTag() {
   if (val && !nouPostTags.value.includes(val)) nouPostTags.value.push(val);
   nouPostTagInput.value = '';
 }
+
 function eliminarTag(idx) { nouPostTags.value.splice(idx, 1); }
 
 async function visitarPerfil(obj) {
