@@ -11,6 +11,7 @@ import Peticions from '../pages/peticions.vue'
 import DetallLloc from '../pages/detallLloc.vue'
 import IniciJoc from '../pages/iniciJoc.vue'
 import SalaEspera from '../pages/SalaEspera.vue'
+import elmeulogin from '../components/elmeulogin.vue'; // Revisa que la ruta sigui correcta
 
 // Admin Pages
 import AdminLogin from '../pages/admin/AdminLogin.vue'
@@ -23,6 +24,11 @@ const routes = [
     path: '/',
     name: 'home',
     component: Index  // Aquest carregarà el teu menú principal
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: elmeulogin
   },
   // --- RUTES PROTEGIDES ---
   {
