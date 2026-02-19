@@ -18,7 +18,7 @@ const PerfilSchema = new mongoose.Schema({
   inventari_cromos: [{
     id_lloc: { type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' },
     data_obtencio: { type: Date, default: Date.now },
-    imatge_usuari: String 
+    imatge_usuari: String
   }]
 });
 
@@ -26,12 +26,13 @@ const LlocSchema = new mongoose.Schema({
   nom: String,
   ubicacio: {
     type: { type: String, default: 'Point' },
-    coordinates: [Number] 
+    coordinates: [Number]
   },
   imatge_referencia: String,
   descripcio: String,
   explicacio_historica: String,
   dificultat: String,
+  barri: String,
   tags: [String],
   control_horari: { hora_tancament: String, actiu: Boolean },
   millors_temps: [{ usuari: String, temps_segons: Number }]
@@ -40,8 +41,8 @@ const LlocSchema = new mongoose.Schema({
 // 4. SessioJoc (sessions)
 const SessioJocSchema = new mongoose.Schema({
   codi_sala: String,
-  tipus_partida: String, 
-  estat: String, 
+  tipus_partida: String,
+  estat: String,
   jugadors: [{
     id_usuari: { type: mongoose.Schema.Types.ObjectId, ref: 'Perfil' },
     personatge_assignat: String,

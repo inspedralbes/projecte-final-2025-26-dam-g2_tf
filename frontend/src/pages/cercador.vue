@@ -18,7 +18,9 @@
     <div class="flex items-center gap-2 mb-6">
 
       <!-- Botón Filtros -->
-      <button class="bg-gray-200 p-3 rounded-full text-gray-700 hover:bg-gray-300 transition-colors">
+      <button @click="mostrarFiltros = !mostrarFiltros"
+        class="bg-gray-200 p-3 rounded-full text-gray-700 hover:bg-gray-300 transition-colors"
+        :class="{ 'bg-gray-300': mostrarFiltros }">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
           class="w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round"
@@ -37,6 +39,35 @@
               d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
         </button>
+      </div>
+    </div>
+
+    <!-- Panel de Filtros -->
+    <div v-if="mostrarFiltros" class="mb-6 p-4 bg-gray-100 rounded-2xl shadow-inner animate-fade-in-down">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Filtre Dificultat -->
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1">Dificultat</label>
+          <select v-model="filtreDificultat"
+            class="w-full p-2 rounded-xl border border-gray-300 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#402749]">
+            <option value="">Totes</option>
+            <option value="Baixa">Baixa</option>
+            <option value="Mitjana">Mitjana</option>
+            <option value="Alta">Alta</option>
+          </select>
+        </div>
+
+        <!-- Filtre Barri -->
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1">Barri</label>
+          <select v-model="filtreBarri"
+            class="w-full p-2 rounded-xl border border-gray-300 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#402749]">
+            <option value="">Tots</option>
+            <option v-for="barri in llistaBarris" :key="barri" :value="barri">
+              {{ barri }}
+            </option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -81,8 +112,12 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 
 // Variables de estado (datos)
+// Variables de estado (datos)
 const textBusqueda = ref('');
 const totsElsLlocs = ref([]);
+const mostrarFiltros = ref(false);
+const filtreDificultat = ref('');
+const filtreBarri = ref('');
 
 // Al iniciar la página
 onMounted(() => {
@@ -102,7 +137,8 @@ async function carregarDades() {
       nom: item.nom,
       imatge: item.imatge_referencia,
       descripcio: item.descripcio,
-      dificultat: item.dificultat || 'Desconeguda'
+      dificultat: item.dificultat || 'Desconeguda',
+      barri: item.barri || 'Desconegut'
     }));
 
   } catch (error) {
@@ -111,12 +147,32 @@ async function carregarDades() {
 }
 
 // Función calculada para filtrar (se actualiza sola cuando escribes)
+// Llista dinàmica de barris
+const llistaBarris = computed(() => {
+  const barris = totsElsLlocs.value
+    .map(lloc => lloc.barri)
+    .filter(barri => barri && barri !== 'Desconegut');
+  return [...new Set(barris)].sort(); // Valors únics i ordenats
+});
+
+// Función calculada para filtrar (se actualiza sola cuando escribes)
 const llocsFiltrats = computed(() => {
   return totsElsLlocs.value.filter(lloc => {
     const busqueda = textBusqueda.value.toLowerCase();
 
-    return lloc.nom.toLowerCase().includes(busqueda) ||
+    // Filtre text
+    const coincideixText = lloc.nom.toLowerCase().includes(busqueda) ||
       lloc.descripcio.toLowerCase().includes(busqueda);
+
+    // Filtre dificultat
+    const coincideixDificultat = !filtreDificultat.value ||
+      (lloc.dificultat && lloc.dificultat.toLowerCase() === filtreDificultat.value.toLowerCase());
+
+    // Filtre barri
+    const coincideixBarri = !filtreBarri.value ||
+      (lloc.barri === filtreBarri.value);
+
+    return coincideixText && coincideixDificultat && coincideixBarri;
   });
 });
 
