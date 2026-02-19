@@ -117,6 +117,8 @@ import { useRouter } from 'vue-router';
 import L from 'leaflet'; 
 import 'leaflet/dist/leaflet.css'; 
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+
 const router = useRouter();
 const successMessage = ref('');
 const errorMessage = ref('');
@@ -129,6 +131,8 @@ const imgInput = ref('');
 let map = null;
 let marker = null;
 
+
+
 const form = ref({
   nom_proposat: '',
   motiu: '',
@@ -138,7 +142,7 @@ const form = ref({
 });
 
 onMounted(() => {
-  const userString = localStorage.getItem('user');
+  const userString = localStorage.getItem('usuari');
   if (userString) {
     try {
       const user = JSON.parse(userString);
@@ -230,7 +234,7 @@ async function submitForm() {
   }
 
   try {
-    const response = await fetch('http://localhost:8088/api/peticions', {
+    const response = await fetch(`${API_URL}/api/peticions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

@@ -74,13 +74,14 @@ import { useRoute } from 'vue-router';
 
 const route = useRoute();
 const user = ref(null);
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
 onMounted(async () => {
   const userId = route.params.id;
   
   // Intentem carregar de l'API
   try {
-    const res = await fetch(`http://localhost:8088/api/usuari/${userId}`);
+    const res = await fetch(`${API_URL}/api/usuari/${userId}`);
     if (res.ok) {
       user.value = await res.json();
     } else {

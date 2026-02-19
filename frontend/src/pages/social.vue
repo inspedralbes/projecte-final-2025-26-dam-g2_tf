@@ -204,6 +204,8 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+
 const router = useRouter();
 const usuariLoguejat = ref(null);
 const pestanyaActiva = ref('feed');
@@ -224,7 +226,7 @@ const nouComentariText = ref('');
 const fileInput = ref(null);
 
 onMounted(() => {
-  const user = localStorage.getItem('user');
+  const user = localStorage.getItem('usuari');
   if (user) {
     usuariLoguejat.value = JSON.parse(user);
     carregarPosts();
@@ -234,8 +236,8 @@ onMounted(() => {
 async function carregarPosts() {
   try {
     const url = filtreActiu.value === 'Tots' 
-      ? 'http://localhost:8088/api/social/posts' 
-      : `http://localhost:8088/api/social/posts?tag=${filtreActiu.value}`;
+      ? `${API_URL}/api/social/posts` 
+      : `${API_URL}/api/social/posts?tag=${filtreActiu.value}`;
     const res = await fetch(url);
     posts.value = await res.json();
   } catch (err) { console.error(err); }
@@ -249,7 +251,7 @@ function filtrarPerTag(tag) {
 async function ferLike(postId) {
   if (!usuariLoguejat.value) return;
   try {
-    const res = await fetch(`http://localhost:8088/api/social/posts/${postId}/like`, {
+    const res = await fetch(`${API_URL}/api/social/posts/${postId}/like`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id_usuari: usuariLoguejat.value._id })
@@ -261,7 +263,7 @@ async function ferLike(postId) {
 async function publicarPost() {
   publicant.value = true;
   try {
-    const res = await fetch('http://localhost:8088/api/social/posts', {
+    const res = await fetch(`${API_URL}/api/social/posts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -284,7 +286,7 @@ async function publicarPost() {
 async function enviarComentari(postId) {
   if (!nouComentariText.value.trim()) return;
   try {
-    const res = await fetch(`http://localhost:8088/api/social/posts/${postId}/comment`, {
+    const res = await fetch(`${API_URL}/api/social/posts/${postId}/comment`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -319,7 +321,7 @@ async function visitarPerfil(obj) {
 
   // Intentem obtenir la informació actual del backend per validar privacitat
   try {
-    const res = await fetch(`http://localhost:8088/api/usuari/${targetId}`);
+    const res = await fetch(`${API_URL}/api/usuari/${targetId}`);
     if (res.ok) {
       const perfil = await res.json();
       if (perfil.perfil_privat) {

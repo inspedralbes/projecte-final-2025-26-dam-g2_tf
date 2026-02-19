@@ -2,6 +2,7 @@
 import { onMounted } from 'vue';
 import { CameraPreview } from '@capacitor-community/camera-preview';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
 onMounted(function inicialitzarCamera() {
   CameraPreview.start({
@@ -29,8 +30,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
   };
 
   try {
-    const resposta = await fetch('http://localhost:3000/api/validar-foto', paquet);
-    const dades = await resposta.json();
+    const resposta = await fetch(`${API_URL}/api/validar-foto`, paquet);    const dades = await resposta.json();
 
     if (dades.exit) {
       alert(dades.missatge + " (Similitud: " + dades.coincidencia );

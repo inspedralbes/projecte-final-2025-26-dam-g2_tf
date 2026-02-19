@@ -109,6 +109,8 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+
 const router = useRouter();
 
 // Variables de estado (datos)
@@ -127,8 +129,7 @@ onMounted(() => {
 // Función para cargar los lugares desde el servidor
 async function carregarDades() {
   try {
-    const resposta = await fetch('http://localhost:8088/api/cercador');
-    if (!resposta.ok) throw new Error('Error al carregar dades');
+    const resposta = await fetch(`${API_URL}/api/cercador`);    if (!resposta.ok) throw new Error('Error al carregar dades');
     const dades = await resposta.json();
 
     // Guardamos los datos limpios en nuestra variable

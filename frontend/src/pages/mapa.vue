@@ -29,6 +29,8 @@ const laMevaPosicio = ref(BCN_CENTRE);
 const cargando = ref(true); 
 let mapa = null;
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+
 onMounted(async () => {
   window.anarADetall = (id) => router.push(`/lloc/${id}`);
 
@@ -75,7 +77,7 @@ async function iniciarMapa(lat, lng) {
 
 async function carregarPuntsDeLaBD() {
   try {
-    const resposta = await fetch('http://localhost:8088/api/mapa/punts');
+    const resposta = await fetch(`${API_URL}/api/mapa/punts`);
     const llocs = await resposta.json();
     
     llocs.forEach(lloc => {

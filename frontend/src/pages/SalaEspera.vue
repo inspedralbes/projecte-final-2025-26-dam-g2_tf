@@ -57,6 +57,8 @@ const route = useRoute();
 const router = useRouter();
 const socket = ref(null);
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+
 const roomCode = ref('');
 const players = ref([]);
 const loading = ref(true);
@@ -64,7 +66,7 @@ const error = ref('');
 const isCreator = ref(false);
 
 // Recuperar usuari del localStorage o usar un per defecte
-const userStr = localStorage.getItem('user');
+const userStr = localStorage.getItem('usuari');
 const user = userStr ? JSON.parse(userStr) : { nom_usuari: 'Invitado' };
 const nomUsuari = user.nom_usuari || 'Invitado';
 
@@ -77,7 +79,7 @@ function iniciarPartida() {
 onMounted(() => {
   // Connectar al backend (ajustar URL segons entorn Docker/Local)
   // El backend està exposat al port 8088 segons docker-compose.dev.yml
-  socket.value = io('http://localhost:8088'); 
+  socket.value = io(API_URL);
 
   socket.value.on('connect', () => {
     console.log('Connectat al servidor WebSocket');

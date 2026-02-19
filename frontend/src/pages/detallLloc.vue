@@ -61,6 +61,8 @@ const route = useRoute()
 const router = useRouter() 
 const lloc = ref(null)
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+
 function obrirGoogleMaps() {
   if (!lloc.value?.ubicacio?.coordinates) {
     console.error("No hay coordenadas disponibles");
@@ -94,7 +96,7 @@ function comencarJoc() {
 
 onMounted(async () => {
   try {
-    const response = await fetch(`http://localhost:8088/api/mapa/punts`);
+    const response = await fetch(`${API_URL}/api/mapa/punts`);
     const dades = await response.json();
     lloc.value = dades.find(item => item._id === route.params.id);
   } catch (err) {

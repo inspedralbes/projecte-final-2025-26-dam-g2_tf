@@ -112,6 +112,8 @@ const user = ref(null);
 const editantBio = ref(false);
 const tempBio = ref('');
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+
 // --- LÒGICA DE NIVELLS (Junior) ---
 const puntsPerAlSeguentNivell = computed(() => {
   return (user.value?.punts || 0) % 100;
@@ -151,7 +153,7 @@ async function carregarMisPosts() {
 // 2. GUARDAR BIOGRAFIA A LA BD
 async function guardarBio() {
   try {
-    const res = await fetch('http://localhost:8088/api/usuari/update', {
+    const res = await fetch(`${API_URL}/api/usuari/update`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -175,7 +177,7 @@ async function guardarBio() {
 async function eliminarPost(postId) {
   if (!confirm('Eliminar post?')) return;
   try {
-    await fetch(`http://localhost:8088/api/social/posts/${postId}`, { method: 'DELETE' });
+    await fetch(`${API_URL}/api/social/posts/${postId}`, { method: 'DELETE' });
     carregarMisPosts();
   } catch (err) {
     console.error("Error eliminant:", err);
@@ -184,7 +186,7 @@ async function eliminarPost(postId) {
 
 // 4. TANCAR SESSIÓ
 function tancarSessio() {
-  localStorage.removeItem('user');
+  localStorage.removeItem('usuari');
   // Força la recàrrega total de la pàgina a l'índex
   window.location.href = '/'; 
 }
@@ -196,7 +198,7 @@ onMounted(async () => {
     const localUser = JSON.parse(saved);
     
     try {
-        const res = await fetch(`http://localhost:8088/api/usuari/update`, {
+        const res = await fetch(`${API_URL}/api/usuari/update`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ perfilId: localUser._id })
