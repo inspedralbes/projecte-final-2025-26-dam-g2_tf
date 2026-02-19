@@ -65,8 +65,8 @@ async function executarAccio() {
     const resultat = await resposta.json();
 
     if (resultat.success) {
-      localStorage.setItem('usuari', JSON.stringify(resultat.user));
-      emit('exit', resultat.user); 
+      localStorage.setItem('usuari', JSON.stringify(resultat.usuari));
+      emit('exit', resultat.usuari); 
       router.push('/social');
     } else {
       error.value = resultat.message;

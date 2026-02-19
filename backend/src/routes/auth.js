@@ -34,7 +34,7 @@ async function ferRegistre(peticio, resposta) {
         });
         const perfilGuardat = await nouPerfil.save();
 
-        resposta.status(201).json({ success: true, user: perfilGuardat });
+        resposta.status(201).json({ success: true, usuari: perfilGuardat });
         
     } catch (error) {
         resposta.status(500).json({ success: false, message: "Error al registrar: " + error.message });
@@ -57,7 +57,7 @@ async function ferLogin(peticio, resposta) {
         }
         const perfilUsuari = await Perfil.findOne({ usuari_id: compte._id });
         
-        resposta.json({ success: true, user: perfilUsuari });
+        resposta.json({ success: true, usuari: perfilUsuari });
 
     } catch (error) {
         resposta.status(500).json({ success: false, message: "Hi ha hagut un error al servidor" });
