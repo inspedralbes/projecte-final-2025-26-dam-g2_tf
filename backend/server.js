@@ -26,6 +26,7 @@ async function startServer() {
         app.use('/api/social', require('./src/routes/social'));
         app.use('/api/mapa', require('./src/routes/mapa'));
         app.use('/api/peticions', require('./src/routes/peticions'));
+        app.use('/api/admin', require('./src/routes/admin'));
 
         app.use('/download', express.static(path.join(__dirname, 'public')));
 
