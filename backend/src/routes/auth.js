@@ -1,22 +1,26 @@
 const express = require('express');
 const router = express.Router();
-// Importem Usuari i Perfil segons el teu nou fitxer de models
 const { Usuari, Perfil } = require('../models');
-
+//JUDIT
 // 1. FUNCIÓ PER AL REGISTRE
 async function ferRegistre(peticio, resposta) {
     try {
-        // Recollim les dades en català tal com les envies des del milogin.vue
+        // Recollim les dades enviades des del milogin.vue
         const correuUsuari = peticio.body.correu;
         const clauUsuari = peticio.body.contrasenya;
         const nomPublic = peticio.body.nom_usuari;
 
-        // Creem l'usuari amb el model Usuari (abans Usuario)
         const nouUsuari = new Usuari({ 
             correu: correuUsuari, 
             contrasenya: clauUsuari,
             edat_verificada: false 
         });
+
+        // Dins de ferRegistre
+          const existeix = await Usuari.findOne({ correu: correuUsuari });
+          if (existeix) {
+              return resposta.status(400).json({ success: false, message: "Aquest correu ja està registrat" });
+        }
         const usuariGuardat = await nouUsuari.save();
 
         // Creem el perfil lligat a l'id de l'usuari
@@ -29,7 +33,6 @@ async function ferRegistre(peticio, resposta) {
         });
         const perfilGuardat = await nouPerfil.save();
 
-        // Retornem 'user' perquè el frontend el guardi al localStorage
         resposta.status(201).json({ success: true, user: perfilGuardat });
         
     } catch (error) {
@@ -37,13 +40,11 @@ async function ferRegistre(peticio, resposta) {
     }
 }
 
-// 2. FUNCIÓ PER AL LOGIN
 async function ferLogin(peticio, resposta) {
     try {
         const correuEntrat = peticio.body.correu;
         const clauEntrada = peticio.body.contrasenya;
 
-        // Busquem a la col·lecció 'usuaris' fent servir el camp 'correu'
         const compte = await Usuari.findOne({ correu: correuEntrat });
 
         if (!compte) {
@@ -53,8 +54,6 @@ async function ferLogin(peticio, resposta) {
         if (compte.contrasenya !== clauEntrada) {
             return resposta.status(401).json({ success: false, message: "La contrasenya és incorrecta" });
         }
-
-        // Si tot és correcte, busquem el perfil associat a 'perfils'
         const perfilUsuari = await Perfil.findOne({ usuari_id: compte._id });
         
         resposta.json({ success: true, user: perfilUsuari });
@@ -64,8 +63,7 @@ async function ferLogin(peticio, resposta) {
     }
 }
 
-// Definició de les rutes
-router.post('/register', ferRegistre);
+router.post('/registre', ferRegistre);
 router.post('/login', ferLogin);
 
 module.exports = router;

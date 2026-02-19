@@ -9,7 +9,7 @@ const { connectDB } = require('./src/config/db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(cors({
-    origin: 'http://localhost:5173', // El port on corre el teu Vite
+    origin: process.env.ORIGIN_URL || 'http://localhost:5173', 
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));
@@ -26,6 +26,7 @@ async function startServer() {
         app.use('/api/social', require('./src/routes/social'));
         app.use('/api/mapa', require('./src/routes/mapa'));
         app.use('/api/peticions', require('./src/routes/peticions'));
+        app.use('/api/admin', require('./src/routes/admin'));
 
         app.use('/download', express.static(path.join(__dirname, 'public')));
 

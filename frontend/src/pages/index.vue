@@ -15,9 +15,7 @@
         :key="lloc._id"
         @click="scrollToCard(index)"
         class="card-item relative flex-shrink-0 snap-center transition-all duration-500 ease-out cursor-pointer
-               /* MÓVIL: tarjetas estrechas y altas */
                w-[70vw] h-[50vh] 
-               /* TABLET/PC: tarjetas más anchas y proporcionadas */
                md:w-[400px] md:h-[600px] lg:w-[500px]"
         :class="activeIndex === index ? 'scale-110 z-20 opacity-100' : 'scale-90 z-10 opacity-40'"
       >
@@ -39,10 +37,9 @@
             Explorar
           </button>
         </div>
-      </div>
-    </div>
+      </div> <div class="flex-shrink-0 w-[40vw] h-10 pointer-events-none"></div>
 
-    <div class="flex justify-center gap-2 py-8">
+    </div> <div class="flex justify-center gap-2 py-8">
       <div 
         v-for="(_, index) in llistaLlocs" 
         :key="index"
@@ -50,8 +47,8 @@
         :class="activeIndex === index ? 'w-8 bg-white' : 'w-2 bg-white/30'"
       ></div>
     </div>
-  </div>
-</template>
+
+  </div> </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';

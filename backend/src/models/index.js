@@ -1,15 +1,14 @@
 const mongoose = require('mongoose');
 
-// 1. Usuario (usuaris)
-const UsuarioSchema = new mongoose.Schema({
+const UsuariSchema = new mongoose.Schema({
   correu: { type: String, required: true, unique: true },
   contrasenya: { type: String, required: true },
   edat_verificada: { type: Boolean, default: false }
 });
 
-// 2. Perfil (perfils)
 const PerfilSchema = new mongoose.Schema({
-  usuari_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuario', required: true },
+  // Canviem la referència a 'Usuari'
+  usuari_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuari', required: true },
   nom_usuari: { type: String, required: true },
   biografia: { type: String, default: "" },
   punts: { type: Number, default: 0 },
@@ -23,7 +22,6 @@ const PerfilSchema = new mongoose.Schema({
   }]
 });
 
-// 3. Lloc (locations)
 const LlocSchema = new mongoose.Schema({
   nom: String,
   ubicacio: {
@@ -55,6 +53,7 @@ const SessioJocSchema = new mongoose.Schema({
   id_lloc_desti: { type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' }
 });
 
+
 // 5. PeticioRuta (peticions_rutes)
 const PeticioRutaSchema = new mongoose.Schema({
   id_usuari: { type: mongoose.Schema.Types.ObjectId, ref: 'Perfil' },
@@ -65,6 +64,7 @@ const PeticioRutaSchema = new mongoose.Schema({
   estat_validacio: { type: String, default: 'pendent' }
 });
 
+
 // 6. Ressenya (ressenyes)
 const RessenyaSchema = new mongoose.Schema({
   id_lloc: { type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' },
@@ -73,6 +73,7 @@ const RessenyaSchema = new mongoose.Schema({
   comentari: String,
   data: { type: Date, default: Date.now }
 });
+
 const PostSchema = new mongoose.Schema({
   id_usuari: { type: mongoose.Schema.Types.ObjectId, ref: 'Perfil', required: true },
   nom_usuari: String,
@@ -85,9 +86,9 @@ const PostSchema = new mongoose.Schema({
   comentaris: { type: Array, default: [] }
 });
 
-// Exportem forçant els teus noms de col·lecció
+
 module.exports = {
-  Usuario: mongoose.model('Usuario', UsuarioSchema, 'usuaris'),
+  Usuari: mongoose.model('Usuari', UsuariSchema, 'usuaris'),
   Perfil: mongoose.model('Perfil', PerfilSchema, 'perfils'),
   Lloc: mongoose.model('Lloc', LlocSchema, 'locations'),
   SessioJoc: mongoose.model('SessioJoc', SessioJocSchema, 'sessions'),
@@ -95,3 +96,4 @@ module.exports = {
   Ressenya: mongoose.model('Ressenya', RessenyaSchema, 'ressenyes'),
   Post: mongoose.model('Post', PostSchema, 'posts')
 };
+

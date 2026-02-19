@@ -29,10 +29,10 @@
 
     <NavBar />
 
-    <LoginModal 
+    <elmeulogin
       :isVisible="mostrarModal" 
-      @close="mostrarModal = false" 
-      @login-success="actualitzarUsuari" 
+      @tancar="mostrarModal = false" 
+      @exit="actualitzarUsuari" 
     />
   </div>
 </template>
@@ -40,32 +40,33 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import NavBar from './components/navBar.vue';
-import LoginModal from './components/LoginModal.vue';
+import Login from './components/elmeulogin.vue';
 
 const mostrarModal = ref(false);
 const usuariLoguejat = ref(null);
 
-onMounted(() => {
-  const userSaved = localStorage.getItem('user');
-  if (userSaved) {
-    usuariLoguejat.value = JSON.parse(userSaved);
+onMounted(async () => {
+  try {
+    // Vite cargará automáticamente la variable del archivo .env correspondiente
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+    
+    const res = await fetch(`${API_URL}/api/mapa/punts`);
+    if (!res.ok) throw new Error('Error en la respuesta del servidor');
+    
+    llistaLlocs.value = await res.json();
+  } catch (err) {
+    console.error("Error cargando rutas:", err);
   }
-
-  // AFEGEIX AIXÒ: Escolta si algun component (Social o DetallLloc) demana obrir el login
-  window.addEventListener('obrir-login', () => {
-    mostrarModal.value = true;
-  });
 });
 
 const actualitzarUsuari = (dadesUsuari) => {
   usuariLoguejat.value = dadesUsuari;
   mostrarModal.value = false;
-  // Opcional: recarregar la pàgina o navegar a social un cop loguejat
+ 
 };
 </script>
 
 <style>
-/* Estils globals si fossin necessaris */
 body {
   margin: 0;
   padding: 0;

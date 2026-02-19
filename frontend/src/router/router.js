@@ -12,11 +12,37 @@ import DetallLloc from '../pages/detallLloc.vue'
 import IniciJoc from '../pages/iniciJoc.vue'
 import SalaEspera from '../pages/SalaEspera.vue'
 
+// Admin Pages
+import AdminLogin from '../pages/admin/AdminLogin.vue'
+import AdminDashboard from '../pages/admin/AdminDashboard.vue'
+import AdminLlocs from '../pages/admin/AdminLlocs.vue'
+import AdminPeticions from '../pages/admin/AdminPeticions.vue'
+
 const routes = [
   {
     path: '/',
     name: 'home',
     component: Index  // Aquest carregarà el teu menú principal
+  },
+  {
+    path: '/admin/login',
+    name: 'admin-login',
+    component: AdminLogin
+  },
+  {
+    path: '/admin/dashboard',
+    name: 'admin-dashboard',
+    component: AdminDashboard
+  },
+  {
+    path: '/admin/llocs',
+    name: 'admin-llocs',
+    component: AdminLlocs
+  },
+  {
+    path: '/admin/peticions',
+    name: 'admin-peticions',
+    component: AdminPeticions
   },
   {
     path: '/social',
