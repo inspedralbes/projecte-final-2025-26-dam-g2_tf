@@ -1,4 +1,5 @@
 <template>
+  
   <div v-if="isVisible" class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 relative border-t-8 border-indigo-600">
       
@@ -29,10 +30,11 @@
 </template>
 
 <script setup>
+
+// judit 
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
-// Reben la propietat 'isVisible' per saber si s'ha de mostrar
 defineProps(['isVisible']);
 const emit = defineEmits(['tancar', 'exit']);
 
@@ -44,7 +46,7 @@ const contrasenya = ref('');
 const error = ref('');
 
 async function executarAccio() {
-  const ruta = esRegistre.value ? '/register' : '/login';
+  const ruta = esRegistre.value ? '/registre' : '/login';
   const dades = {
     nom_usuari: nomPublic.value,
     correu: correu.value,
@@ -61,9 +63,8 @@ async function executarAccio() {
     const resultat = await resposta.json();
 
     if (resultat.success) {
-      // Guardem el perfil a la memòria
       localStorage.setItem('usuari', JSON.stringify(resultat.user));
-      emit('exit', resultat.user); // Avisem que tot ha anat bé
+      emit('exit', resultat.user); 
       router.push('/social');
     } else {
       error.value = resultat.message;
