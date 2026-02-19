@@ -40,10 +40,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import NavBar from './components/navBar.vue';
-import Login from './components/elmeulogin.vue';
+import Elmeulogin from './components/elmeulogin.vue'; // Revisa que la ruta sigui correcta
 
 const mostrarModal = ref(false);
 const usuariLoguejat = ref(null);
+const llistaLlocs = ref([]);
 
 onMounted(async () => {
   try {

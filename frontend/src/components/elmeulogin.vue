@@ -12,8 +12,8 @@
       <form @submit.prevent="executarAccio" class="space-y-4">
         <input v-if="esRegistre" v-model="nomPublic" type="text" placeholder="Nom d'usuari" class="w-full border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-indigo-500" required>
         
-        <input v-model="correu" type="email" placeholder="Correu electrònic" class="w-full border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-indigo-500" required>
-        <input v-model="contrasenya" type="password" placeholder="Contrasenya" class="w-full border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-indigo-500" required>
+        <input v-model="correu" type="email" placeholder="Correu electrònic" class="w-full border-2 text-black border-gray-100 rounded-xl p-3 outline-none focus:border-indigo-500" required>
+        <input v-model="contrasenya" type="password" placeholder="Contrasenya" class="w-full border-2 text-black border-gray-100 rounded-xl p-3 outline-none focus:border-indigo-500" required>
         
         <button type="submit" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-indigo-700 transition-all uppercase">
           {{ esRegistre ? 'Registrar-me' : 'Entrar' }}
@@ -45,6 +45,8 @@ const correu = ref('');
 const contrasenya = ref('');
 const error = ref('');
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+
 async function executarAccio() {
   const ruta = esRegistre.value ? '/registre' : '/login';
   const dades = {
@@ -54,7 +56,7 @@ async function executarAccio() {
   };
 
   try {
-    const resposta = await fetch(`http://localhost:3000/auth${ruta}`, {
+     const resposta = await fetch(`${API_URL}/api/auth${ruta}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dades)

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Usuari, Perfil } = require('../models');
+
 //JUDIT
 // 1. FUNCIÓ PER AL REGISTRE
 async function ferRegistre(peticio, resposta) {
