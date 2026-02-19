@@ -24,26 +24,26 @@ const routes = [
     name: 'home',
     component: Index  // Aquest carregarà el teu menú principal
   },
-  {
-    path: '/admin/login',
-    name: 'admin-login',
-    component: AdminLogin
-  },
+  // --- RUTES PROTEGIDES ---
   {
     path: '/admin/dashboard',
     name: 'admin-dashboard',
-    component: AdminDashboard
+    component: AdminDashboard,
+    meta: { requiereAdmin: true } // Protegit
   },
   {
     path: '/admin/llocs',
     name: 'admin-llocs',
-    component: AdminLlocs
+    component: AdminLlocs,
+    meta: { requiereAdmin: true } // Protegit
   },
   {
     path: '/admin/peticions',
     name: 'admin-peticions',
-    component: AdminPeticions
+    component: AdminPeticions,
+    meta: { requiereAdmin: true } // Protegit
   },
+  // -------------------------
   {
     path: '/social',
     name: 'social',
@@ -96,5 +96,33 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
 })
+
+// GUÀRDIA DE NAVEGACIÓ CORREGIDA
+router.beforeEach((to, from, next) => {
+  // 1. Mirem si la ruta requereix ser admin
+  const requereixAdmin = to.matched.some(record => record.meta.requiereAdmin);
+  
+  // 2. Busquem la sessió
+  const sessioRaw = localStorage.getItem('admin_session');
+  let sessio = null;
+  
+  try {
+    sessio = JSON.parse(sessioRaw);
+  } catch (e) {
+    sessio = null;
+  }
+
+  // 3. LÒGICA DE REDIRECCIÓ (Evita el bucle infinit)
+  if (requereixAdmin && (!sessio || sessio.rol !== 'admin')) {
+    // Si no és admin i vol entrar a una ruta protegida, enviem al login
+    next({ name: 'admin-login' });
+  } else if (to.name === 'admin-login' && sessio?.rol === 'admin') {
+    // Si JA és admin i intenta anar al login, el portem al dashboard
+    next({ name: 'admin-dashboard' });
+  } else {
+    // En qualsevol altre cas (ruta pública o usuari correcte), deixem passar
+    next();
+  }
+});
 
 export default router

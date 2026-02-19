@@ -14,7 +14,7 @@
     <main class="flex-1 p-10">
       <header class="mb-10">
         <h1 class="text-3xl font-bold text-[#402749]">Benvingut, Administrador</h1>
-        <p class="text-gray-500 mt-2">Gestió de l'aplicació de llocs històrics de Barcelona[cite: 1, 2].</p>
+        <p class="text-gray-500 mt-2">Gestió de l'aplicació de llocs històrics de Barcelona.</p>
       </header>
 
       <section class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -22,16 +22,16 @@
         <div class="bg-white p-8 rounded-xl shadow border-l-8 border-[#804f7f]">
           <h2 class="text-xl font-bold text-[#402749] mb-4">📍 Gestió de Llocs</h2>
           <p class="text-gray-600 leading-relaxed">
-            Administra el catàleg oficial de llocs[cite: 8]. Des d'aquí pots crear nous punts, 
-            pujar fotografies històriques de referència i validar les coordenades GPS[cite: 92, 93].
+            Administra el catàleg oficial de llocs. Des d'aquí pots crear nous punts, 
+            pujar fotografies històriques de referència i validar les coordenades GPS.
           </p>
         </div>
 
         <div class="bg-white p-8 rounded-xl shadow border-l-8 border-[#bc85ab]">
           <h2 class="text-xl font-bold text-[#402749] mb-4">📩 Peticions Usuaris</h2>
           <p class="text-gray-600 leading-relaxed">
-            Revisa les propostes enviades per la comunitat[cite: 13, 91]. 
-            Verifica que la ubicació és correcta, la descripció és adequada i que el lloc és segur per als usuaris[cite: 6, 92].
+            Revisa les propostes enviades per la comunitat. 
+            Verifica que la ubicació és correcta, la descripció és adequada i que el lloc és segur per als usuaris.
           </p>
         </div>
 
@@ -41,7 +41,7 @@
         <div class="flex items-center gap-3">
           <span class="text-xl">⚠️</span>
           <p class="text-sm font-bold uppercase tracking-wider">
-            Recordatori: Totes les validacions s'apliquen en temps real a l'App mòbil[cite: 24, 112].
+            Recordatori: Totes les validacions s'apliquen en temps real a l'App mòbil.
           </p>
         </div>
       </div>
