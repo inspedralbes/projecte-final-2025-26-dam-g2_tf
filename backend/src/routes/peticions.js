@@ -1,32 +1,29 @@
 const express = require('express');
 const router = express.Router();
-const { getDB } = require('../config/db');
+const { PeticioRuta } = require('../models');
 
 router.post('/', async (req, res) => {
     try {
-        const db = getDB();
-        const collection = db.collection('peticions_rutes');
         const { nom_proposat, motiu, ubicacio, fotos_proporcionades, id_usuari } = req.body;
 
         if (!id_usuari) {
             return res.status(401).json({ message: "Has d'estar loguejat per fer aquesta acció." });
         }
 
-        const nuevaPeticion = {
-            nom_proposat: nom_proposat,
-            motiu: motiu,
+        const nuevaPeticion = new PeticioRuta({
+            nom_proposat,
+            motiu,
             ubicacio: ubicacio || [],
             fotos_proporcionades: fotos_proporcionades ? [fotos_proporcionades] : [],
             estat_validacio: "pendent",
-            id_usuari: id_usuari,
-            data_creacio: new Date()
-        };
+            id_usuari
+        });
 
-        const resultado = await collection.insertOne(nuevaPeticion);
+        await nuevaPeticion.save();
 
         res.status(201).json({
             message: "Petició guardada correctament!",
-            id: resultado.insertedId
+            id: nuevaPeticion._id
         });
 
     } catch (error) {
