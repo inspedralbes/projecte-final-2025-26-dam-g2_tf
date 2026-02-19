@@ -1,27 +1,43 @@
 <template>
   <div class="min-h-screen bg-white p-6 pb-24">
     <!-- Header / Nav -->
-    <div class="flex items-center mb-6">
-      <button @click="tornarEnrere" class="p-2 rounded-full hover:bg-gray-100">
+    <div class="flex items-center justify-between mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Cercador</h1>
+
+      <button @click="router.push('/perfil')"
+        class="w-10 h-10 rounded-full bg-[#402749] flex items-center justify-center text-white shadow-md hover:bg-[#5a3766] transition-colors">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-          class="w-6 h-6 text-gray-600">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+          class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
         </svg>
       </button>
-      <h1 class="text-xl font-bold ml-4">Cercador</h1>
     </div>
 
-    <!-- Buscador -->
-    <div class="relative mb-4">
-      <input type="text" v-model="textBusqueda" placeholder="Buscar llocs..."
-        class="w-full bg-gray-200 text-gray-700 rounded-full py-3 px-5 pr-12 focus:outline-none focus:ring-2 focus:ring-gray-400" />
-      <button class="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-gray-500">
+    <!-- Buscador + Filtro -->
+    <div class="flex items-center gap-2 mb-6">
+
+      <!-- Botón Filtros -->
+      <button class="bg-gray-200 p-3 rounded-full text-gray-700 hover:bg-gray-300 transition-colors">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-          class="w-5 h-5">
+          class="w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round"
-            d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
         </svg>
       </button>
+
+      <!-- Input de búsqueda -->
+      <div class="relative flex-1">
+        <input type="text" v-model="textBusqueda" placeholder="Buscar llocs..."
+          class="w-full bg-gray-200 text-gray-700 rounded-full py-3 px-5 pr-12 focus:outline-none focus:ring-2 focus:ring-gray-400" />
+        <button class="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-gray-500">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+            class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+          </svg>
+        </button>
+      </div>
     </div>
 
     <!-- Lista de Resultados -->
@@ -105,10 +121,6 @@ const llocsFiltrats = computed(() => {
 });
 
 // Funciones de navegación
-function tornarEnrere() {
-  router.push('/');
-}
-
 function anarALloc(id) {
   router.push(`/lloc/${id}`);
 }
