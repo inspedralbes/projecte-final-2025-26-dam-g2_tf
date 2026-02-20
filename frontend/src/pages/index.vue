@@ -72,22 +72,16 @@ onMounted(async () => {
   try {
     const resposta = await fetch(`${API_URL}/api/mapa/punts`);
     
-    // Si Nginx falla o el backend está caído, respuesta.ok será false
-    if (!resposta.ok) {
-      throw new Error(`Error servidor: ${resposta.status}`);
-    }
-
-    // Verificamos que sea JSON antes de parsear
+    // Si la respuesta no es un JSON (es el error 404 de Nginx), lanzamos error
     const contentType = resposta.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
-      llistaLlocs.value = await resposta.json();
-    } else {
-      throw new Error("La resposta no és un JSON vàlid");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error("El servidor no ha enviat JSON (comprova Nginx)");
     }
 
+    llistaLlocs.value = await resposta.json();
   } catch (err) {
-    // Si falla, la web no se rompe. Simplemente llistaLlocs queda vacía.
     console.error("Error cargando rutas:", err);
+    // Inicializamos como array vacío para que el v-for no explote
     llistaLlocs.value = []; 
   }
 });
