@@ -38,6 +38,12 @@ const LlocSchema = new mongoose.Schema({
   descripcio: String,
   explicacio_historica: String,
   dificultat: String,
+  punts_missio: [{
+    nom_punt: String,
+    posicio_x: Number, // Valor de 0 a 100
+    posicio_y: Number, // Valor de 0 a 100
+    pista: String
+  }],
   barri: String,
   tags: [String],
   control_horari: { hora_tancament: String, actiu: Boolean },

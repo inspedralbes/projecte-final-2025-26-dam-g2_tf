@@ -64,7 +64,7 @@ const lloc = ref(null)
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
 function obrirGoogleMaps() {
-  if (!lloc.value?.ubicacio?.coordinates) {
+  if (!idlloc.value?.ubicacio?.coordinates) {
     console.error("No hay coordenadas disponibles");
     return;
   }
@@ -91,7 +91,7 @@ function comencarJoc() {
   }
 
   console.log("Usuari detectat. Anant al joc...");
-  
+
   router.push({ 
     path: '/sala-espera/crear', 
     query: { idLloc: route.params.id } 

@@ -6,6 +6,7 @@ const path = require('path');
 const { connectDB } = require('./src/config/db');
 
 
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(cors({
@@ -14,6 +15,7 @@ app.use(cors({
     credentials: true
 }));
 app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 async function startServer() {
     try {
