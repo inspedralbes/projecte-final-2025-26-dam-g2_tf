@@ -110,16 +110,33 @@ async function carregarDadesPerfil(id) {
 function comprovarEstatAmistat() {
   if (!usuariLoguejat.value || !user.value) return;
   
-  // Comprobar si ya son amigos
-  if (user.value.amics?.includes(usuariLoguejat.value._id)) {
+  // Declaramos miId UNA SOLA VEZ
+  const miId = String(usuariLoguejat.value._id || usuariLoguejat.value.id);
+  
+  // RESET: Antes de comprobar, ponemos el estado por defecto
+  estatAmistat.value = 'cap'; 
+
+  // 1. Comprobar si ya son amigos
+  const sonAmics = user.value.amics?.some(amic => {
+    // Si el backend hizo .populate, 'amic' es un objeto, si no, es un string
+    const idAmic = (amic && typeof amic === 'object') ? String(amic._id || amic.id) : String(amic);
+    return idAmic === miId;
+  });
+
+  if (sonAmics) {
     estatAmistat.value = 'amics';
+    return; // Si ya somos amigos, terminamos aquí
   } 
-  // Comprobar si hay solicitud pendiente usando id_perfil
-  else if (user.value.sollicituds_pendents?.some(s => s.id_perfil === usuariLoguejat.value._id)) {
+  
+  // 2. Comprobar si hay solicitud enviada por MÍ a este perfil
+  const solicitudPendiente = user.value.sollicituds_pendents?.some(s => 
+    String(s.id_perfil) === miId
+  );
+
+  if (solicitudPendiente) {
     estatAmistat.value = 'pendent';
   }
 }
-
 async function gestionarAmistat() {
   if (estatAmistat.value !== 'cap') return;
 
@@ -147,12 +164,16 @@ async function gestionarAmistat() {
     alert("Error de connexió amb el servidor");
   }
 }
-// Añade esto para que la página se actualice al navegar entre amigos
-watch(() => route.params.id, (newId) => {
+// En perfilVisita.vue
+watch(() => route.params.id, async (newId) => { // 1. Añadimos async
   if (newId) {
-    carregarDadesPerfil(newId);
-    // Reiniciamos el estado de amistad para el nuevo perfil
+    // 2. Ponemos await para que no compruebe la amistad hasta tener los datos
+    await carregarDadesPerfil(newId); 
+    
+    // 3. Opcional: limpiar estado antes de comprobar
     estatAmistat.value = 'cap'; 
+    
+    // 4. Ahora sí, con los datos nuevos en 'user.value', comprobamos
     comprovarEstatAmistat();
   }
 });
