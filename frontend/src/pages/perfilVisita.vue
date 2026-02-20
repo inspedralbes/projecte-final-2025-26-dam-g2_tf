@@ -84,7 +84,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuth } from '../composables/useAuth'; // Importem el teu auth
 
@@ -110,12 +110,12 @@ async function carregarDadesPerfil(id) {
 function comprovarEstatAmistat() {
   if (!usuariLoguejat.value || !user.value) return;
   
-  // Si ja està a la llista d'amics
+  // Comprobar si ya son amigos
   if (user.value.amics?.includes(usuariLoguejat.value._id)) {
     estatAmistat.value = 'amics';
   } 
-  // Si hi ha una sol·licitud enviada (hauries de guardar això a la BD de l'altre)
-  else if (user.value.sollicituds_pendents?.some(s => s.id_usuari === usuariLoguejat.value._id)) {
+  // Comprobar si hay solicitud pendiente usando id_perfil
+  else if (user.value.sollicituds_pendents?.some(s => s.id_perfil === usuariLoguejat.value._id)) {
     estatAmistat.value = 'pendent';
   }
 }
@@ -128,20 +128,34 @@ async function gestionarAmistat() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        de_id: usuariLoguejat.value._id,
+        // Cambiamos los nombres para que coincidan con el backend
+        de_perfil_id: usuariLoguejat.value._id, 
         de_nom: usuariLoguejat.value.nom_usuari,
-        per_a_id: user.value._id
+        per_a_perfil_id: user.value._id
       })
     });
 
     if (res.ok) {
       estatAmistat.value = 'pendent';
       alert("Sol·licitud enviada!");
+    } else {
+      const errorData = await res.json();
+      alert(errorData.message || "Error en la sol·licitud");
     }
   } catch (err) {
-    alert("Error enviant la sol·licitud");
+    console.error("Error enviant la sol·licitud:", err);
+    alert("Error de connexió amb el servidor");
   }
 }
+// Añade esto para que la página se actualice al navegar entre amigos
+watch(() => route.params.id, (newId) => {
+  if (newId) {
+    carregarDadesPerfil(newId);
+    // Reiniciamos el estado de amistad para el nuevo perfil
+    estatAmistat.value = 'cap'; 
+    comprovarEstatAmistat();
+  }
+});
 </script>
 
 <style scoped>
