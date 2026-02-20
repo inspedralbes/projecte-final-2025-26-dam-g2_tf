@@ -57,7 +57,7 @@
                 <td colspan="5" class="p-6">
                   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div>
-                      <h4 class="text-[10px] font-black text-gray-400 uppercase mb-2">Motiu</h4>
+                      <h4 class="text-[10px] font-black text-gray-400 uppercase mb-2">Descripció</h4>
                       <p class="text-sm italic bg-white p-3 rounded border shadow-sm">{{ p.motiu || 'Sense descripció' }}</p>
                     </div>
                     <div class="h-40">
