@@ -1,6 +1,6 @@
 // useAuth.js — Composable compartit per a l'autenticació
 // L'estat es defineix FORA de la funció perquè sigui global (singleton)
-import { ref } from 'vue';
+import { ref,computed } from 'vue';
 
 // Estat reactiu global — compartit entre tots els components que importin useAuth
 const usuari = ref(null);
@@ -26,6 +26,7 @@ export function useAuth() {
         usuari.value = null;
         localStorage.removeItem('usuari');
     }
+    const isAdmin = computed(() => usuari.value?.rol === 'admin');
 
-    return { usuari, login, logout };
+    return { usuari, isAdmin, login, logout };
 }

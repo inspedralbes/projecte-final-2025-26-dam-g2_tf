@@ -112,33 +112,28 @@ const router = createRouter({
 
 // GUÀRDIA DE NAVEGACIÓ CORREGIDA
 router.beforeEach((to, from, next) => {
-  // 1. Intentamos leer la sesión, pero SIN MIEDO a que falle
-  const sessioRaw = localStorage.getItem('admin_session');
+  const sessioRaw = localStorage.getItem('usuari');
   let sessio = null;
-
+  let usuari = null;
+  
   try {
-    // Solo intentamos parsear si hay algo y parece un objeto
-    if (sessioRaw && sessioRaw.startsWith('{')) {
-      sessio = JSON.parse(sessioRaw);
+    if (usuariRaw) {
+      usuari = JSON.parse(usuariRaw);
     }
   } catch (e) {
-    // Si el JSON está mal, no hacemos nada, sessio se queda null
-    console.warn("Sessió no vàlida, continuant com a convidat");
+    usuari = null;
   }
 
-  // 2. Definimos si la ruta es protegida
   const requereixAdmin = to.matched.some(record => record.meta.requiereAdmin);
 
   // 3. LÓGICA DE NAVEGACIÓN
   if (requereixAdmin) {
-    // SOLO si la ruta pide admin, comprobamos la sesión
     if (sessio && sessio.rol === 'admin') {
-      next(); // Es admin, pasa
+      next(); 
     } else {
-      next({ name: 'home' }); // No es admin, fuera de aquí (a la home)
+      next({ name: 'home' }); 
     }
   } else {
-    // SI LA RUTA NO PIDE ADMIN (como la Home), PASA SIEMPRE
     next();
   }
 });
