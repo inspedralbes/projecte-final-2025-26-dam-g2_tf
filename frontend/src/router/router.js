@@ -14,7 +14,6 @@ import SalaEspera from '../pages/SalaEspera.vue'
 import elmeulogin from '../components/elmeulogin.vue'; // Revisa que la ruta sigui correcta
 
 // Admin Pages
-import AdminLogin from '../pages/admin/AdminLogin.vue'
 import AdminDashboard from '../pages/admin/AdminDashboard.vue'
 import AdminLlocs from '../pages/admin/AdminLlocs.vue'
 import AdminPeticions from '../pages/admin/AdminPeticions.vue'
@@ -29,12 +28,6 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: elmeulogin
-  },
-   // --- AQUESTA ÉS LA RUTA QUE FALTAVA ---
-  {
-    path: '/admin/login',
-    name: 'admin-login',
-    component: AdminLogin
   },
   
   // --- RUTES PROTEGIDES ---

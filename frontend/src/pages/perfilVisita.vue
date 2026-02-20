@@ -84,7 +84,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuth } from '../composables/useAuth'; // Importem el teu auth
 
@@ -110,16 +110,33 @@ async function carregarDadesPerfil(id) {
 function comprovarEstatAmistat() {
   if (!usuariLoguejat.value || !user.value) return;
   
-  // Si ja està a la llista d'amics
-  if (user.value.amics?.includes(usuariLoguejat.value._id)) {
+  // Declaramos miId UNA SOLA VEZ
+  const miId = String(usuariLoguejat.value._id || usuariLoguejat.value.id);
+  
+  // RESET: Antes de comprobar, ponemos el estado por defecto
+  estatAmistat.value = 'cap'; 
+
+  // 1. Comprobar si ya son amigos
+  const sonAmics = user.value.amics?.some(amic => {
+    // Si el backend hizo .populate, 'amic' es un objeto, si no, es un string
+    const idAmic = (amic && typeof amic === 'object') ? String(amic._id || amic.id) : String(amic);
+    return idAmic === miId;
+  });
+
+  if (sonAmics) {
     estatAmistat.value = 'amics';
+    return; // Si ya somos amigos, terminamos aquí
   } 
-  // Si hi ha una sol·licitud enviada (hauries de guardar això a la BD de l'altre)
-  else if (user.value.sollicituds_pendents?.some(s => s.id_usuari === usuariLoguejat.value._id)) {
+  
+  // 2. Comprobar si hay solicitud enviada por MÍ a este perfil
+  const solicitudPendiente = user.value.sollicituds_pendents?.some(s => 
+    String(s.id_perfil) === miId
+  );
+
+  if (solicitudPendiente) {
     estatAmistat.value = 'pendent';
   }
 }
-
 async function gestionarAmistat() {
   if (estatAmistat.value !== 'cap') return;
 
@@ -128,20 +145,38 @@ async function gestionarAmistat() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        de_id: usuariLoguejat.value._id,
+        // Cambiamos los nombres para que coincidan con el backend
+        de_perfil_id: usuariLoguejat.value._id, 
         de_nom: usuariLoguejat.value.nom_usuari,
-        per_a_id: user.value._id
+        per_a_perfil_id: user.value._id
       })
     });
 
     if (res.ok) {
       estatAmistat.value = 'pendent';
       alert("Sol·licitud enviada!");
+    } else {
+      const errorData = await res.json();
+      alert(errorData.message || "Error en la sol·licitud");
     }
   } catch (err) {
-    alert("Error enviant la sol·licitud");
+    console.error("Error enviant la sol·licitud:", err);
+    alert("Error de connexió amb el servidor");
   }
 }
+// En perfilVisita.vue
+watch(() => route.params.id, async (newId) => { // 1. Añadimos async
+  if (newId) {
+    // 2. Ponemos await para que no compruebe la amistad hasta tener los datos
+    await carregarDadesPerfil(newId); 
+    
+    // 3. Opcional: limpiar estado antes de comprobar
+    estatAmistat.value = 'cap'; 
+    
+    // 4. Ahora sí, con los datos nuevos en 'user.value', comprobamos
+    comprovarEstatAmistat();
+  }
+});
 </script>
 
 <style scoped>

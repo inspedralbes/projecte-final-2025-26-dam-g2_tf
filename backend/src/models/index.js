@@ -3,7 +3,12 @@ const mongoose = require('mongoose');
 const UsuariSchema = new mongoose.Schema({
   correu: { type: String, required: true, unique: true },
   contrasenya: { type: String, required: true },
-  edat_verificada: { type: Boolean, default: false }
+  edat_verificada: { type: Boolean, default: false },
+  rol: { 
+    type: String, 
+    enum: ['user', 'admin'], 
+    default: 'user' 
+  }
 });
 
 const PerfilSchema = new mongoose.Schema({

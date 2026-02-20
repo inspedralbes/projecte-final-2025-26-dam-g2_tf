@@ -75,7 +75,6 @@
           </div>
           <p v-if="misPosts.length === 0" class="text-center text-gray-600 text-sm italic">No has publicat res encara.</p>
         </div>
-                </div>
 
 
 <div v-if="activeTab === 'cromos'" class="space-y-8 animate-fade-in">
@@ -134,32 +133,42 @@
   </div>
 </div>
 
-        <div v-if="activeTab === 'amics'" class="space-y-6">
+     <div v-if="activeTab === 'amics'" class="space-y-6">
   
-  <div v-if="user?.sollicituds_pendents?.length > 0" class="space-y-3">
-    <h3 class="text-[#bc85ab] text-[10px] font-black tracking-widest uppercase">Sol·licituds noves</h3>
-    <div v-for="sol in user.sollicituds_pendents" :key="sol.id_usuari" class="bg-[#f5cbdd]/10 p-4 rounded-2xl border border-[#f5cbdd]/20 flex items-center justify-between">
-      <span class="text-sm font-bold text-[#f5cbdd]">{{ sol.nom_usuari }}</span>
-      <div class="flex gap-2">
-        <button @click="acceptarAmic(sol)" class="bg-[#bc85ab] text-black text-[10px] font-bold px-3 py-1 rounded-lg">ACCEPTAR</button>
-        <button @click="rebutjarAmic(sol)" class="bg-red-500/20 text-red-400 text-[10px] font-bold px-3 py-1 rounded-lg">REBUTJAR</button>
-      </div>
-    </div>
-  </div>
+        <div v-if="user?.sollicituds_pendents?.length > 0" class="space-y-3">
+          <h3 class="text-[#bc85ab] text-[10px] font-black tracking-widest uppercase">Sol·licituds noves</h3>
+          <div v-for="sol in user.sollicituds_pendents" :key="sol.id_usuari" class="bg-[#f5cbdd]/10 p-4 rounded-2xl border border-[#f5cbdd]/20 flex items-center justify-between">
+            <span class="text-sm font-bold text-[#f5cbdd]">{{ sol.nom_usuari }}</span>
+            <div class="flex gap-2">
+              <button @click="acceptarAmic(sol)" class="bg-[#bc85ab] text-black text-[10px] font-bold px-3 py-1 rounded-lg">ACCEPTAR</button>
+              <button @click="rebutjarAmic(sol)" class="bg-red-500/20 text-red-400 text-[10px] font-bold px-3 py-1 rounded-lg">REBUTJAR</button>
+            </div>
+          </div>
+        </div>
 
-  <div class="space-y-2">
-    <h3 class="text-gray-500 text-[10px] font-black tracking-widest uppercase">Els teus amics</h3>
-    <div v-for="amic in user?.amics" :key="amic.id" class="bg-[#2d1b33] p-3 rounded-xl flex items-center justify-between">
-      <span class="text-sm font-bold">{{ amic.nom }}</span>
-      <span class="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_#22c55e]"></span>
-    </div>
-    <p v-if="!user?.amics?.length" class="text-center text-gray-600 text-sm italic">Encara no tens amics afegits.</p>
-  </div>
-</div>
-
-      <button @click="tancarSessio" class="w-full mt-10 py-4 border border-red-500/30 text-red-400 rounded-2xl font-bold text-sm hover:bg-red-500/10">
-        TANCAR SESSIÓ
-      </button>
+        <div class="space-y-2">
+          <h3 class="text-gray-500 text-[10px] font-black tracking-widest uppercase">Els teus amics</h3>
+          
+          <div 
+            v-for="amic in user?.amics" 
+            :key="amic._id" 
+            @click="router.push(`/perfil-visita/${amic._id}`)"
+            class="bg-[#2d1b33] p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-[#3d2b43] transition-colors group"
+          >
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-[#bc85ab] flex items-center justify-center text-[10px] font-bold text-black">
+                {{ amic.nom_usuari?.charAt(0).toUpperCase() || '?' }}
+              </div>
+              <span class="text-sm font-bold group-hover:text-[#bc85ab]">{{ amic.nom_usuari }}</span>
+            </div>
+            <span class="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_#22c55e]"></span>
+          </div>
+          
+          <p v-if="!user?.amics?.length" class="text-center text-gray-600 text-sm italic">Encara no tens amics afegits.</p>
+        </div>
+      </div> </div> <button @click="tancarSessio" class="w-full mt-10 py-4 border border-red-500/30 text-red-400 rounded-2xl font-bold text-sm hover:bg-red-500/10">
+      TANCAR SESSIÓ
+    </button>
 
     </main>
   </div>
@@ -255,18 +264,25 @@ async function acceptarAmic(solicitud) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        el_meu_id: user.value._id,
-        id_nou_amic: solicitud.id_usuari,
-        nom_nou_amic: solicitud.nom_usuari
+        // AQUESTES CLAUS HAN DE COINCIDIR AMB EL BACKEND:
+        el_meu_perfil_id: user.value._id,
+        id_nou_amic_perfil: solicitud.id_perfil // O solicitud.id_usuari segons com el guardis
       })
     });
+
     if (res.ok) {
-      // Recarregar dades de l'usuari
       const actualitzat = await res.json();
+      // 'actualitzat.user' conté el teu perfil amb la llista d'amics nova
       user.value = actualitzat.user;
       localStorage.setItem('usuari', JSON.stringify(user.value));
+      alert("Ara sou amics!");
+    } else {
+      const errorData = await res.json();
+      console.error("Error del servidor:", errorData.message);
     }
-  } catch (err) { console.error(err); }
+  } catch (err) { 
+    console.error("Error en la petició:", err); 
+  }
 }
 
 // 4. TANCAR SESSIÓ — Usa el composable per netejar l'estat global
@@ -296,13 +312,15 @@ onMounted(async () => {
     const localUser = JSON.parse(saved);
     
     try {
-        const res = await fetch(`${API_URL}/api/usuari/update`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ perfilId: localUser._id })
-        });
-        const data = await res.json();
-        user.value = data.user;
+        // Fem servir el GET per ID per tenir les dades més recents (amics, sol·licituds...)
+        const res = await fetch(`${API_URL}/api/usuari/${localUser._id}`);
+        if (res.ok) {
+            const freshData = await res.json();
+            user.value = freshData;
+            localStorage.setItem('usuari', JSON.stringify(freshData));
+        } else {
+            user.value = localUser;
+        }
     } catch {
         user.value = localUser;
     }
@@ -313,6 +331,8 @@ onMounted(async () => {
     router.push('/login');
   }
 });
+
+
 </script>
 
  <style scoped>
