@@ -75,24 +75,87 @@
           </div>
           <p v-if="misPosts.length === 0" class="text-center text-gray-600 text-sm italic">No has publicat res encara.</p>
         </div>
+                </div>
 
-        <div v-if="activeTab === 'cromos'" class="grid grid-cols-3 gap-2">
-          <div v-for="cromo in user?.inventari_cromos" :key="cromo.id_lloc" class="aspect-square bg-[#2d1b33] rounded-xl overflow-hidden border border-white/10">
-            <img :src="cromo.imatge_usuari" class="w-full h-full object-cover">
-          </div>
-          <div v-if="!user?.inventari_cromos?.length" class="col-span-3 py-10 text-center text-gray-600 text-xs italic">
-            Encara no has col·leccionat cap cromo.
-          </div>
-        </div>
 
-        <div v-if="activeTab === 'amics'" class="space-y-2">
-          <div v-for="amic in user?.amics" :key="amic" class="bg-[#2d1b33] p-3 rounded-xl flex items-center justify-between">
-            <span class="text-sm font-bold">{{ amic }}</span>
-            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-          </div>
-          <p v-if="!user?.amics?.length" class="text-center text-gray-600 text-sm italic">Encara no tens amics afegits.</p>
+<div v-if="activeTab === 'cromos'" class="space-y-8 animate-fade-in">
+  <div class="text-center border-b border-[#bc85ab]/20 pb-4">
+    <h3 class="text-[#f5cbdd] text-xs font-black tracking-[0.3em] uppercase">Diari d'Exploració</h3>
+    <p class="text-[10px] text-gray-500 mt-1">
+      {{ (user?.inventari_cromos?.length || 0) + (cromosExemple?.length || 0) }} de 50 llocs descoberts
+    </p>
+  </div>
+
+  <div class="grid grid-cols-2 gap-y-10 gap-x-6 relative py-4">
+    <div class="absolute inset-y-0 left-1/2 w-px bg-gradient-to-b from-transparent via-[#bc85ab]/10 to-transparent"></div>
+
+    <div 
+      v-for="(cromo, index) in [...(user?.inventari_cromos || []), ...(cromosExemple || [])]" 
+      :key="index" 
+      class="album-slot group"
+    >
+      <div 
+        class="relative bg-[#1a0a1f] p-1 rounded-sm shadow-2xl transform transition-transform group-hover:rotate-0"
+        :class="index % 2 === 0 ? '-rotate-2' : 'rotate-2'"
+      >
+        <div class="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-[#bc85ab]/40"></div>
+        <div class="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-[#bc85ab]/40"></div>
+
+        <div class="aspect-[4/5] overflow-hidden bg-black/40">
+          <img 
+            :src="cromo.imatge_usuari" 
+            class="w-full h-full object-cover sepia-[0.3] hover:sepia-0 transition-all duration-500"
+          >
         </div>
       </div>
+
+      <div class="mt-3 text-center">
+        <p class="text-[10px] font-medium text-[#bc85ab] italic tracking-tight leading-tight">
+          {{ cromo.nom_lloc || 'Barcelona, 2026' }}
+        </p>
+        <p class="text-[8px] text-gray-600 font-bold mt-0.5">
+          {{ new Date(cromo.data_obtencio).toLocaleDateString('ca-ES') }}
+        </p>
+      </div>
+    </div>
+
+    <div v-for="i in (((user?.inventari_cromos?.length || 0) + (cromosExemple?.length || 0)) % 2 === 0 ? 0 : 1)" :key="'empty-'+i" class="opacity-20">
+      <div class="aspect-[4/5] border-2 border-dashed border-[#bc85ab]/30 rounded-sm flex items-center justify-center">
+        <span class="text-[10px] text-[#bc85ab] font-black">?</span>
+      </div>
+    </div>
+  </div>
+
+  <div v-if="(!user?.inventari_cromos?.length) && (!cromosExemple || cromosExemple.length === 0)" class="py-20 text-center space-y-4">
+    <div class="w-16 h-20 border-2 border-[#bc85ab]/20 mx-auto rounded-sm flex items-center justify-center opacity-30">
+      <span class="text-2xl">📖</span>
+    </div>
+    <p class="text-gray-600 text-[10px] font-bold uppercase tracking-widest">El teu diari està buit</p>
+  </div>
+</div>
+
+        <div v-if="activeTab === 'amics'" class="space-y-6">
+  
+  <div v-if="user?.sollicituds_pendents?.length > 0" class="space-y-3">
+    <h3 class="text-[#bc85ab] text-[10px] font-black tracking-widest uppercase">Sol·licituds noves</h3>
+    <div v-for="sol in user.sollicituds_pendents" :key="sol.id_usuari" class="bg-[#f5cbdd]/10 p-4 rounded-2xl border border-[#f5cbdd]/20 flex items-center justify-between">
+      <span class="text-sm font-bold text-[#f5cbdd]">{{ sol.nom_usuari }}</span>
+      <div class="flex gap-2">
+        <button @click="acceptarAmic(sol)" class="bg-[#bc85ab] text-black text-[10px] font-bold px-3 py-1 rounded-lg">ACCEPTAR</button>
+        <button @click="rebutjarAmic(sol)" class="bg-red-500/20 text-red-400 text-[10px] font-bold px-3 py-1 rounded-lg">REBUTJAR</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="space-y-2">
+    <h3 class="text-gray-500 text-[10px] font-black tracking-widest uppercase">Els teus amics</h3>
+    <div v-for="amic in user?.amics" :key="amic.id" class="bg-[#2d1b33] p-3 rounded-xl flex items-center justify-between">
+      <span class="text-sm font-bold">{{ amic.nom }}</span>
+      <span class="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_#22c55e]"></span>
+    </div>
+    <p v-if="!user?.amics?.length" class="text-center text-gray-600 text-sm italic">Encara no tens amics afegits.</p>
+  </div>
+</div>
 
       <button @click="tancarSessio" class="w-full mt-10 py-4 border border-red-500/30 text-red-400 rounded-2xl font-bold text-sm hover:bg-red-500/10">
         TANCAR SESSIÓ
@@ -186,12 +249,46 @@ async function eliminarPost(postId) {
   }
 }
 
+async function acceptarAmic(solicitud) {
+  try {
+    const res = await fetch(`${API_URL}/api/usuari/acceptar-amistat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        el_meu_id: user.value._id,
+        id_nou_amic: solicitud.id_usuari,
+        nom_nou_amic: solicitud.nom_usuari
+      })
+    });
+    if (res.ok) {
+      // Recarregar dades de l'usuari
+      const actualitzat = await res.json();
+      user.value = actualitzat.user;
+      localStorage.setItem('usuari', JSON.stringify(user.value));
+    }
+  } catch (err) { console.error(err); }
+}
+
 // 4. TANCAR SESSIÓ — Usa el composable per netejar l'estat global
 function tancarSessio() {
   logout(); // Neteja l'estat reactiu global + localStorage
   window.location.href = '/'; 
 }
-
+// Dades de prova per visualitzar l'àlbum estil llibre
+const cromosExemple = [
+  {
+    nom_lloc: "Arc de Triomf",
+    imatge_usuari: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=500",
+    data_obtencio: new Date(),
+    isDemo: true
+  },
+  {
+    nom_lloc: "Barris de Gràcia",
+    imatge_usuari: "https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?w=500",
+    data_obtencio: new Date(),
+    isDemo: true
+  }
+];
 // INICI
 onMounted(async () => {
   const saved = localStorage.getItem('usuari');
@@ -218,6 +315,61 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped>
+ <style scoped>
+
 .aspect-square { aspect-ratio: 1 / 1; }
-</style>
+
+
+/* Animació d'entrada suau */
+
+.animate-fade-in {
+
+animation: fadeIn 0.8s ease-out;
+
+}
+
+
+@keyframes fadeIn {
+
+from { opacity: 0; transform: translateY(10px); }
+
+to { opacity: 1; transform: translateY(0); }
+
+}
+
+
+/* Efecte de textura de paper per als slots */
+
+.album-slot {
+
+perspective: 1000px;
+
+}
+
+
+.album-slot img {
+
+filter: contrast(1.1) brightness(0.9) sepia(0.2);
+
+/* Sembla una impressió física */
+
+box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+
+}
+
+
+/* Efecte visual de "pàgina" */
+
+main {
+
+background-image:
+
+radial-gradient(circle at 50% 50%, rgba(64, 39, 73, 0.05) 0%, transparent 100%),
+
+linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px);
+
+background-size: 100% 100%, 20px 20px;
+
+}
+
+</style> 
