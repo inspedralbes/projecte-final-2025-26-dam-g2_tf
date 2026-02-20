@@ -30,6 +30,13 @@ const routes = [
     name: 'Login',
     component: elmeulogin
   },
+   // --- AQUESTA ÉS LA RUTA QUE FALTAVA ---
+  {
+    path: '/admin/login',
+    name: 'admin-login',
+    component: AdminLogin
+  },
+  
   // --- RUTES PROTEGIDES ---
   {
     path: '/admin/dashboard',

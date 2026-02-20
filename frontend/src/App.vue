@@ -1,18 +1,24 @@
 <template>
   <div id="app-container" class="flex flex-col h-screen overflow-hidden bg-[#9f6795] relative">
-        <main class="flex-grow overflow-y-auto">
+    <main class="flex-grow overflow-y-auto">
       <router-view />
     </main>
 
-    <NavBar />
+    <NavBar v-if="mostrarNavBar" />
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 import NavBar from './components/navBar.vue';
 
-// No global session logic needed here, handled by BotonPerfil in pages
+const route = useRoute();
+
+// Fem servir una variable computada per evitar errors si la ruta encara no s'ha carregat
+const mostrarNavBar = computed(() => {
+  return route.path && !route.path.startsWith('/admin');
+});
 </script>
 
 <style>
