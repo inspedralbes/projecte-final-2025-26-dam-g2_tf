@@ -3,8 +3,7 @@ const mongoose = require('mongoose');
 const UsuariSchema = new mongoose.Schema({
   correu: { type: String, required: true, unique: true },
   contrasenya: { type: String, required: true },
-  edat_verificada: { type: Boolean, default: false },
-  rol: { type: String, default: 'user' }
+  edat_verificada: { type: Boolean, default: false }
 });
 
 const PerfilSchema = new mongoose.Schema({
