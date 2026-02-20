@@ -105,28 +105,33 @@ const router = createRouter({
 
 // GUÀRDIA DE NAVEGACIÓ CORREGIDA
 router.beforeEach((to, from, next) => {
-  // 1. Mirem si la ruta requereix ser admin
-  const requereixAdmin = to.matched.some(record => record.meta.requiereAdmin);
-  
-  // 2. Busquem la sessió
+  // 1. Intentamos leer la sesión, pero SIN MIEDO a que falle
   const sessioRaw = localStorage.getItem('admin_session');
   let sessio = null;
-  
+
   try {
-    sessio = JSON.parse(sessioRaw);
+    // Solo intentamos parsear si hay algo y parece un objeto
+    if (sessioRaw && sessioRaw.startsWith('{')) {
+      sessio = JSON.parse(sessioRaw);
+    }
   } catch (e) {
-    sessio = null;
+    // Si el JSON está mal, no hacemos nada, sessio se queda null
+    console.warn("Sessió no vàlida, continuant com a convidat");
   }
 
-  // 3. LÒGICA DE REDIRECCIÓ (Evita el bucle infinit)
-  if (requereixAdmin && (!sessio || sessio.rol !== 'admin')) {
-    // Si no és admin i vol entrar a una ruta protegida, enviem al login
-    next({ name: 'admin-login' });
-  } else if (to.name === 'admin-login' && sessio?.rol === 'admin') {
-    // Si JA és admin i intenta anar al login, el portem al dashboard
-    next({ name: 'admin-dashboard' });
+  // 2. Definimos si la ruta es protegida
+  const requereixAdmin = to.matched.some(record => record.meta.requiereAdmin);
+
+  // 3. LÓGICA DE NAVEGACIÓN
+  if (requereixAdmin) {
+    // SOLO si la ruta pide admin, comprobamos la sesión
+    if (sessio && sessio.rol === 'admin') {
+      next(); // Es admin, pasa
+    } else {
+      next({ name: 'home' }); // No es admin, fuera de aquí (a la home)
+    }
   } else {
-    // En qualsevol altre cas (ruta pública o usuari correcte), deixem passar
+    // SI LA RUTA NO PIDE ADMIN (como la Home), PASA SIEMPRE
     next();
   }
 });

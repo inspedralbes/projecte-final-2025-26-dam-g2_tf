@@ -69,14 +69,26 @@ const scrollContainer = ref(null);
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
 onMounted(async () => {
-  // removed: user localStorage check (handled in BotonPerfil)
-
-  // 2. Carregar les rutes (el teu codi original)
   try {
     const resposta = await fetch(`${API_URL}/api/mapa/punts`);
-    llistaLlocs.value = await resposta.json();
+    
+    // Si Nginx falla o el backend está caído, respuesta.ok será false
+    if (!resposta.ok) {
+      throw new Error(`Error servidor: ${resposta.status}`);
+    }
+
+    // Verificamos que sea JSON antes de parsear
+    const contentType = resposta.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      llistaLlocs.value = await resposta.json();
+    } else {
+      throw new Error("La resposta no és un JSON vàlid");
+    }
+
   } catch (err) {
+    // Si falla, la web no se rompe. Simplemente llistaLlocs queda vacía.
     console.error("Error cargando rutas:", err);
+    llistaLlocs.value = []; 
   }
 });
 
