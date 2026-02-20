@@ -58,7 +58,7 @@ const router = useRouter();
  * Tanca la sessió esborrant les dades i redirigint al login [cite: 112]
  */
 function logout() {
-  localStorage.removeItem('admin_session');
-  router.push('/admin/login');
+  localStorage.clear();
+  window.location.href = '/'; 
 }
 </script>
