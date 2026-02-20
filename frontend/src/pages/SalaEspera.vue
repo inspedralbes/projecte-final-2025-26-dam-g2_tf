@@ -82,17 +82,20 @@ onMounted(() => {
   socket.value = io(API_URL);
 
   socket.value.on('connect', () => {
-    console.log('Connectat al servidor WebSocket');
-    
-    const param = route.params.id;
+    const param = route.params.id; 
+    const idLlocRuta = route.query.idLloc; 
 
     if (param === 'crear') {
-        // Crear nova sala
-        socket.value.emit('create-room', nomUsuari);
+        
+        const dadesPerEnviar = {
+            nomUsuari: nomUsuari, 
+            idLloc: idLlocRuta    
+        };
+        
+        socket.value.emit('create-room', dadesPerEnviar);
         isCreator.value = true;
     } else {
-        // Unir-se a sala existent
-        roomCode.value = param;
+        
         socket.value.emit('join-room', { roomCode: param, nomUsuari });
     }
   });
@@ -118,15 +121,22 @@ onMounted(() => {
     loading.value = false;
   });
 
-  socket.value.on('game-started', () => {
+  /*socket.value.on('game-started', () => {
       // Redirigir al joc, per exemple al mapa
       router.push({ name: 'mapa' });
-  });
+  }); */
+
+  socket.value.on('game-started', (idLloc) => {
+    // Tots els jugadors marxen cap al mapa!
+    // Passem la ID a la URL del mapa
+    router.push('/mapa/' + idLloc);
+});
 });
 
 onUnmounted(() => {
   if (socket.value) {
     socket.value.disconnect();
   }
+    
 });
 </script>

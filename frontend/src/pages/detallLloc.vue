@@ -91,7 +91,11 @@ function comencarJoc() {
   }
 
   console.log("Usuari detectat. Anant al joc...");
-  router.push({ name: 'inici-joc', params: { id: route.params.id } });
+  
+  router.push({ 
+    path: '/sala-espera/crear', 
+    query: { idLloc: route.params.id } 
+  });
 } 
 
 onMounted(async () => {

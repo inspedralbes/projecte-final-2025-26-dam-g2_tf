@@ -90,12 +90,12 @@ const PostSchema = new mongoose.Schema({
 
 
 module.exports = {
-  Usuari: mongoose.model('Usuari', UsuariSchema, 'usuaris'),
-  Perfil: mongoose.model('Perfil', PerfilSchema, 'perfils'),
-  Lloc: mongoose.model('Lloc', LlocSchema, 'locations'),
-  SessioJoc: mongoose.model('SessioJoc', SessioJocSchema, 'sessions'),
-  PeticioRuta: mongoose.model('PeticioRuta', PeticioRutaSchema, 'peticions_rutes'),
-  Ressenya: mongoose.model('Ressenya', RessenyaSchema, 'ressenyes'),
-  Post: mongoose.model('Post', PostSchema, 'posts')
+  Usuari: mongoose.model('Usuari', UsuariSchema, 'Usuari'),
+  Perfil: mongoose.model('Perfil', PerfilSchema, 'Perfil'),
+  Lloc: mongoose.model('Lloc', LlocSchema, 'Lloc'),
+  SessioJoc: mongoose.model('SessioJoc', SessioJocSchema, 'SessioJoc'),
+  PeticioRuta: mongoose.model('PeticioRuta', PeticioRutaSchema, 'PeticioRuta'),
+  Ressenya: mongoose.model('Ressenya', RessenyaSchema, 'Ressenya'),
+  Post: mongoose.model('Post', PostSchema, 'Post')
 };
 
