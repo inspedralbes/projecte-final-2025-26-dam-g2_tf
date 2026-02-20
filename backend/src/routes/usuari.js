@@ -52,4 +52,89 @@ router.put('/afegir-cromo', async (req, res) => {
     }
 });
 
+// OBTENIR PERFIL PER ID (Aquesta és la ruta que et falta)
+router.get('/:id', async (req, res) => {
+    try {
+        const perfil = await Perfil.findById(req.params.id)
+            .populate('usuari_id', 'correu'); // Opcional: si vols portar dades de l'usuari base
+
+        if (!perfil) {
+            return res.status(404).json({ message: "Perfil no trobat" });
+        }
+
+        res.json(perfil);
+    } catch (error) {
+        console.error("Error al carregar el perfil:", error);
+        res.status(500).json({ message: "Error intern del servidor" });
+    }
+});
+// A. ENVIAR SOL·LICITUD D'AMISTAT (Corregit)
+router.post('/sollicitud-amistat', async (req, res) => {
+    try {
+        const { de_perfil_id, de_nom, per_a_perfil_id } = req.body;
+
+        const perfilDesti = await Perfil.findById(per_a_perfil_id);
+
+        if (!perfilDesti) return res.status(404).json({ message: "Perfil no trobat" });
+
+        // INICIALITZACIÓ SEGURA: Si no existeix l'array, el creem buit
+        if (!perfilDesti.sollicituds_pendents) {
+            perfilDesti.sollicituds_pendents = [];
+        }
+        if (!perfilDesti.amics) {
+            perfilDesti.amics = [];
+        }
+
+        // Ara ja podem comprovar sense por a l'error 500
+        if (perfilDesti.amics.includes(de_perfil_id)) {
+            return res.status(400).json({ message: "Ja sou amics" });
+        }
+
+        const jaEnviada = perfilDesti.sollicituds_pendents.some(s => 
+            s.id_perfil && s.id_perfil.toString() === de_perfil_id
+        );
+        
+        if (jaEnviada) {
+            return res.status(400).json({ message: "Sol·licitud ja enviada" });
+        }
+
+        perfilDesti.sollicituds_pendents.push({ 
+            id_perfil: de_perfil_id, 
+            nom_usuari: de_nom 
+        });
+
+        await perfilDesti.save();
+        res.json({ success: true, message: "Sol·licitud enviada" });
+    } catch (error) {
+        console.error("ERROR CRÍTIC:", error); // Això t'ajudarà a veure el detall a la terminal
+        res.status(500).json({ message: "Error intern del servidor", detall: error.message });
+    }
+});
+
+// B. ACCEPTAR SOL·LICITUD D'AMISTAT
+router.post('/acceptar-amistat', async (req, res) => {
+    try {
+        const { el_meu_perfil_id, id_nou_amic_perfil } = req.body;
+
+        const jo = await Perfil.findById(el_meu_perfil_id);
+        const ell = await Perfil.findById(id_nou_amic_perfil);
+
+        // 1. Ens afegim mútuament a l'array 'amics'
+        jo.amics.push(id_nou_amic_perfil);
+        ell.amics.push(el_meu_perfil_id);
+
+        // 2. Traiem la sol·licitud de la llista de pendents
+        jo.sollicituds_pendents = jo.sollicituds_pendents.filter(
+            s => s.id_perfil.toString() !== id_nou_amic_perfil
+        );
+
+        await jo.save();
+        await ell.save();
+
+        res.json({ success: true, user: jo });
+    } catch (error) {
+        res.status(500).json({ message: "Error en acceptar l'amistat" });
+    }
+});
+
 module.exports = router;

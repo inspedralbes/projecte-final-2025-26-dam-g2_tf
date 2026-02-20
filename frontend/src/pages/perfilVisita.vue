@@ -31,7 +31,22 @@
         <div class="text-[#d9a6c2]/80 text-sm italic px-6 mb-6">
           "{{ user.bio || 'Aquest explorador encara no ha escrit la seva biografia.' }}"
         </div>
-
+<div v-if="usuariLoguejat && usuariLoguejat._id !== user._id" class="mb-6">
+  <button 
+    @click="gestionarAmistat"
+    :disabled="estatAmistat === 'pendent' || estatAmistat === 'amics'"
+    :class="[
+      'w-full py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg',
+      estatAmistat === 'cap' ? 'bg-[#f5cbdd] text-[#402749] active:scale-95' : '',
+      estatAmistat === 'pendent' ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : '',
+      estatAmistat === 'amics' ? 'bg-green-500/20 text-green-400 border border-green-500/50 cursor-default' : ''
+    ]"
+  >
+    <span v-if="estatAmistat === 'cap'">+ AFEGIR AMIC</span>
+    <span v-if="estatAmistat === 'pendent'">SOL·LICITUD ENVIADA</span>
+    <span v-if="estatAmistat === 'amics'">SOU AMICS</span>
+  </button>
+</div>
         <!-- Stats -->
         <div class="grid grid-cols-2 gap-4">
           <div class="bg-black/20 p-4 rounded-2xl border border-white/5">
@@ -69,33 +84,64 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
+import { useAuth } from '../composables/useAuth'; // Importem el teu auth
 
 const route = useRoute();
+const { usuari: usuariLoguejat } = useAuth();
 const user = ref(null);
+const estatAmistat = ref('cap'); // 'cap', 'pendent', 'amics'
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
 onMounted(async () => {
-  const userId = route.params.id;
-  
-  // Intentem carregar de l'API
+  const userIdVisita = route.params.id;
+  await carregarDadesPerfil(userIdVisita);
+  comprovarEstatAmistat();
+});
+
+async function carregarDadesPerfil(id) {
   try {
-    const res = await fetch(`${API_URL}/api/usuari/${userId}`);
+    const res = await fetch(`${API_URL}/api/usuari/${id}`);
+    if (res.ok) user.value = await res.json();
+  } catch (err) { console.error(err); }
+}
+
+function comprovarEstatAmistat() {
+  if (!usuariLoguejat.value || !user.value) return;
+  
+  // Si ja està a la llista d'amics
+  if (user.value.amics?.includes(usuariLoguejat.value._id)) {
+    estatAmistat.value = 'amics';
+  } 
+  // Si hi ha una sol·licitud enviada (hauries de guardar això a la BD de l'altre)
+  else if (user.value.sollicituds_pendents?.some(s => s.id_usuari === usuariLoguejat.value._id)) {
+    estatAmistat.value = 'pendent';
+  }
+}
+
+async function gestionarAmistat() {
+  if (estatAmistat.value !== 'cap') return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/usuari/sollicitud-amistat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        de_id: usuariLoguejat.value._id,
+        de_nom: usuariLoguejat.value.nom_usuari,
+        per_a_id: user.value._id
+      })
+    });
+
     if (res.ok) {
-      user.value = await res.json();
-    } else {
-      // Si falla l'API, intentem recuperar de localStorage (el que va guardar social.vue)
-      const cached = localStorage.getItem('usuari_visita');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed.id_usuari === userId) user.value = parsed;
-      }
+      estatAmistat.value = 'pendent';
+      alert("Sol·licitud enviada!");
     }
   } catch (err) {
-    console.error("Error carregar perfil visita", err);
+    alert("Error enviant la sol·licitud");
   }
-});
+}
 </script>
 
 <style scoped>

@@ -13,7 +13,12 @@ const PerfilSchema = new mongoose.Schema({
   biografia: { type: String, default: "" },
   punts: { type: Number, default: 0 },
   nivell: { type: String, default: "Explorador Novell" },
-  amics: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Perfil' }],
+amics: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Perfil' }],
+  // AFEGIM AIXÒ: Sol·licituds d'amistat pendents
+  sollicituds_pendents: [{
+    id_perfil: { type: mongoose.Schema.Types.ObjectId, ref: 'Perfil' },
+    nom_usuari: String
+  }],  
   invitacions: { type: Array, default: [] },
   inventari_cromos: [{
     id_lloc: { type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' },
@@ -21,6 +26,7 @@ const PerfilSchema = new mongoose.Schema({
     imatge_usuari: String
   }]
 });
+
 
 const LlocSchema = new mongoose.Schema({
   nom: String,
@@ -89,12 +95,12 @@ const PostSchema = new mongoose.Schema({
 
 
 module.exports = {
-  Usuari: mongoose.model('Usuari', UsuariSchema, 'usuaris'),
-  Perfil: mongoose.model('Perfil', PerfilSchema, 'perfils'),
-  Lloc: mongoose.model('Lloc', LlocSchema, 'locations'),
-  SessioJoc: mongoose.model('SessioJoc', SessioJocSchema, 'sessions'),
-  PeticioRuta: mongoose.model('PeticioRuta', PeticioRutaSchema, 'peticions_rutes'),
-  Ressenya: mongoose.model('Ressenya', RessenyaSchema, 'ressenyes'),
-  Post: mongoose.model('Post', PostSchema, 'posts')
+  Usuari: mongoose.model('Usuari', UsuariSchema, 'Usuari'),
+  Perfil: mongoose.model('Perfil', PerfilSchema, 'Perfil'),
+  Lloc: mongoose.model('Lloc', LlocSchema, 'Lloc'),
+  SessioJoc: mongoose.model('SessioJoc', SessioJocSchema, 'SessioJoc'),
+  PeticioRuta: mongoose.model('PeticioRuta', PeticioRutaSchema, 'PeticioRuta'),
+  Ressenya: mongoose.model('Ressenya', RessenyaSchema, 'Ressenya'),
+  Post: mongoose.model('Post', PostSchema, 'Post')
 };
 
