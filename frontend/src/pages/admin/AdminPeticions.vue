@@ -57,15 +57,18 @@
                 <td colspan="5" class="p-6">
                   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div>
-                      <h4 class="text-[10px] font-black text-gray-400 uppercase mb-2">Motiu</h4>
+                      <h4 class="text-[10px] font-black text-gray-400 uppercase mb-2">Descripció</h4>
                       <p class="text-sm italic bg-white p-3 rounded border shadow-sm">{{ p.motiu || 'Sense descripció' }}</p>
                     </div>
                     <div class="h-40">
-                      <h4 class="text-[10px] font-black text-gray-400 uppercase mb-2">Mapa</h4>
-                      <iframe v-if="p.ubicacio" class="w-full h-full rounded border" frameborder="0" 
-                        :src="`https://www.openstreetmap.org/export/embed.html?bbox=${p.ubicacio[0]-0.002},${p.ubicacio[1]-0.002},${p.ubicacio[0]+0.002},${p.ubicacio[1]+0.002}&marker=${p.ubicacio[1]},${p.ubicacio[0]}`">
-                      </iframe>
-                    </div>
+  <h4 class="text-[10px] font-black text-gray-400 uppercase mb-2">Mapa</h4>
+  <iframe 
+    v-if="p.ubicacio && p.ubicacio.length === 2" 
+    class="w-full h-full rounded border" 
+    frameborder="0" 
+    :src="`https://www.openstreetmap.org/export/embed.html?bbox=${p.ubicacio[1]-0.01},${p.ubicacio[0]-0.01},${p.ubicacio[1]+0.01},${p.ubicacio[0]+0.01}&layer=mapnik&marker=${p.ubicacio[0]},${p.ubicacio[1]}`">
+  </iframe>
+</div>
                     <div>
                       <h4 class="text-[10px] font-black text-gray-400 uppercase mb-2">Fotos</h4>
                       <div class="flex gap-2 flex-wrap">

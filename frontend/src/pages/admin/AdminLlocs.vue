@@ -22,7 +22,13 @@
           <input v-model="form.nom" placeholder="Nom del lloc" class="w-full border p-2 rounded" required>
           <input v-model="form.imatge_portada" placeholder="URL Imatge" class="w-full border p-2 rounded" required>
           <textarea v-model="form.descripcio" placeholder="Descripció" class="w-full border p-2 rounded" rows="2"></textarea>
-          
+
+<textarea 
+  v-model="form.explicacio_historica" 
+  placeholder="Història detallada del lloc..." 
+  class="w-full border p-2 rounded" 
+  rows="4">
+</textarea>
           <div class="flex gap-4 bg-gray-50 p-2 rounded text-xs font-mono">
             <span>Lat: {{ form.lat.toFixed(4) }}</span>
             <span>Lng: {{ form.lng.toFixed(4) }}</span>
