@@ -31,7 +31,7 @@
 
 <script setup>
 
-// judit 
+ 
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
@@ -65,15 +65,36 @@ async function executarAccio() {
     });
 
     const resultat = await resposta.json();
+if (resultat.success) {
+      // 1. Actualitzem l'estat global de l'auth (composable)
+      login(resultat.usuari);
 
-    if (resultat.success) {
-      login(resultat.usuari); // Actualitza l'estat global reactiu + localStorage
+      // 2. Lògica de redireccionament segons el rol guardat a la BD
+      if (resultat.usuari.rol === 'admin') {
+        // Guardem la sessió d'admin segons l'estructura que demana el teu router.js
+        const dadesSessio = {
+          rol: 'admin',
+          id: resultat.usuari._id,
+          timestamp: new Date().getTime()
+        };
+        localStorage.setItem('admin_session', JSON.stringify(dadesSessio));
+        
+        emit('tancar');
+        // Redirigim a la pantalla d'escriptori per a l'administrador [cite: 23, 111, 112]
+        router.push({ name: 'admin-dashboard' });
+      } else {
+        // Redirigim a la pantalla de l'app mòbil per a l'usuari [cite: 24]
+        emit('tancar');
+        router.push({ name: 'home' }); 
+      }
+      
       emit('exit', resultat.usuari); 
     } else {
-      error.value = resultat.message;
+      error.value = resultat.message || "Error en l'operació";
     }
   } catch (err) {
     error.value = "Error de connexió amb el servidor";
+    console.error(err);
   }
 }
 </script>
