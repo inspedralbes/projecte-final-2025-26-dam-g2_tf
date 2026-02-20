@@ -67,24 +67,13 @@ async function executarAccio() {
     const resultat = await resposta.json();
 
     if (resultat.success) {
-    login(resultat.usuari); // Guardamos al usuario (que ahora trae el "rol")
-
-    // PREGUNTA: ¿Es admin?
-    if (resultat.usuari.rol === 'admin') {
-      router.push('/admin/dashboard'); // Al panel de admin
+      login(resultat.usuari); // Actualitza l'estat global reactiu + localStorage
+      emit('exit', resultat.usuari); 
     } else {
-      emit('exit', resultat.usuari); // Al mapa o página normal
+      error.value = resultat.message;
     }
-    
-    emit('tancar'); // Cerramos el modal
-  } else {
-    error.value = resultat.message;
-  }
-} // <--- Aquí terminaba tu código original
-  catch (err) { 
-    // ESTO ES LO QUE TIENES QUE AÑADIR:
-    console.error("Error en la petició:", err);
+  } catch (err) {
     error.value = "Error de connexió amb el servidor";
-  } 
+  }
 }
 </script>
