@@ -65,7 +65,9 @@ const SessioJocSchema = new mongoose.Schema({
     personatge_assignat: String,
     foto_secreta: String,
     pistes_gastades: { type: Number, default: 0 },
-    completat: { type: Boolean, default: false }
+    completat: { type: Boolean, default: false },
+    puntsPartida: { type: Number, default: 0 },
+    temps: { type: String, default: "0" }
   }],
   temps_inici: { type: Date, default: Date.now },
   id_lloc_desti: { type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' }
