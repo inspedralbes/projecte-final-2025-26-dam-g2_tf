@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen bg-[#f5cbdd]/20 pb-24 font-sans text-gray-800">
-    <!-- Encapçalament Estil Xarxa Social -->
     <header class="bg-gradient-to-br from-[#402749] to-[#5d3962] text-white p-6 rounded-b-[40px] shadow-xl mb-6 sticky top-0 z-40">
       <div class="flex justify-between items-center mb-6">
         <div>
@@ -8,12 +7,27 @@
           <p class="text-[#f5cbdd] text-[10px] font-bold uppercase tracking-widest opacity-80">Explora Barcelona</p>
         </div>
         <div class="flex gap-2 items-center">
-            <!-- Botón Perfil / Login -->
             <BotonPerfil @login="actualitzarUsuari" />
         </div>
       </div>
 
-      <!-- FILTRES (Nou per PDF) -->
+      <div class="flex bg-black/20 rounded-2xl p-1 mb-4 border border-white/10">
+        <button 
+          @click="pestanyaActiva = 'feed'"
+          :class="['flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all', 
+                  pestanyaActiva === 'feed' ? 'bg-[#f5cbdd] text-[#402749]' : 'text-white/60']"
+        >
+          Muro
+        </button>
+        <button 
+          @click="pestanyaActiva = 'ranking'"
+          :class="['flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all', 
+                  pestanyaActiva === 'ranking' ? 'bg-[#f5cbdd] text-[#402749]' : 'text-white/60']"
+        >
+          Rànquing
+        </button>
+      </div>
+
       <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
         <button 
           v-for="cat in categories" 
@@ -29,10 +43,8 @@
 
     <main class="px-4 max-w-xl mx-auto">
       
-      <!-- PESTANYA: FEED -->
       <div v-if="pestanyaActiva === 'feed'" class="space-y-6 animate-fade-in">
         
-        <!-- Publicar nou post -->
         <div v-if="usuari" class="bg-white p-6 rounded-[40px] shadow-sm border border-white">
           <div class="flex gap-4 mb-4">
             <div class="w-12 h-12 rounded-2xl bg-[#f5cbdd] flex items-center justify-center font-black text-[#5d3962] overflow-hidden shrink-0 shadow-sm border-2 border-white">
@@ -57,7 +69,6 @@
                 <input v-model="nouPostUbicacio" type="text" placeholder="On ets?" class="bg-transparent border-none text-xs font-bold text-[#5d3962] focus:outline-none w-full">
               </div>
 
-              <!-- Tags ràpids per al post -->
               <div class="flex flex-wrap gap-2">
                 <span v-for="(tag, idx) in nouPostTags" :key="idx" class="bg-[#5d3962] text-white text-[9px] px-3 py-1 rounded-full font-black uppercase">
                   #{{ tag }} <button @click="eliminarTag(idx)">✕</button>
@@ -91,16 +102,12 @@
           </div>
         </div>
 
-        <!-- Llista de Posts (Feed) -->
         <div class="space-y-6 pb-12">
           <div v-for="post in posts" :key="post._id" class="bg-white rounded-[35px] shadow-sm border border-white overflow-hidden transition-all hover:shadow-md relative">
-            
-            <!-- Indicador de Cromo (Estil PDF) -->
             <div v-if="post.imatge_post" class="absolute top-4 right-4 z-10 bg-gradient-to-br from-yellow-400 to-orange-500 text-white text-[8px] font-black px-3 py-1 rounded-full shadow-lg rotate-12 uppercase tracking-tighter border-2 border-white">
                COLECCIONABLE DESBLOQUEJAT
             </div>
 
-            <!-- Header Post -->
             <div class="p-5 flex items-center gap-4">
               <div @click="visitarPerfil(post)" class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#bc85ab] to-[#f5cbdd] flex items-center justify-center font-black text-[#402749] shadow-sm overflow-hidden border-2 border-white cursor-pointer hover:scale-105 transition-transform">
                 <img v-if="post.avatar_usuari" :src="post.avatar_usuari" class="w-full h-full object-cover">
@@ -113,14 +120,11 @@
                   <span v-if="post.ubicacio" class="text-[10px] bg-red-50 text-red-500 font-black px-2 py-0.5 rounded-full border border-red-100 italic">📍 {{ post.ubicacio }}</span>
                 </div>
               </div>
-              
-              <!-- Botó Emergència (PDF section: Seguretat Proactiva) -->
               <button @click="reportarLloc(post)" class="bg-red-500/10 text-red-500 p-2 rounded-xl hover:bg-red-500 hover:text-white transition-all">
                 🚨
               </button>
             </div>
 
-            <!-- Cos Post -->
             <div class="px-6 pb-4">
               <p v-if="post.text" class="text-gray-600 text-sm leading-relaxed font-medium mb-4">
                 {{ post.text }}
@@ -128,7 +132,6 @@
               <div v-if="post.imatge_post" class="rounded-[25px] overflow-hidden border border-gray-50 shadow-sm mb-4">
                 <img :src="post.imatge_post" class="w-full h-auto max-h-[400px] object-cover">
               </div>
-              
               <div class="flex flex-wrap gap-2">
                 <span v-for="tag in post.tags" :key="tag" class="text-[9px] font-black text-[#bc85ab] uppercase tracking-widest bg-[#f5cbdd]/20 px-3 py-1 rounded-full">
                   #{{ tag }}
@@ -136,7 +139,6 @@
               </div>
             </div>
 
-            <!-- Accions -->
             <div class="px-6 py-4 border-t border-gray-50 flex items-center justify-between">
               <div class="flex gap-4 items-center">
                 <button @click="ferLike(post._id)" class="flex items-center gap-2 group transition-all">
@@ -149,18 +151,15 @@
                   <span class="text-xl transform hover:scale-125 transition-transform">💬</span>
                   <span class="text-xs font-black text-gray-400">{{ post.comentaris?.length || 0 }}</span>
                 </button>
-                <!-- Botó per reportar contingut -->
                 <button @click="reportPost(post)" class="flex items-center gap-2 text-yellow-600 hover:text-yellow-800" title="Reportar publicació">
                   <span class="text-xl">⚠️</span>
                 </button>
               </div>
-              
               <div class="flex items-center gap-3">
                 <button v-if="esAutor(post)" @click="eliminarPost(post._id)" class="text-[10px] font-black text-red-400 uppercase tracking-widest hover:text-red-600">Eliminar</button>
               </div>
             </div>
 
-            <!-- Comentaris -->
             <div v-if="mostrantComentaris === post._id" class="bg-gray-50/50 p-6 border-t border-gray-100 animate-slide-up">
               <div v-for="com in post.comentaris" :key="com.id_comentari" class="flex gap-3 mb-4 last:mb-0">
                 <div @click="visitarPerfil(com)" class="w-8 h-8 rounded-xl bg-white flex items-center justify-center font-black text-[#5d3962] border border-gray-100 shadow-xs cursor-pointer overflow-hidden">
@@ -172,7 +171,6 @@
                   <p class="text-xs text-gray-600 font-medium">{{ com.text }}</p>
                 </div>
               </div>
-              
               <div class="flex gap-2 mt-4">
                 <input v-model="nouComentariText" @keyup.enter="enviarComentari(post._id)" placeholder="Escriu un comentari..." class="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 text-xs outline-none">
                 <button @click="enviarComentari(post._id)" class="bg-[#402749] text-white px-4 py-2 rounded-xl font-bold text-[10px]">OK</button>
@@ -182,18 +180,54 @@
         </div>
       </div>
 
-      <!-- PESTANYA: RÀNQUING -->
       <div v-else class="space-y-6 animate-fade-in">
-         <!-- ... (mateix codi de rànquing que teníem) ... -->
-         <div class="bg-[#402749] text-white p-8 rounded-[40px] shadow-2xl">
-            <h2 class="text-4xl font-black italic">EL MEU TOP #4</h2>
-            <p class="text-xl font-black text-[#f5cbdd]">{{ usuari?.punts || 0 }} pts</p>
-         </div>
+        <div class="bg-[#402749] text-white p-8 rounded-[40px] shadow-2xl border border-[#f5cbdd]/20">
+          <div class="flex justify-between items-end">
+            <div>
+              <h2 class="text-4xl font-black italic uppercase tracking-tighter leading-none">EL MEU RÀNQUING</h2>
+              <p class="text-[#f5cbdd] font-bold mt-2 uppercase tracking-widest text-xs opacity-80">Estat de l'explorador</p>
+            </div>
+            <div class="text-right">
+              <span class="block text-5xl font-black text-[#f5cbdd]">{{ usuari?.punts || 0 }}</span>
+              <span class="text-[10px] font-black uppercase tracking-[0.2em]">Punts Totals</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-[40px] p-6 shadow-sm border border-white">
+          <h3 class="text-[#402749] text-xl font-black italic mb-6 uppercase tracking-tight flex items-center gap-2">
+            <span>🏆</span> TOP EXPLORADORS
+          </h3>
+          <div class="space-y-3">
+            <div v-for="(user, index) in rankingGlobal" :key="user._id" 
+                 class="flex items-center justify-between p-4 rounded-2xl transition-all"
+                 :class="index === 0 ? 'bg-yellow-50 border border-yellow-100' : 'bg-gray-50'">
+              <div class="flex items-center gap-4">
+                <div class="w-8 h-8 flex items-center justify-center font-black italic text-lg"
+                     :class="{'text-yellow-500': index === 0, 'text-gray-400': index === 1, 'text-orange-400': index === 2, 'text-gray-300': index > 2}">
+                  {{ index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '#' + (index + 1) }}
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-[#bc85ab] flex items-center justify-center text-white font-bold shadow-sm overflow-hidden border-2 border-white">
+                  <img v-if="user.avatar" :src="user.avatar" class="w-full h-full object-cover">
+                  <span v-else>{{ user.nom_usuari.charAt(0).toUpperCase() }}</span>
+                </div>
+                <div>
+                  <p class="font-black text-gray-800 text-sm">{{ user.nom_usuari }}</p>
+                  <p v-if="index === 0" class="text-[9px] font-black text-yellow-600 uppercase">Líder de l'Expedició</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-[#402749] font-black text-sm">{{ user.punts }}</span>
+                <span class="text-[9px] font-bold text-gray-400 block uppercase">PTS</span>
+              </div>
+            </div>
+          </div>
+          <div v-if="carregantRanking" class="text-center py-8">
+            <div class="inline-block animate-spin text-2xl">🌀</div>
+          </div>
+        </div>
       </div>
-
-
     </main>
-
   </div>
 </template>
 
@@ -227,14 +261,46 @@ const posts = ref([]);
 const mostrantComentaris = ref(null);
 const nouComentariText = ref('');
 
+// Afegeix aquestes refs al principi amb les altres
+const rankingGlobal = ref([]);
+const carregantRanking = ref(false);
+
 const actualitzarUsuari = (dadesUsuari) => {
   login(dadesUsuari);
 };
 
-// Carregar posts quan l'usuari està disponible
+async function carregarPosts() {
+  try {
+    // Fem la crida al backend usant el filtre de tags si n'hi ha
+    const res = await fetch(`${API_URL}/api/social/posts?tag=${filtreActiu.value !== 'Tots' ? filtreActiu.value : ''}`);
+    const dades = await res.json();
+    posts.value = Array.isArray(dades) ? dades : [];
+  } catch (err) {
+    console.error("Error carregant posts:", err);
+  }
+}
+
+// 3. AFEGIT: Watcher per canviar de dades automàticament en clicar la pestanya
+watch(pestanyaActiva, (nova) => {
+  if (nova === 'ranking') {
+    carregarRanking();
+  } else {
+    carregarPosts();
+  }
+});
+
+// 4. AFEGIT: Watcher per actualitzar el feed quan canviem el filtre (Industrial, Gòtic...)
+watch(filtreActiu, () => {
+  if (pestanyaActiva.value === 'feed') {
+    carregarPosts();
+  }
+});
+
+// Actualitza el onMounted per carregar el rànquing si la pestanya és activa
 onMounted(() => {
   if (usuari.value) {
     carregarPosts();
+    carregarRanking(); // Carreguem el rànquing en iniciar
   }
 });
 
@@ -245,13 +311,25 @@ watch(usuari, (nouUsuari) => {
   }
 });
 
-async function carregarPosts() {
+// Watcher per detectar quan l'usuari canvia a la pestanya de rànquing i refrescar dades
+watch(pestanyaActiva, (novaPestanya) => {
+  if (novaPestanya === 'ranking') {
+    carregarRanking();
+  }
+});
+
+// 5. CORREGIT: El teu carregarRanking ara és una funció "async" declarada correctament
+async function carregarRanking() {
+  carregantRanking.value = true;
   try {
-    const res = await fetch(`${API_URL}/api/social/posts`);
-    const dades = await res.json();
-    posts.value = Array.isArray(dades) ? dades : [];
+    const res = await fetch(`${API_URL}/api/social/leaderboard/global`);
+    if (res.ok) {
+      rankingGlobal.value = await res.json();
+    }
   } catch (err) {
-    console.error("Error carregant posts:", err);
+    console.error("Error carregant rànquing:", err);
+  } finally {
+    carregantRanking.value = false;
   }
 }
 
@@ -286,9 +364,12 @@ async function ferLike(postId) {
     await fetch(`${API_URL}/api/social/posts/${postId}/like`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: usuari.value._id })
+      // CAMBIAMOS 'userId' por 'id_usuari' para que coincida con tu backend
+      body: JSON.stringify({ id_usuari: usuari.value._id }) 
     });
-    carregarPosts();
+    
+    // Esto refresca la lista de posts para que el corazón cambie de 🤍 a ❤️
+    await carregarPosts(); 
   } catch (err) {
     console.error("Error like:", err);
   }

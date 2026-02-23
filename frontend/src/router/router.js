@@ -12,6 +12,7 @@ import DetallLloc from '../pages/detallLloc.vue'
 import IniciJoc from '../pages/iniciJoc.vue'
 import SalaEspera from '../pages/SalaEspera.vue'
 import elmeulogin from '../components/elmeulogin.vue'; // Revisa que la ruta sigui correcta
+import LeaderboardFinal from '../pages/LeaderboardFinal.vue'
 import camara from '../pages/camara.vue'
 
 // Admin Pages
@@ -102,7 +103,14 @@ const routes = [
     path: '/sala-espera/:id',
     name: 'sala-espera',
     component: SalaEspera
-  }
+  },
+  
+  {
+    path: '/leaderboard-final/:id', // L'ID de la sessió de joc
+    name: 'leaderboard-final',
+    component: LeaderboardFinal,
+    props: true // Permet que el component rebi 'id' com a prop
+  },
 ]
 
 const router = createRouter({
