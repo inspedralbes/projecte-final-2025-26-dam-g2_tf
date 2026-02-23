@@ -12,6 +12,7 @@ import DetallLloc from '../pages/detallLloc.vue'
 import IniciJoc from '../pages/iniciJoc.vue'
 import SalaEspera from '../pages/SalaEspera.vue'
 import elmeulogin from '../components/elmeulogin.vue'; // Revisa que la ruta sigui correcta
+import camara from '../pages/camara.vue'
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/AdminDashboard.vue'
@@ -50,6 +51,12 @@ const routes = [
     meta: { requiereAdmin: true } // Protegit
   },
   // -------------------------
+  {
+  path: '/camara',
+  name: 'camara',
+  component: camara,
+  props: route => ({ idLloc: route.query.idLloc })
+  },
   {
     path: '/social',
     name: 'social',

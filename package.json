@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@capacitor-community/camera-preview": "^7.0.5",
     "leaflet": "^1.9.4",
     "socket.io": "^4.8.3"
   }
