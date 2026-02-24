@@ -34,7 +34,7 @@ export default {
   const host = window.location.hostname;
   const baseApi = host === 'localhost' 
     ? "http://localhost:8088" 
-    : "https://tu-dominio-api.com"; // <-- PON AQUÍ TU DOMINIO REAL
+    : "https://north.dam.inspedralbes.cat"; // <-- PON AQUÍ TU DOMINIO REAL
 
   try {
     const resposta = await fetch(`${baseApi}/api/mapa/punts/${this.idLloc}`);
