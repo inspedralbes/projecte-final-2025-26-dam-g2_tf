@@ -5,6 +5,7 @@ import Index from '../pages/index.vue'
 import Social from '../pages/social.vue'
 import Cercador from '../pages/cercador.vue'
 import Mapa from '../pages/mapa.vue'
+import mapajoc from '../pages/mapajoc.vue';
 import Perfil from '../pages/perfil.vue'
 import PerfilVisita from '../pages/perfilVisita.vue'
 import Peticions from '../pages/peticions.vue'
@@ -53,11 +54,11 @@ const routes = [
   },
   // -------------------------
   {
-  path: '/camara',
+  path: '/joc/camera/:id', // Ha de tenir els dos punts (:) per a la ID
   name: 'camara',
-  component: camara,
-  props: route => ({ idLloc: route.query.idLloc })
-  },
+  component: camara
+},
+
   {
     path: '/social',
     name: 'social',
@@ -73,6 +74,12 @@ const routes = [
     name: 'mapa',
     component: Mapa
   },
+  {
+    path: '/mapa/:id',
+    name: 'mapa',
+    component: mapajoc 
+  },
+
   {
     path: '/perfil',
     name: 'perfil',
@@ -99,6 +106,7 @@ const routes = [
     component: DetallLloc,
     props: true // Això permet passar l'id directament com a prop
   },
+
   {
     path: '/sala-espera/:id',
     name: 'sala-espera',
