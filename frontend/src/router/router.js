@@ -71,12 +71,12 @@ const routes = [
   },
   {
     path: '/mapa',
-    name: 'mapa',
+    name: 'mapa-general',
     component: Mapa
   },
   {
     path: '/mapa/:id',
-    name: 'mapa',
+    name: 'mapa-joc',
     component: mapajoc 
   },
 
