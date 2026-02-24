@@ -37,23 +37,24 @@ export default {
       if (!resposta.ok) throw new Error("No s'ha pogut carregar el lloc");
       var lloc = await resposta.json();
 
-    /* 2. CONSTRUCCIÓN DE LA URL
-       Si tu backend sirve las fotos por ID, usa la primera opción.
-       Si las sirve por nombre de archivo dentro de la carpeta public, usa la segunda.
-    */
-    
-    // Opción A: Tu servidor requiere el ID del objeto para buscar la foto
-    urlFinal.value = `${baseApi}/api/foto_mapa/${lloc._id}`; 
+      // Si el lloc té foto_mapa la fem servir, si no construïm amb el nom
+      var nomImatge = lloc.foto_mapa
+        ? lloc.foto_mapa
+        : "mapa_" + lloc.nom.toLowerCase().replace(/\s+/g, "") + ".jpg";
 
+      this.urlFinal = baseApi + "/foto_mapa/" + nomImatge;
+      console.log("Carregant mapa:", this.urlFinal);
+    } catch (error) {
+      console.error("Error carregant el mapa:", error);
+    }
+  },
 
-    console.log("Intentando cargar mapa con ID:", lloc._id);
-  } catch (error) {
-    console.error("Error cargando el mapa:", error);
+  methods: {
+    anarACamera: function() {
+      // Redirigim a la següent part del joc (la càmera) [cite: 26]
+      this.$router.push("/joc/camera/" + this.idLloc);
+    }
   }
-});
-
-const anarACamera = () => {
-  router.push(`/joc/camera/${idLloc}`);
 };
 </script>
 
