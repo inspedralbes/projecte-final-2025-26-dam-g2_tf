@@ -70,8 +70,8 @@ const lloc = ref(null)
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
 function obrirGoogleMaps() {
-  if (!idlloc.value?.ubicacio?.coordinates) {
-    console.error("No hay coordenadas disponibles");
+  if (!lloc.value || !lloc.value.ubicacio || !lloc.value.ubicacio.coordinates) {    
+  console.error("No hay coordenadas disponibles");
     return;
   }
   
