@@ -18,56 +18,43 @@
   </div>
 </template>
 
-<script>
-export default {
-  data: function() {
-    return {
-      // Agafem la ID de la ruta des de la URL (ex: sagradafamilia)
-      idLloc: this.$route.params.id,
-      urlFinal: ""
-    };
-  },
-  
-  mounted: async function() {
-  // 1. Detectamos automáticamente la URL del servidor
-  // Si estás en local usará localhost, si estás en producción usará tu dominio
-  const host = window.location.hostname;
-  const baseApi = host === 'localhost' 
-    ? "http://localhost:8088" 
-    : "https://north.dam.inspedralbes.cat"; // <-- PON AQUÍ TU DOMINIO REAL
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
+const route = useRoute();
+const router = useRouter();
+
+const idLloc = route.params.id; 
+const urlFinal = ref("");
+
+onMounted(async () => {
+  // Cambia localhost por tu dominio real de Pedralbes
+  const baseApi = "https://north.dam.inspedralbes.cat"; 
+  
   try {
-    const resposta = await fetch(`${baseApi}/api/mapa/punts/${this.idLloc}`);
+    // 1. Obtenemos los datos del lugar usando el ID de la ruta
+    const resposta = await fetch(`${baseApi}/api/mapa/punts/${idLloc}`);
     if (!resposta.ok) throw new Error("No s'ha pogut carregar el lloc");
-    
     const lloc = await resposta.json();
 
-    // 2. Construimos la URL
-    const nomImatge = lloc.foto_mapa
-      ? lloc.foto_mapa
-      : `mapa_${lloc.nom.toLowerCase().replace(/\s+/g, "")}.jpg`;
-
-    // 3. Forzamos HTTPS para evitar el bloqueo en móvil
-    let urlFinalTemp = `${baseApi}/foto_mapa/${nomImatge}`;
+    /* 2. CONSTRUCCIÓN DE LA URL
+       Si tu backend sirve las fotos por ID, usa la primera opción.
+       Si las sirve por nombre de archivo dentro de la carpeta public, usa la segunda.
+    */
     
-    if (window.location.protocol === 'https:') {
-        this.urlFinal = urlFinalTemp.replace("http://", "https://");
-    } else {
-        this.urlFinal = urlFinalTemp;
-    }
+    // Opción A: Tu servidor requiere el ID del objeto para buscar la foto
+    urlFinal.value = `${baseApi}/api/foto_mapa/${lloc._id}`; 
 
-    console.log("URL generada para el móvil:", this.urlFinal);
+
+    console.log("Intentando cargar mapa con ID:", lloc._id);
   } catch (error) {
-    console.error("Error cargando desde la BD:", error);
+    console.error("Error cargando el mapa:", error);
   }
-},
+});
 
-  methods: {
-    anarACamera: function() {
-      // Redirigim a la següent part del joc (la càmera) [cite: 26]
-      this.$router.push("/joc/camera/" + this.idLloc);
-    }
-  }
+const anarACamera = () => {
+  router.push(`/joc/camera/${idLloc}`);
 };
 </script>
 
