@@ -21,6 +21,8 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 
+app.use('/foto_mapa', express.static(path.join(__dirname, 'public/foto_mapa')));
+
 async function startServer() {
     try {
         await connectDB();
@@ -35,6 +37,8 @@ async function startServer() {
         app.use('/api/admin', require('./src/routes/admin'));
         app.use('/api/auth', require('./src/routes/auth'));
 
+        
+      
 
         // 4. Configurar Socket.io
         const http = require('http');
