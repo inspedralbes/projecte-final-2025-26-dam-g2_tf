@@ -28,6 +28,7 @@ export default {
     };
   },
   
+  //hb
   mounted: async function() {
     var baseApi = import.meta.env.VITE_API_URL || 'http://localhost:8088';
     try {
