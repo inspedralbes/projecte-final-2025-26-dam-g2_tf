@@ -29,7 +29,7 @@ export default {
   },
   
   mounted: async function() {
-    var baseApi = "http://localhost:8088";
+    var baseApi = import.meta.env.VITE_API_URL || 'http://localhost:8088';
     try {
       // Obtenim les dades del lloc per saber el nom real de la imatge
       var resposta = await fetch(baseApi + "/api/mapa/punts/" + this.idLloc);
