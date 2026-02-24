@@ -29,24 +29,38 @@ export default {
   },
   
   mounted: async function() {
-    var baseApi = import.meta.env.VITE_API_URL || 'http://localhost:8088';
-    try {
-      // Obtenim les dades del lloc per saber el nom real de la imatge
-      var resposta = await fetch(baseApi + "/api/mapa/punts/" + this.idLloc);
-      if (!resposta.ok) throw new Error("No s'ha pogut carregar el lloc");
-      var lloc = await resposta.json();
+  // 1. Detectamos automáticamente la URL del servidor
+  // Si estás en local usará localhost, si estás en producción usará tu dominio
+  const host = window.location.hostname;
+  const baseApi = host === 'localhost' 
+    ? "http://localhost:8088" 
+    : "https://tu-dominio-api.com"; // <-- PON AQUÍ TU DOMINIO REAL
 
-      // Si el lloc té foto_mapa la fem servir, si no construïm amb el nom
-      var nomImatge = lloc.foto_mapa
-        ? lloc.foto_mapa
-        : "mapa_" + lloc.nom.toLowerCase().replace(/\s+/g, "") + ".jpg";
+  try {
+    const resposta = await fetch(`${baseApi}/api/mapa/punts/${this.idLloc}`);
+    if (!resposta.ok) throw new Error("No s'ha pogut carregar el lloc");
+    
+    const lloc = await resposta.json();
 
-      this.urlFinal = baseApi + "/foto_mapa/" + nomImatge;
-      console.log("Carregant mapa:", this.urlFinal);
-    } catch (error) {
-      console.error("Error carregant el mapa:", error);
+    // 2. Construimos la URL
+    const nomImatge = lloc.foto_mapa
+      ? lloc.foto_mapa
+      : `mapa_${lloc.nom.toLowerCase().replace(/\s+/g, "")}.jpg`;
+
+    // 3. Forzamos HTTPS para evitar el bloqueo en móvil
+    let urlFinalTemp = `${baseApi}/foto_mapa/${nomImatge}`;
+    
+    if (window.location.protocol === 'https:') {
+        this.urlFinal = urlFinalTemp.replace("http://", "https://");
+    } else {
+        this.urlFinal = urlFinalTemp;
     }
-  },
+
+    console.log("URL generada para el móvil:", this.urlFinal);
+  } catch (error) {
+    console.error("Error cargando desde la BD:", error);
+  }
+},
 
   methods: {
     anarACamera: function() {
