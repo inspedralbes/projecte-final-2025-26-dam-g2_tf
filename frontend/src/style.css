@@ -1,11 +1,60 @@
 @import "tailwindcss";
 
+/* Configuració base */
 html, body, #app, #app-container {
-  background-color: #804f7f
-
-!important;
+  background-color: #402749 !important; /* Color fosc corporatiu del PDF */
   margin: 0;
   padding: 0;
   height: 100%;
   width: 100%;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+/* --- ANIMACIONS PER AL LEADERBOARD --- */
+
+/* Perquè els jugadors apareguin un rere l'altre */
+.animate-slide-up {
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Efecte de pols per al guanyador (🥇) */
+.winner-glow {
+  box-shadow: 0 0 20px rgba(245, 203, 221, 0.3);
+  border: 2px solid #f5cbdd !important;
+}
+
+/* Ocultar la barra de scroll en els filtres horitzontals de Social.vue */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* --- ESTILS PER A LES ESTRELLES DE RESSENYA --- */
+.star-rating button {
+  transition: transform 0.2s ease;
+}
+
+.star-rating button:active {
+  transform: scale(1.4);
+}
+
+/* Colors de degradats personalitzats */
+.bg-brand-gradient {
+  background: linear-gradient(135deg, #402749 0%, #5d3962 100%);
 }
