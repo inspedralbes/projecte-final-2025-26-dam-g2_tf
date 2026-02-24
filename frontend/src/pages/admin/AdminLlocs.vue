@@ -85,10 +85,12 @@ const form = ref({ nom: '', descripcio: '', imatge_portada: '', lat: 41.3879, ln
 let map = null;
 let marker = null;
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+
 onMounted(obtenerLlocs);
 
 async function obtenerLlocs() {
-  const respuesta = await fetch('http://localhost:8088/api/admin/llocs');
+  const respuesta = await fetch(`${API_URL}/api/admin/llocs`);
   llocs.value = await respuesta.json();
 }
 
@@ -101,8 +103,8 @@ async function guardarLloc() {
   };
 
   const url = idEditando.value 
-    ? `http://localhost:8088/api/admin/llocs/${idEditando.value}` 
-    : 'http://localhost:8088/api/admin/llocs';
+    ? `${API_URL}/api/admin/llocs/${idEditando.value}` 
+    : `${API_URL}/api/admin/llocs`;
 
   await fetch(url, {
     method: idEditando.value ? 'PUT' : 'POST',
@@ -115,7 +117,7 @@ async function guardarLloc() {
 
 async function eliminarLloc(id) {
   if (confirm("Segur que vols eliminar aquest lloc?")) {
-    await fetch(`http://localhost:8088/api/admin/llocs/${id}`, { method: 'DELETE' });
+    await fetch(`${API_URL}/api/admin/llocs/${id}`, { method: 'DELETE' });
     obtenerLlocs();
   }
 }

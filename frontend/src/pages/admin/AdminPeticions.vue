@@ -99,19 +99,20 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import AdminNav from './components/AdminNav.vue';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
 const peticions = ref([]);
 const peticionSeleccionada = ref(null);
 
 const cargarPeticiones = async () => {
-  const res = await fetch('http://localhost:8088/api/admin/peticions');
+  const res = await fetch(`${API_URL}/api/admin/peticions`);
   peticions.value = await res.json();
 };
 
 const votar = async (id, nouEstat) => {
   if (!confirm(`Vols marcar aquesta petició com a ${nouEstat}?`)) return;
   
-  await fetch(`http://localhost:8088/api/admin/peticions/${id}`, {
+  const res = await fetch(`${API_URL}/api/admin/peticions/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ estat_validacio: nouEstat })
