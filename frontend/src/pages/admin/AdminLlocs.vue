@@ -85,8 +85,7 @@ const form = ref({ nom: '', descripcio: '', imatge_portada: '', lat: 41.3879, ln
 let map = null;
 let marker = null;
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
-
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8088').replace(/\/$/, '');
 onMounted(obtenerLlocs);
 
 async function obtenerLlocs() {

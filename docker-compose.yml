@@ -5,6 +5,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+      VITE_API_URL: https://north.dam.inspedralbes.cat
     restart: always
     expose:
       - "80"
@@ -16,9 +18,11 @@ services:
     restart: always
     expose:
       - "8088"
+    env_file:
+    - .env
     environment:
       - NODE_ENV=production
-      - PORT=8088
+      - PORT=8088VITE_API_URL: https://north.dam.inspedralbes.cat
 
   proxy:
     image: nginx:stable
