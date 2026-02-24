@@ -28,13 +28,24 @@ export default {
     };
   },
   
-  mounted: function() {
-    // Quan la pàgina es carrega, construïm la ruta de la foto
-    // El backend té les fotos a public/foto_mapa/mapa_ID.jpg 
-    var baseApi = "http://localhost:8088"; 
-    this.urlFinal = baseApi + "/foto_mapa/mapa_" + this.idLloc + ".jpg";
-    
-    console.log("Carregant mapa per a: " + this.idLloc);
+  mounted: async function() {
+    var baseApi = "http://localhost:8088";
+    try {
+      // Obtenim les dades del lloc per saber el nom real de la imatge
+      var resposta = await fetch(baseApi + "/api/mapa/punts/" + this.idLloc);
+      if (!resposta.ok) throw new Error("No s'ha pogut carregar el lloc");
+      var lloc = await resposta.json();
+
+      // Si el lloc té foto_mapa la fem servir, si no construïm amb el nom
+      var nomImatge = lloc.foto_mapa
+        ? lloc.foto_mapa
+        : "mapa_" + lloc.nom.toLowerCase().replace(/\s+/g, "") + ".jpg";
+
+      this.urlFinal = baseApi + "/foto_mapa/" + nomImatge;
+      console.log("Carregant mapa:", this.urlFinal);
+    } catch (error) {
+      console.error("Error carregant el mapa:", error);
+    }
   },
 
   methods: {

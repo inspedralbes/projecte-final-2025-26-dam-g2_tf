@@ -4,10 +4,10 @@ const UsuariSchema = new mongoose.Schema({
   correu: { type: String, required: true, unique: true },
   contrasenya: { type: String, required: true },
   edat_verificada: { type: Boolean, default: false },
-  rol: { 
-    type: String, 
-    enum: ['user', 'admin'], 
-    default: 'user' 
+  rol: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
   }
 });
 
@@ -18,12 +18,12 @@ const PerfilSchema = new mongoose.Schema({
   biografia: { type: String, default: "" },
   punts: { type: Number, default: 0 },
   nivell: { type: String, default: "Explorador Novell" },
-amics: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Perfil' }],
+  amics: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Perfil' }],
   // AFEGIM AIXÒ: Sol·licituds d'amistat pendents
   sollicituds_pendents: [{
     id_perfil: { type: mongoose.Schema.Types.ObjectId, ref: 'Perfil' },
     nom_usuari: String
-  }],  
+  }],
   invitacions: { type: Array, default: [] },
   inventari_cromos: [{
     id_lloc: { type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' },
@@ -40,6 +40,7 @@ const LlocSchema = new mongoose.Schema({
     coordinates: [Number]
   },
   imatge_referencia: String,
+  foto_mapa: String,
   descripcio: String,
   explicacio_historica: String,
   dificultat: String,

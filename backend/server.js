@@ -13,12 +13,12 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 
 app.use(cors({
-    origin: process.env.ORIGIN_URL || 'http://localhost:5173', 
+    origin: process.env.ORIGIN_URL || 'http://localhost:5173',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 
 async function startServer() {
@@ -34,7 +34,7 @@ async function startServer() {
         app.use('/api/peticions', require('./src/routes/peticions'));
         app.use('/api/admin', require('./src/routes/admin'));
         app.use('/api/auth', require('./src/routes/auth'));
-     
+
 
         // 4. Configurar Socket.io
         const http = require('http');
