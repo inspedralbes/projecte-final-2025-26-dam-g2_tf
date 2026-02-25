@@ -7,75 +7,88 @@ const { Lloc } = require('../models');
 
 router.post('/', async function (req, res) {
     const imatgeBase64 = req.body.imatge;
-    const idLloc = req.body.idLloc;
+    const idLloc = req.body.idLloc; // Necessitem rebre quin lloc és per buscar la referència
 
-    if (!idLloc) return res.status(400).json({ missatge: "Falta l'ID del lloc." });
+    if (!idLloc) {
+        return res.status(400).json({ missatge: "Falta l'ID del lloc." });
+    }
 
     try {
         const lloc = await Lloc.findById(idLloc);
         if (!lloc || !lloc.imatge_referencia) {
-            return res.status(404).json({ missatge: "No s'ha trobat la imatge." });
+            return res.status(404).json({ missatge: "No s'ha trobat la imatge de referència per a aquest lloc." });
         }
 
-        const nomFitxer = 'captura_' + Date.now() + '.jpg';
+        const nomFitxer = 'captura_' + Date.now() + '.jpg'; // Millor PNG per a la comparació
         const camiUsuari = path.join(__dirname, '../../public/fotos_partides_usuaris', nomFitxer);
 
         let inputRef;
-        if (lloc.imatge_referencia.startsWith('http')) {
+        if (lloc.imatge_referencia.startsWith('http://') || lloc.imatge_referencia.startsWith('https://')) {
             const response = await fetch(lloc.imatge_referencia);
-            if (!response.ok) throw new Error("Error descarregant imatge externa");
-            inputRef = Buffer.from(await response.arrayBuffer());
+            if (!response.ok) {
+                return res.status(500).json({ missatge: "No s'ha pogut descarregar la imatge de referència externa." });
+            }
+            const arrayBuffer = await response.arrayBuffer();
+            inputRef = Buffer.from(arrayBuffer);
         } else {
             inputRef = path.join(__dirname, '../../public/fotos_historiques', lloc.imatge_referencia);
         }
 
         try {
             const carpetaUsuari = path.dirname(camiUsuari);
-            if (!fs.existsSync(carpetaUsuari)) fs.mkdirSync(carpetaUsuari, { recursive: true });
+            if (!fs.existsSync(carpetaUsuari)) {
+                fs.mkdirSync(carpetaUsuari, { recursive: true });
+            }
 
+            //aqui guardem la imatge que ens envia l usuari
             const dadesNetes = imatgeBase64.replace(/^data:image\/.*;base64,/, "");
             fs.writeFileSync(camiUsuari, dadesNetes, 'base64');
 
-            /* =========================================================
-               MOTOR DEFINITIU: Comparació Zonal de Luminància (MAE)
-               ========================================================= */
-            const processarImatge = async (imatgePathOrBuffer) => {
-                return await sharp(imatgePathOrBuffer)
-                    // 1. Matriu de 32x32: Equilibri perfecte entre precisió i tolerància
-                    .resize({ width: 32, height: 32, fit: 'fill' })
-                    // 2. Traiem el color (només comparem formes i ombres)
-                    .greyscale()
-                    // 3. Normalitzem la llum perquè el dia i la nit no afectin
-                    .normalize()
-                    // 4. Petit desenfocament per perdonar moviments de càmera
-                    .blur(1)
-                    .raw()
-                    .toBuffer();
+            /*començem el processament d'imatges amb sharp
+            - les pasem a 100x100 per ignorar detalls
+            - pasem a grisos
+            - fem el convolve (filtre de detecció de vorerers per ignorar problemes de llum*/
+
+            const opcionsProcessat = {
+                width: 100,
+                height: 100,
+                kernel: [-1, -1, -1, -1, 8, -1, -1, -1, -1] // Filtre per ressaltar línies
             };
 
-            const bufferRef = await processarImatge(inputRef);
-            const bufferUsuari = await processarImatge(camiUsuari);
+            const bufferRef = await sharp(inputRef)                           // Agafa la imatge original i la transforma 
+                .resize(opcionsProcessat.width, opcionsProcessat.height)            //en numeros que sharp pugui comparar
+                .greyscale()
+                .convolve({
+                    width: 3,
+                    height: 3,
+                    kernel: opcionsProcessat.kernel
+                })
+                .raw()
+                .toBuffer();
 
-            // Calculem la Diferència Absoluta Mitjana (MAE)
+            const bufferUsuari = await sharp(camiUsuari)
+                .resize(opcionsProcessat.width, opcionsProcessat.height)
+                .greyscale()
+                .convolve({
+                    width: 3,
+                    height: 3,
+                    kernel: opcionsProcessat.kernel
+                })
+                .raw()
+                .toBuffer();
+
             let diferenciaAcumulada = 0;
-            const TOTAL_PIXELS = 32 * 32; // 1024
-
-            for (let i = 0; i < TOTAL_PIXELS; i++) {
+            for (let i = 0; i < bufferRef.length; i++) {
                 diferenciaAcumulada += Math.abs(bufferRef[i] - bufferUsuari[i]);
             }
 
-            // La màxima diferència possible és si un píxel és blanc pur (255) i l'altre negre pur (0)
-            const maxDiferencia = TOTAL_PIXELS * 255;
+            // El valor màxim de diferència seria 100x100 píxels * 255 (valor màxim d'un píxel)
+            const maxDiferencia = 100 * 100 * 255;
+            const similitud = (1 - (diferenciaAcumulada / maxDiferencia)) * 100;
 
-            // Passem la diferència a percentatge de SIMILITUD
-            let similitud = (1 - (diferenciaAcumulada / maxDiferencia)) * 100;
+            console.log(`[Càmera] IdLloc: ${idLloc} | Similitud: ${similitud.toFixed(2)}%`);
 
-            console.log(`[Càmera - Zonal] Similitud real: ${similitud.toFixed(2)}%`);
-
-            // Si enfoques el mateix objecte/edifici hauria de donar > 75%
-            const LIMIT_VICTORIA = 75;
-
-            if (similitud >= LIMIT_VICTORIA) {
+            if (similitud >= 75) {
                 res.json({
                     exit: true,
                     coincidencia: similitud.toFixed(2) + "%",
@@ -86,17 +99,17 @@ router.post('/', async function (req, res) {
                 res.json({
                     exit: false,
                     coincidencia: similitud.toFixed(2) + "%",
-                    missatge: "La foto no coincideix prou amb la històrica. Revisa l'angle i la quadrícula."
+                    missatge: "No coincideix prou. Revisa l'angle."
                 });
             }
 
         } catch (error) {
-            console.error("Error processant:", error);
-            res.status(500).json({ missatge: "Error intern processant la foto." });
+            console.error("Error al backend:", error);
+            res.status(500).json({ missatge: "Error en el processament d'imatges." });
         }
     } catch (err) {
-        console.error("Error global:", err);
-        res.status(500).json({ missatge: "Error al servidor." });
+        console.error("Error buscant el lloc:", err);
+        res.status(500).json({ missatge: "Error de servidor al buscar el lloc." });
     }
 });
 
