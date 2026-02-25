@@ -65,8 +65,10 @@ router.post('/validar-foto', async function (req, res) {
         const maxDiferencia = 100 * 100 * 255;
         const similitud = (1 - (diferenciaAcumulada / maxDiferencia)) * 100;
 
-        // 5. Verifiquem si supera el llindar del 75% de similitud 
-        if (similitud >= 75) {
+        console.log(`[Càmera] IdLloc: ${idLloc} | Similitud: ${similitud.toFixed(2)}%`);
+
+        // Llindar del 50% (fotos reals vs fotos històriques tenen llum/angle diferent)
+        if (similitud >= 50) {
             res.json({
                 exit: true,
                 coincidencia: similitud.toFixed(2) + "%",
