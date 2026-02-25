@@ -9,6 +9,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 const videoRef = ref(null);
 const canvasRef = ref(null);
 const imatgeHistoricaSrc = ref('');
+const carregant = ref(false);
 let stream = null;
 
 onMounted(async () => {
@@ -46,7 +47,7 @@ onUnmounted(() => {
 });
 
 async function executarTotElProces() {
-  if (!videoRef.value || !canvasRef.value) return;
+  if (!videoRef.value || !canvasRef.value || carregant.value) return;
 
   // Capturem el frame actual del vídeo
   const canvas = canvasRef.value;
@@ -58,10 +59,11 @@ async function executarTotElProces() {
   const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
   const imatgeEnText = dataUrl.split(',')[1];
 
-  enviarDadesAlBackend(imatgeEnText);
+  await enviarDadesAlBackend(imatgeEnText);
 }
 
 async function enviarDadesAlBackend(imatgeEnText) {
+  carregant.value = true;
   const paquet = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -70,15 +72,24 @@ async function enviarDadesAlBackend(imatgeEnText) {
 
   try {
     const resposta = await fetch(`${API_URL}/api/validar-foto`, paquet);
-    const dades = await resposta.json();
+    const text = await resposta.text();
+    let dades;
+    try {
+      dades = JSON.parse(text);
+    } catch {
+      alert('Error del servidor. Torna-ho a provar.');
+      return;
+    }
 
     if (dades.exit) {
-      alert(dades.missatge + " (Similitud: " + dades.coincidencia + ")");
+      alert('✅ ' + dades.missatge + ' (Similitud: ' + dades.coincidencia + ')');
     } else {
-      alert(dades.missatge + " (Similitud: " + dades.coincidencia + ")");
+      alert('❌ ' + dades.missatge + ' (Similitud: ' + dades.coincidencia + ')');
     }
   } catch (error) {
-    alert("Error de connexió amb el servidor");
+    alert('Error de connexió amb el servidor: ' + error.message);
+  } finally {
+    carregant.value = false;
   }
 }
 </script>
@@ -112,10 +123,11 @@ async function enviarDadesAlBackend(imatgeEnText) {
       
       <button 
         @click="executarTotElProces"
-        class="px-8 py-4 rounded-xl font-bold border-2 transition-transform active:scale-95"
+        :disabled="carregant"
+        class="px-8 py-4 rounded-xl font-bold border-2 transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         style="background-color: #402749; color: #d9a6c2; border-color: #d9a6c2;"
       >
-        FER FOTO I VALIDAR
+        {{ carregant ? '⏳ Processant...' : 'FER FOTO I VALIDAR' }}
       </button>
     </div>
 

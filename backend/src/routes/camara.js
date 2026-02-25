@@ -13,6 +13,12 @@ router.post('/validar-foto', async function (req, res) {
     const camiReferencia = path.join(__dirname, '../../public/fotos_historiques', idLloc + '.jpg');
 
     try {
+        // Creem la carpeta si no existeix
+        const carpetaUsuari = path.dirname(camiUsuari);
+        if (!fs.existsSync(carpetaUsuari)) {
+            fs.mkdirSync(carpetaUsuari, { recursive: true });
+        }
+
         //aqui guardem la imatge que ens envia l usuari
         const dadesNetes = imatgeBase64.replace(/^data:image\/.*;base64,/, "");
         fs.writeFileSync(camiUsuari, dadesNetes, 'base64');
