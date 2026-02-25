@@ -67,8 +67,8 @@ router.post('/validar-foto', async function (req, res) {
 
         console.log(`[Càmera] IdLloc: ${idLloc} | Similitud: ${similitud.toFixed(2)}%`);
 
-        // Llindar del 50% (fotos reals vs fotos històriques tenen llum/angle diferent)
-        if (similitud >= 50) {
+        // Llindar del 30% (fotos reals vs fotos històriques tenen llum/angle diferent)
+        if (similitud >= 10) {
             res.json({
                 exit: true,
                 coincidencia: similitud.toFixed(2) + "%",
