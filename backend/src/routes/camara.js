@@ -19,7 +19,7 @@ router.post('/', async function (req, res) {
             return res.status(404).json({ missatge: "No s'ha trobat la imatge de referència per a aquest lloc." });
         }
 
-        const nomFitxer = 'captura_' + Date.now() + '.jpg'; // Millor PNG per a la comparació
+        const nomFitxer = 'captura_' + Date.now() + '.jpg';
         const camiUsuari = path.join(__dirname, '../../public/fotos_partides_usuaris', nomFitxer);
 
         let inputRef;
@@ -40,55 +40,62 @@ router.post('/', async function (req, res) {
                 fs.mkdirSync(carpetaUsuari, { recursive: true });
             }
 
-            //aqui guardem la imatge que ens envia l usuari
+            // Aquí guardem la imatge que ens envia l'usuari
             const dadesNetes = imatgeBase64.replace(/^data:image\/.*;base64,/, "");
             fs.writeFileSync(camiUsuari, dadesNetes, 'base64');
 
-            /*començem el processament d'imatges amb sharp
-            - les pasem a 100x100 per ignorar detalls
-            - pasem a grisos
-            - fem el convolve (filtre de detecció de vorerers per ignorar problemes de llum*/
-
-            const opcionsProcessat = {
-                width: 100,
-                height: 100,
-                kernel: [-1, -1, -1, -1, 8, -1, -1, -1, -1] // Filtre per ressaltar línies
+            /* COMENÇA EL PROCESSAMENT D'IMATGES (Enfocament Estructural)
+               - Redimensionem a 100x100
+               - Passem a grisos i normalitzem (ignora canvis de llum/brillantor)
+               - Filtre per extreure les línies de l'edifici
+               - Desenfoquem (blur) per perdonar petites fallades de pols
+            */
+            const processarImatge = async (imatgePathOrBuffer) => {
+                return await sharp(imatgePathOrBuffer)
+                    .resize(100, 100)
+                    .greyscale()
+                    .normalize()
+                    .convolve({
+                        width: 3,
+                        height: 3,
+                        kernel: [-1, -1, -1, -1, 8, -1, -1, -1, -1]
+                    })
+                    .blur(1.5)
+                    .raw()
+                    .toBuffer();
             };
 
-            const bufferRef = await sharp(inputRef)                           // Agafa la imatge original i la transforma 
-                .resize(opcionsProcessat.width, opcionsProcessat.height)            //en numeros que sharp pugui comparar
-                .greyscale()
-                .convolve({
-                    width: 3,
-                    height: 3,
-                    kernel: opcionsProcessat.kernel
-                })
-                .raw()
-                .toBuffer();
+            const bufferRef = await processarImatge(inputRef);
+            const bufferUsuari = await processarImatge(camiUsuari);
 
-            const bufferUsuari = await sharp(camiUsuari)
-                .resize(opcionsProcessat.width, opcionsProcessat.height)
-                .greyscale()
-                .convolve({
-                    width: 3,
-                    height: 3,
-                    kernel: opcionsProcessat.kernel
-                })
-                .raw()
-                .toBuffer();
+            // Càlcul de similitud basat en Intersecció (IoU) de les línies estructurals
+            let liniesCoincidents = 0;
+            let liniesTotals = 0;
+            const UMBRAL = 40; // Ignorem el fons negre. Només comptem les línies clares.
 
-            let diferenciaAcumulada = 0;
             for (let i = 0; i < bufferRef.length; i++) {
-                diferenciaAcumulada += Math.abs(bufferRef[i] - bufferUsuari[i]);
+                const esLiniaRef = bufferRef[i] > UMBRAL;
+                const esLiniaUsuari = bufferUsuari[i] > UMBRAL;
+
+                if (esLiniaRef || esLiniaUsuari) {
+                    liniesTotals++;
+                }
+
+                if (esLiniaRef && esLiniaUsuari) {
+                    liniesCoincidents++;
+                }
             }
 
-            // El valor màxim de diferència seria 100x100 píxels * 255 (valor màxim d'un píxel)
-            const maxDiferencia = 100 * 100 * 255;
-            const similitud = (1 - (diferenciaAcumulada / maxDiferencia)) * 100;
+            let similitud = 0;
+            if (liniesTotals > 0) {
+                similitud = (liniesCoincidents / liniesTotals) * 100;
+            }
 
-            console.log(`[Càmera] IdLloc: ${idLloc} | Similitud: ${similitud.toFixed(2)}%`);
+            console.log(`[Càmera] IdLloc: ${idLloc} | Similitud Estructural: ${similitud.toFixed(2)}%`);
 
-            if (similitud >= 75) {
+            // Hem baixat el llindar al 25% perquè ara l'algoritme és molt més estricte
+            // i només premia quan les formes de l'edifici encaixen realment.
+            if (similitud >= 25) {
                 res.json({
                     exit: true,
                     coincidencia: similitud.toFixed(2) + "%",
@@ -99,7 +106,7 @@ router.post('/', async function (req, res) {
                 res.json({
                     exit: false,
                     coincidencia: similitud.toFixed(2) + "%",
-                    missatge: "No coincideix prou. Revisa l'angle."
+                    missatge: "La forma de l'edifici no encaixa prou. Revisa l'angle."
                 });
             }
 
