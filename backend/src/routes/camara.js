@@ -40,27 +40,24 @@ router.post('/', async function (req, res) {
                 fs.mkdirSync(carpetaUsuari, { recursive: true });
             }
 
-            // Aquí guardem la imatge que ens envia l'usuari
+            // Aquí guardem la imatge que ens envia l'usuari des del Vue
             const dadesNetes = imatgeBase64.replace(/^data:image\/.*;base64,/, "");
             fs.writeFileSync(camiUsuari, dadesNetes, 'base64');
 
-            /* COMENÇA EL PROCESSAMENT D'IMATGES (Enfocament Estructural)
-               - Redimensionem a 100x100
-               - Passem a grisos i normalitzem (ignora canvis de llum/brillantor)
-               - Filtre per extreure les línies de l'edifici
-               - Desenfoquem (blur) per perdonar petites fallades de pols
-            */
+            /* COMENÇA EL PROCESSAMENT D'IMATGES (Versió Permissiva) */
             const processarImatge = async (imatgePathOrBuffer) => {
                 return await sharp(imatgePathOrBuffer)
-                    .resize(100, 100)
-                    .greyscale()
-                    .normalize()
+                    // 1. Baixem la resolució a 50x50 i ignorem les proporcions (aixafen la imatge en un quadrat)
+                    .resize({ width: 50, height: 50, fit: 'ignore' })
+                    .greyscale() // 2. Traiem el color
+                    .normalize() // 3. Igualem el contrast i la llum
                     .convolve({
                         width: 3,
                         height: 3,
-                        kernel: [-1, -1, -1, -1, 8, -1, -1, -1, -1]
+                        kernel: [-1, -1, -1, -1, 8, -1, -1, -1, -1] // 4. Extraiem les línies (vores)
                     })
-                    .blur(1.5)
+                    // 5. BLUR MOLT FORT: fa que les línies s'expandeixin i perdonin el mal pols
+                    .blur(3)
                     .raw()
                     .toBuffer();
             };
@@ -68,10 +65,10 @@ router.post('/', async function (req, res) {
             const bufferRef = await processarImatge(inputRef);
             const bufferUsuari = await processarImatge(camiUsuari);
 
-            // Càlcul de similitud basat en Intersecció (IoU) de les línies estructurals
             let liniesCoincidents = 0;
             let liniesTotals = 0;
-            const UMBRAL = 40; // Ignorem el fons negre. Només comptem les línies clares.
+            // Baixem el llindar perquè el blur difumina molt els blancs
+            const UMBRAL = 25;
 
             for (let i = 0; i < bufferRef.length; i++) {
                 const esLiniaRef = bufferRef[i] > UMBRAL;
@@ -80,7 +77,7 @@ router.post('/', async function (req, res) {
                 if (esLiniaRef || esLiniaUsuari) {
                     liniesTotals++;
                 }
-
+                // Només suma si les línies grosses de les dues fotos es toquen
                 if (esLiniaRef && esLiniaUsuari) {
                     liniesCoincidents++;
                 }
@@ -91,11 +88,12 @@ router.post('/', async function (req, res) {
                 similitud = (liniesCoincidents / liniesTotals) * 100;
             }
 
-            console.log(`[Càmera] IdLloc: ${idLloc} | Similitud Estructural: ${similitud.toFixed(2)}%`);
+            // --- AQUESTA LÍNIA ÉS LA MÉS IMPORTANT PER A LES TEVES PROVES ---
+            console.log(`[Càmera] IdLloc: ${idLloc} | Similitud real detectada: ${similitud.toFixed(2)}%`);
+            // ----------------------------------------------------------------
 
-            // Hem baixat el llindar al 25% perquè ara l'algoritme és molt més estricte
-            // i només premia quan les formes de l'edifici encaixen realment.
-            if (similitud >= 25) {
+            // Posem l'exigència súper baixa (10%) per fer proves.
+            if (similitud >= 10) {
                 res.json({
                     exit: true,
                     coincidencia: similitud.toFixed(2) + "%",
@@ -106,7 +104,7 @@ router.post('/', async function (req, res) {
                 res.json({
                     exit: false,
                     coincidencia: similitud.toFixed(2) + "%",
-                    missatge: "La forma de l'edifici no encaixa prou. Revisa l'angle."
+                    missatge: "La forma no encaixa prou. Revisa l'angle."
                 });
             }
 
