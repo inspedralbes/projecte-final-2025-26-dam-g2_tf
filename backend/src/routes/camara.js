@@ -9,14 +9,12 @@ router.post('/', async function (req, res) {
     const imatgeBase64 = req.body.imatge;
     const idLloc = req.body.idLloc;
 
-    if (!idLloc) {
-        return res.status(400).json({ missatge: "Falta l'ID del lloc." });
-    }
+    if (!idLloc) return res.status(400).json({ missatge: "Falta l'ID del lloc." });
 
     try {
         const lloc = await Lloc.findById(idLloc);
         if (!lloc || !lloc.imatge_referencia) {
-            return res.status(404).json({ missatge: "No s'ha trobat la imatge de referència." });
+            return res.status(404).json({ missatge: "No s'ha trobat la imatge." });
         }
 
         const nomFitxer = 'captura_' + Date.now() + '.jpg';
@@ -35,56 +33,47 @@ router.post('/', async function (req, res) {
             const carpetaUsuari = path.dirname(camiUsuari);
             if (!fs.existsSync(carpetaUsuari)) fs.mkdirSync(carpetaUsuari, { recursive: true });
 
-            // Guardem la imatge de l'usuari
             const dadesNetes = imatgeBase64.replace(/^data:image\/.*;base64,/, "");
             fs.writeFileSync(camiUsuari, dadesNetes, 'base64');
 
-            /* ==============================================================
-               NOU MOTOR DE COMPARACIÓ: dHash (Difference Hash Perceptual)
-               ============================================================== */
-
-            // Funció per generar la "petjada digital" (hash) de la imatge
-            const calcularDHash = async (imatgePathOrBuffer) => {
-                // 1. Reduïm la imatge a una quadrícula minúscula de 9x8 píxels.
-                // Això elimina tot el soroll, fons complexos i problemes d'enfocament.
-                const buffer = await sharp(imatgePathOrBuffer)
-                    .resize({ width: 9, height: 8, fit: 'fill' })
-                    .greyscale() // Llevem el color
+            /* =========================================================
+               MOTOR DEFINITIU: Comparació Zonal de Luminància (MAE)
+               ========================================================= */
+            const processarImatge = async (imatgePathOrBuffer) => {
+                return await sharp(imatgePathOrBuffer)
+                    // 1. Matriu de 32x32: Equilibri perfecte entre precisió i tolerància
+                    .resize({ width: 32, height: 32, fit: 'fill' })
+                    // 2. Traiem el color (només comparem formes i ombres)
+                    .greyscale()
+                    // 3. Normalitzem la llum perquè el dia i la nit no afectin
+                    .normalize()
+                    // 4. Petit desenfocament per perdonar moviments de càmera
+                    .blur(1)
                     .raw()
                     .toBuffer();
-
-                let hash = '';
-                // 2. Comparem cada píxel amb el de la seva dreta per veure on hi ha canvis de llum
-                for (let y = 0; y < 8; y++) {
-                    for (let x = 0; x < 8; x++) {
-                        const pixelEsquerra = buffer[y * 9 + x];
-                        const pixelDreta = buffer[y * 9 + (x + 1)];
-                        // Si l'esquerra és més brillant que la dreta, posem un '1', si no, un '0'
-                        hash += pixelEsquerra > pixelDreta ? '1' : '0';
-                    }
-                }
-                return hash; // Retorna un string de 64 uns i zeros (ex: "10110010...")
             };
 
-            // Calculem les petjades d'ambdues imatges
-            const hashRef = await calcularDHash(inputRef);
-            const hashUsuari = await calcularDHash(camiUsuari);
+            const bufferRef = await processarImatge(inputRef);
+            const bufferUsuari = await processarImatge(camiUsuari);
 
-            // 3. Comparem els dos hash (Distància de Hamming)
-            let diferencies = 0;
-            for (let i = 0; i < 64; i++) {
-                if (hashRef[i] !== hashUsuari[i]) {
-                    diferencies++;
-                }
+            // Calculem la Diferència Absoluta Mitjana (MAE)
+            let diferenciaAcumulada = 0;
+            const TOTAL_PIXELS = 32 * 32; // 1024
+
+            for (let i = 0; i < TOTAL_PIXELS; i++) {
+                diferenciaAcumulada += Math.abs(bufferRef[i] - bufferUsuari[i]);
             }
 
-            // 4. Calculem el percentatge (0 diferències = 100% iguals)
-            const similitud = ((64 - diferencies) / 64) * 100;
+            // La màxima diferència possible és si un píxel és blanc pur (255) i l'altre negre pur (0)
+            const maxDiferencia = TOTAL_PIXELS * 255;
 
-            console.log(`[Càmera - Nou Motor dHash] IdLloc: ${idLloc} | Similitud: ${similitud.toFixed(2)}%`);
+            // Passem la diferència a percentatge de SIMILITUD
+            let similitud = (1 - (diferenciaAcumulada / maxDiferencia)) * 100;
 
-            // Per dHash, una similitud > 70% ja indica que és clarament la mateixa foto/edifici
-            const LIMIT_VICTORIA = 70;
+            console.log(`[Càmera - Zonal] Similitud real: ${similitud.toFixed(2)}%`);
+
+            // Si enfoques el mateix objecte/edifici hauria de donar > 75%
+            const LIMIT_VICTORIA = 75;
 
             if (similitud >= LIMIT_VICTORIA) {
                 res.json({
@@ -97,12 +86,12 @@ router.post('/', async function (req, res) {
                 res.json({
                     exit: false,
                     coincidencia: similitud.toFixed(2) + "%",
-                    missatge: "No s'assembla prou. Intenta quadrar millor l'objectiu."
+                    missatge: "La foto no coincideix prou amb la històrica. Revisa l'angle i la quadrícula."
                 });
             }
 
         } catch (error) {
-            console.error("Error al processar imatges:", error);
+            console.error("Error processant:", error);
             res.status(500).json({ missatge: "Error intern processant la foto." });
         }
     } catch (err) {

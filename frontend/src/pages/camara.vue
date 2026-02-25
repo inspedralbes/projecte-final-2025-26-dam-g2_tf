@@ -13,7 +13,6 @@ const carregant = ref(false);
 let stream = null;
 
 onMounted(async () => {
-  // Carreguem la foto històrica des de la BD
   try {
     if (idLloc) {
       const resposta = await fetch(`${API_URL}/api/mapa/punts/${idLloc}`);
@@ -26,10 +25,9 @@ onMounted(async () => {
     console.error('Error carregant la foto històrica:', err);
   }
 
-  // Activem la càmera
   try {
     stream = await navigator.mediaDevices.getUserMedia({ 
-      video: { facingMode: 'environment' } // Càmera trasera
+      video: { facingMode: 'environment' }
     });
     if (videoRef.value) {
       videoRef.value.srcObject = stream;
@@ -40,7 +38,6 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  // Apaguem la càmera quan sortim de la pàgina
   if (stream) {
     stream.getTracks().forEach(track => track.stop());
   }
@@ -49,13 +46,11 @@ onUnmounted(() => {
 async function executarTotElProces() {
   if (!videoRef.value || !canvasRef.value || carregant.value) return;
 
-  // Capturem el frame actual del vídeo
   const canvas = canvasRef.value;
   canvas.width = videoRef.value.videoWidth;
   canvas.height = videoRef.value.videoHeight;
   canvas.getContext('2d').drawImage(videoRef.value, 0, 0);
 
-  // Convertim a base64 (sense el prefix "data:image/jpeg;base64,")
   const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
   const imatgeEnText = dataUrl.split(',')[1];
 
@@ -87,7 +82,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
       alert('❌ ' + dades.missatge + ' (Similitud: ' + dades.coincidencia + ')');
     }
   } catch (error) {
-    alert('Error de connexió amb el servidor: ' + error.message);
+    alert('Error de connexió: ' + error.message);
   } finally {
     carregant.value = false;
   }
@@ -97,7 +92,6 @@ async function enviarDadesAlBackend(imatgeEnText) {
 <template>
   <div class="relative w-full h-screen bg-black overflow-hidden">
 
-    <!-- Stream de la càmera -->
     <video 
       ref="videoRef" 
       autoplay 
@@ -105,29 +99,35 @@ async function enviarDadesAlBackend(imatgeEnText) {
       class="absolute inset-0 w-full h-full object-cover z-0"
     ></video>
 
-    <!-- Canvas ocult per capturar la foto -->
     <canvas ref="canvasRef" class="hidden"></canvas>
 
-    <!-- Imatge històrica semitransparent -->
     <img 
       v-if="imatgeHistoricaSrc"
       :src="imatgeHistoricaSrc" 
       class="absolute inset-0 w-full h-full object-cover z-10 opacity-40 pointer-events-none" 
     />
 
-    <!-- Controls -->
+    <div class="absolute inset-0 z-15 pointer-events-none flex flex-col justify-evenly">
+      <div class="w-full h-[1px] bg-white/50"></div>
+      <div class="w-full h-[1px] bg-white/50"></div>
+    </div>
+    <div class="absolute inset-0 z-15 pointer-events-none flex justify-evenly">
+      <div class="h-full w-[1px] bg-white/50"></div>
+      <div class="h-full w-[1px] bg-white/50"></div>
+    </div>
+
     <div class="absolute bottom-10 w-full flex flex-col items-center gap-4 z-20">
-      <p class="text-white bg-black/50 px-3 py-1 rounded-full text-sm">
-        Intenta quadrar els contorns de l'edifici
+      <p class="text-white bg-black/60 px-4 py-2 rounded-full text-sm backdrop-blur-sm">
+        Quadra l'edifici fent servir la quadrícula
       </p>
       
       <button 
         @click="executarTotElProces"
         :disabled="carregant"
-        class="px-8 py-4 rounded-xl font-bold border-2 transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="px-8 py-4 rounded-xl font-bold border-2 transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
         style="background-color: #402749; color: #d9a6c2; border-color: #d9a6c2;"
       >
-        {{ carregant ? '⏳ Processant...' : 'FER FOTO I VALIDAR' }}
+        {{ carregant ? '⏳ COMPROVANT...' : 'FER FOTO I VALIDAR' }}
       </button>
     </div>
 
