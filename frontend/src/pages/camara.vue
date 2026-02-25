@@ -1,16 +1,31 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
 
-const props = defineProps({
-  idLloc: String
-});
+const route = useRoute();
+const idLloc = route.params.id;
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 const videoRef = ref(null);
 const canvasRef = ref(null);
+const imatgeHistoricaSrc = ref('');
 let stream = null;
 
 onMounted(async () => {
+  // Carreguem la foto històrica des de la BD
+  try {
+    if (idLloc) {
+      const resposta = await fetch(`${API_URL}/api/mapa/punts/${idLloc}`);
+      const dades = await resposta.json();
+      if (dades.fotos_historiques && dades.fotos_historiques.length > 0) {
+        imatgeHistoricaSrc.value = `${API_URL}/fotos_historiques/${dades.fotos_historiques[0]}`;
+      }
+    }
+  } catch (err) {
+    console.error('Error carregant la foto històrica:', err);
+  }
+
+  // Activem la càmera
   try {
     stream = await navigator.mediaDevices.getUserMedia({ 
       video: { facingMode: 'environment' } // Càmera trasera
@@ -50,7 +65,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
   const paquet = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ imatge: imatgeEnText })
+    body: JSON.stringify({ imatge: imatgeEnText, idLloc: idLloc })
   };
 
   try {
@@ -84,7 +99,8 @@ async function enviarDadesAlBackend(imatgeEnText) {
 
     <!-- Imatge històrica semitransparent -->
     <img 
-      :src="'/img/fotos_historiques/' + idLloc + '.jpg'" 
+      v-if="imatgeHistoricaSrc"
+      :src="imatgeHistoricaSrc" 
       class="absolute inset-0 w-full h-full object-cover z-10 opacity-40 pointer-events-none" 
     />
 

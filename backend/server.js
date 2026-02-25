@@ -2,11 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-
 const { connectDB } = require('./src/config/db');
-
-
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -37,18 +33,12 @@ async function startServer() {
         app.use('/api/admin', require('./src/routes/admin'));
         app.use('/api/auth', require('./src/routes/auth'));
 
-        
-      
-
         // 4. Configurar Socket.io
         const http = require('http');
-
         const server = http.createServer(app);
 
         // 4. Configurar Socket.io
         require('./src/routes/gameSocket')(server);
-
-
         server.listen(PORT, '0.0.0.0', function () {
             console.log("Servidor funcionant a: http://localhost:" + PORT);
         });

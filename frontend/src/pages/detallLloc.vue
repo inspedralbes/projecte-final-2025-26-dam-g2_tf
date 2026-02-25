@@ -89,6 +89,10 @@ function obrirGoogleMaps() {
 
 
 
+function anarACamara() {
+  router.push({ name: 'camara', params: { id: route.params.id } });
+}
+
 function comencarJoc() {
   if (!usuari.value) {
     obrirModal('Per començar la ruta i guardar el teu progress, has d\'iniciar sessió primer. és ràpid i gratuit!');

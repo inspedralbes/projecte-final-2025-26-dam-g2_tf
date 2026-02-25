@@ -4,24 +4,24 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 
-router.post('/validar-foto', async function(req, res) {
-    const imatgeBase64 = req.body.imatge; 
+router.post('/validar-foto', async function (req, res) {
+    const imatgeBase64 = req.body.imatge;
     const idLloc = req.body.idLloc; // Necessitem rebre quin lloc és per buscar la referència
 
     const nomFitxer = 'captura_' + Date.now() + '.jpg'; // Millor PNG per a la comparació
     const camiUsuari = path.join(__dirname, '../../public/fotos_partides_usuaris', nomFitxer);
-    const camiReferencia = path.join(__dirname, '../../public/fotos_historiques', idLloc + '.jpg'); 
+    const camiReferencia = path.join(__dirname, '../../public/fotos_historiques', idLloc + '.jpg');
 
-        try{ 
-            //aqui guardem la imatge que ens envia l usuari
-            const dadesNetes = imatgeBase64.replace(/^data:image\/.*;base64,/, "");
+    try {
+        //aqui guardem la imatge que ens envia l usuari
+        const dadesNetes = imatgeBase64.replace(/^data:image\/.*;base64,/, "");
         fs.writeFileSync(camiUsuari, dadesNetes, 'base64');
 
         /*començem el processament d'imatges amb sharp
         - les pasem a 100x100 per ignorar detalls
         - pasem a grisos
         - fem el convolve (filtre de detecció de vorerers per ignorar problemes de llum*/
-        
+
         const opcionsProcessat = {
             width: 100,
             height: 100,
@@ -51,7 +51,7 @@ router.post('/validar-foto', async function(req, res) {
         let diferenciaAcumulada = 0;
         for (let i = 0; i < bufferRef.length; i++) {
             diferenciaAcumulada += Math.abs(bufferRef[i] - bufferUsuari[i]);
-        } 
+        }
 
         // El valor màxim de diferència seria 100x100 píxels * 255 (valor màxim d'un píxel)
         const maxDiferencia = 100 * 100 * 255;
@@ -59,17 +59,17 @@ router.post('/validar-foto', async function(req, res) {
 
         // 5. Verifiquem si supera el llindar del 75% de similitud 
         if (similitud >= 75) {
-            res.json({ 
+            res.json({
                 exit: true,
                 coincidencia: similitud.toFixed(2) + "%",
                 missatge: "Cromo guardat! Has trobat l'angle correcte.",
-                url: "/fotos_partides_usuaris/" + nomFitxer 
+                url: "/fotos_partides_usuaris/" + nomFitxer
             });
         } else {
-            res.json({ 
+            res.json({
                 exit: false,
                 coincidencia: similitud.toFixed(2) + "%",
-                missatge: "No coincideix prou. Revisa l'angle." 
+                missatge: "No coincideix prou. Revisa l'angle."
             });
         }
 
