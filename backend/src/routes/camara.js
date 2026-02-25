@@ -35,7 +35,6 @@ router.post('/', async function (req, res) {
         }
 
         try {
-            // Creem la carpeta si no existeix
             const carpetaUsuari = path.dirname(camiUsuari);
             if (!fs.existsSync(carpetaUsuari)) {
                 fs.mkdirSync(carpetaUsuari, { recursive: true });
