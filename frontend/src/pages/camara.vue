@@ -3,21 +3,22 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
+const idLloc = route.params.id;
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 const videoRef = ref(null);
 const canvasRef = ref(null);
-const imatgeHistorica = ref(null);
+const imatgeHistoricaSrc = ref('');
 let stream = null;
 
 onMounted(async () => {
-  // Carreguem les dades del lloc per obtenir la foto històrica
+  // Carreguem la foto històrica des de la BD
   try {
-    const idLloc = route.params.id;
     if (idLloc) {
       const resposta = await fetch(`${API_URL}/api/mapa/punts/${idLloc}`);
       const dades = await resposta.json();
       if (dades.fotos_historiques && dades.fotos_historiques.length > 0) {
-        imatgeHistorica.value = `${API_URL}/fotos_historiques/${dades.fotos_historiques[0]}`;
+        imatgeHistoricaSrc.value = `${API_URL}/fotos_historiques/${dades.fotos_historiques[0]}`;
       }
     }
   } catch (err) {
@@ -64,11 +65,11 @@ async function enviarDadesAlBackend(imatgeEnText) {
   const paquet = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ imatge: imatgeEnText, idLloc: route.params.id })
+    body: JSON.stringify({ imatge: imatgeEnText, idLloc: idLloc })
   };
 
   try {
-    const resposta = await fetch(`${API_URL}/api/camara/validar-foto`, paquet);
+    const resposta = await fetch(`${API_URL}/api/validar-foto`, paquet);
     const dades = await resposta.json();
 
     if (dades.exit) {
@@ -98,8 +99,8 @@ async function enviarDadesAlBackend(imatgeEnText) {
 
     <!-- Imatge històrica semitransparent -->
     <img 
-      v-if="imatgeHistorica"
-      :src="imatgeHistorica" 
+      v-if="imatgeHistoricaSrc"
+      :src="imatgeHistoricaSrc" 
       class="absolute inset-0 w-full h-full object-cover z-10 opacity-40 pointer-events-none" 
     />
 

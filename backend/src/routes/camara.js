@@ -3,21 +3,14 @@ const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
-const { Lloc } = require('../models/index');
 
 router.post('/validar-foto', async function (req, res) {
     const imatgeBase64 = req.body.imatge;
-    const idLloc = req.body.idLloc;
+    const idLloc = req.body.idLloc; // Necessitem rebre quin lloc és per buscar la referència
 
-    // Busquem el nom del fitxer de referència a la BD
-    const lloc = await Lloc.findById(idLloc);
-    if (!lloc || !lloc.fotos_historiques || lloc.fotos_historiques.length === 0) {
-        return res.status(404).json({ missatge: "No s'ha trobat cap foto de refer\u00e8ncia per a aquest lloc." });
-    }
-
-    const nomFitxer = 'captura_' + Date.now() + '.jpg';
+    const nomFitxer = 'captura_' + Date.now() + '.jpg'; // Millor PNG per a la comparació
     const camiUsuari = path.join(__dirname, '../../public/fotos_partides_usuaris', nomFitxer);
-    const camiReferencia = path.join(__dirname, '../../public/fotos_historiques', lloc.fotos_historiques[0]);
+    const camiReferencia = path.join(__dirname, '../../public/fotos_historiques', idLloc + '.jpg');
 
     try {
         //aqui guardem la imatge que ens envia l usuari
@@ -35,16 +28,14 @@ router.post('/validar-foto', async function (req, res) {
             kernel: [-1, -1, -1, -1, 8, -1, -1, -1, -1] // Filtre per ressaltar línies
         };
 
-        const bufferRef = await sharp(camiReferencia)
-            .resize(opcionsProcessat.width, opcionsProcessat.height)
+        const bufferRef = await sharp(camiReferencia)                           // Agafa la imatge original i la transforma 
+            .resize(opcionsProcessat.width, opcionsProcessat.height)            //en numeros que sharp pugui comparar
             .greyscale()
             .convolve({
                 width: 3,
                 height: 3,
                 kernel: opcionsProcessat.kernel
             })
-            .raw()
-            .toBuffer();
 
         const bufferUsuari = await sharp(camiUsuari)
             .resize(opcionsProcessat.width, opcionsProcessat.height)
