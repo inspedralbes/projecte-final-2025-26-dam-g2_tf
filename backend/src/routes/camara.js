@@ -48,7 +48,7 @@ router.post('/', async function (req, res) {
             const processarImatge = async (imatgePathOrBuffer) => {
                 return await sharp(imatgePathOrBuffer)
                     // 1. Baixem la resolució a 50x50 i ignorem les proporcions (aixafen la imatge en un quadrat)
-                    .resize({ width: 50, height: 50, fit: 'ignore' })
+                    .resize({ width: 50, height: 50, fit: 'fill' })
                     .greyscale() // 2. Traiem el color
                     .normalize() // 3. Igualem el contrast i la llum
                     .convolve({
