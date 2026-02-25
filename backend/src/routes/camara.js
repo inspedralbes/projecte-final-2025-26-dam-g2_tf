@@ -36,6 +36,8 @@ router.post('/validar-foto', async function (req, res) {
                 height: 3,
                 kernel: opcionsProcessat.kernel
             })
+            .raw()
+            .toBuffer();
 
         const bufferUsuari = await sharp(camiUsuari)
             .resize(opcionsProcessat.width, opcionsProcessat.height)
