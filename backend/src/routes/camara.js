@@ -47,33 +47,24 @@ router.post('/', async function (req, res) {
             /*començem el processament d'imatges amb sharp
             - les pasem a 100x100 per ignorar detalls
             - pasem a grisos
-            - fem el convolve (filtre de detecció de vorerers per ignorar problemes de llum*/
+            - normalitzem els colors per reduir l'efecte de la il·luminació*/
 
             const opcionsProcessat = {
                 width: 100,
-                height: 100,
-                kernel: [-1, -1, -1, -1, 8, -1, -1, -1, -1] // Filtre per ressaltar línies
+                height: 100
             };
 
-            const bufferRef = await sharp(inputRef)                           // Agafa la imatge original i la transforma 
-                .resize(opcionsProcessat.width, opcionsProcessat.height)            //en numeros que sharp pugui comparar
+            const bufferRef = await sharp(inputRef)
+                .resize(opcionsProcessat.width, opcionsProcessat.height)
                 .greyscale()
-                .convolve({
-                    width: 3,
-                    height: 3,
-                    kernel: opcionsProcessat.kernel
-                })
+                .normalise() // Normalitza el contrast per reduir diferències de llum
                 .raw()
                 .toBuffer();
 
             const bufferUsuari = await sharp(camiUsuari)
                 .resize(opcionsProcessat.width, opcionsProcessat.height)
                 .greyscale()
-                .convolve({
-                    width: 3,
-                    height: 3,
-                    kernel: opcionsProcessat.kernel
-                })
+                .normalise() // Normalitza el contrast per reduir diferències de llum
                 .raw()
                 .toBuffer();
 
@@ -88,7 +79,7 @@ router.post('/', async function (req, res) {
 
             console.log(`[Càmera] IdLloc: ${idLloc} | Similitud: ${similitud.toFixed(2)}%`);
 
-            if (similitud >= 75) {
+            if (similitud >= 60) {
                 res.json({
                     exit: true,
                     coincidencia: similitud.toFixed(2) + "%",
