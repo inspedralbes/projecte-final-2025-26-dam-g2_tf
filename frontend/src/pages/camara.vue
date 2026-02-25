@@ -18,8 +18,8 @@ onMounted(async () => {
     if (idLloc) {
       const resposta = await fetch(`${API_URL}/api/mapa/punts/${idLloc}`);
       const dades = await resposta.json();
-      if (dades.imatge_referencia) {
-        imatgeHistoricaSrc.value = `${API_URL}/fotos_historiques/${dades.imatge_referencia}`;
+      if (dades.fotos_historiques && dades.fotos_historiques.length > 0) {
+        imatgeHistoricaSrc.value = `${API_URL}/fotos_historiques/${dades.fotos_historiques[0]}`;
       }
     }
   } catch (err) {
