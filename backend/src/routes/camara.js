@@ -21,7 +21,18 @@ router.post('/', async function (req, res) {
 
         const nomFitxer = 'captura_' + Date.now() + '.jpg'; // Millor PNG per a la comparació
         const camiUsuari = path.join(__dirname, '../../public/fotos_partides_usuaris', nomFitxer);
-        const camiReferencia = path.join(__dirname, '../../public/fotos_historiques', lloc.imatge_referencia);
+
+        let inputRef;
+        if (lloc.imatge_referencia.startsWith('http://') || lloc.imatge_referencia.startsWith('https://')) {
+            const response = await fetch(lloc.imatge_referencia);
+            if (!response.ok) {
+                return res.status(500).json({ missatge: "No s'ha pogut descarregar la imatge de referència externa." });
+            }
+            const arrayBuffer = await response.arrayBuffer();
+            inputRef = Buffer.from(arrayBuffer);
+        } else {
+            inputRef = path.join(__dirname, '../../public/fotos_historiques', lloc.imatge_referencia);
+        }
 
         try {
             // Creem la carpeta si no existeix
@@ -45,7 +56,7 @@ router.post('/', async function (req, res) {
                 kernel: [-1, -1, -1, -1, 8, -1, -1, -1, -1] // Filtre per ressaltar línies
             };
 
-            const bufferRef = await sharp(camiReferencia)                           // Agafa la imatge original i la transforma 
+            const bufferRef = await sharp(inputRef)                           // Agafa la imatge original i la transforma 
                 .resize(opcionsProcessat.width, opcionsProcessat.height)            //en numeros que sharp pugui comparar
                 .greyscale()
                 .convolve({
