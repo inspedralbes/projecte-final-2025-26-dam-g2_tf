@@ -235,12 +235,14 @@
 import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
+import { useLoginModal } from '../composables/useLoginModal';
 import BotonPerfil from '../components/BotonPerfil.vue';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
 const router = useRouter();
 const { usuari, login } = useAuth();
+const { obrirModal } = useLoginModal();
 
 const pestanyaActiva = ref('feed');
 const categories = ['Tots', 'Industrial', 'Gòtic', 'Parcs', 'Graffiti', 'Misteri'];
@@ -359,16 +361,16 @@ function visitarPerfil(item) {
 }
 
 async function ferLike(postId) {
-  if (!usuari.value) return;
+  if (!usuari.value) {
+    obrirModal('Inicia sessió per poder donar likes i interactuar amb la comunitat!');
+    return;
+  }
   try {
     await fetch(`${API_URL}/api/social/posts/${postId}/like`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      // CAMBIAMOS 'userId' por 'id_usuari' para que coincida con tu backend
       body: JSON.stringify({ id_usuari: usuari.value._id }) 
     });
-    
-    // Esto refresca la lista de posts para que el corazón cambie de 🤍 a ❤️
     await carregarPosts(); 
   } catch (err) {
     console.error("Error like:", err);
@@ -380,7 +382,11 @@ function toggleComentaris(postId) {
 }
 
 async function enviarComentari(postId) {
-  if (!nouComentariText.value.trim() || !usuari.value) return;
+  if (!nouComentariText.value.trim()) return;
+  if (!usuari.value) {
+    obrirModal('Inicia sessió per poder deixar comentaris a la comunitat!');
+    return;
+  }
   try {
     await fetch(`${API_URL}/api/social/posts/${postId}/comentari`, {
       method: 'POST',

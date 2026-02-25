@@ -62,10 +62,15 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router' 
+import { useAuth } from '../composables/useAuth';
+import { useLoginModal } from '../composables/useLoginModal';
 
 const route = useRoute()
 const router = useRouter() 
 const lloc = ref(null)
+
+const { usuari } = useAuth();
+const { obrirModal } = useLoginModal();
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
@@ -85,25 +90,23 @@ function obrirGoogleMaps() {
 
 
 function comencarJoc() {
-  console.log("Iniciando ruta para:", route.params.id);
-  
-  const usuariGuardat = localStorage.getItem('usuari');
-
-  if (!usuariGuardat) {
-    
-    alert("Per seguretat i per guardar el teu progrés, has d'iniciar sessió abans de començar la ruta.");
-    
-    
-    window.dispatchEvent(new CustomEvent('obrir-login'));
+  if (!usuari.value) {
+    obrirModal('Per començar la ruta i guardar el teu progress, has d\'iniciar sessió primer. és ràpid i gratuit!');
     return;
   }
-
-  console.log("Usuari detectat. Anant al joc...");
 
   router.push({ 
     path: '/sala-espera/crear', 
     query: { idLloc: route.params.id } 
   });
+}
+
+function anarACamara() {
+  if (!usuari.value) {
+    obrirModal('Has d\'iniciar sessió per poder usar la càmera i desbloquejar col·leccionables!');
+    return;
+  }
+  router.push({ name: 'camara', params: { id: route.params.id } });
 } 
 
 onMounted(async () => {

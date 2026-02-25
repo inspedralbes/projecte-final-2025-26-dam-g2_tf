@@ -121,6 +121,7 @@
 import { ref, onMounted, nextTick, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
+import { useLoginModal } from '../composables/useLoginModal';
 import L from 'leaflet'; 
 import 'leaflet/dist/leaflet.css'; 
 import BotonPerfil from '../components/BotonPerfil.vue';
@@ -137,6 +138,7 @@ const manualAddress = ref('');
 const imgInput = ref('');
 
 const { usuari, login } = useAuth();
+const { obrirModal } = useLoginModal();
 const usuariId = ref(null);
 
 let map = null;
@@ -241,7 +243,8 @@ async function submitForm() {
   successMessage.value = '';
 
   if (!form.value.id_usuari) {
-      errorMessage.value = "Error: No estàs loguejat. Inicia sessió per enviar.";
+      // Mostrem el modal de login en lloc d'un missatge d'error text
+      obrirModal('Per enviar una petició de ruta, has d\'iniciar sessió primer. És ràpid!');
       isSubmitting.value = false;
       return;
   }

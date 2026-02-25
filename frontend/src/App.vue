@@ -5,6 +5,9 @@
     </main>
 
     <NavBar v-if="mostrarNavBar" />
+
+    <!-- Modal de login global: accessible des de qualsevol pàgina -->
+    <LoginModal />
   </div>
 </template>
 
@@ -12,6 +15,7 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import NavBar from './components/navBar.vue';
+import LoginModal from './components/LoginModal.vue';
 
 const route = useRoute();
 

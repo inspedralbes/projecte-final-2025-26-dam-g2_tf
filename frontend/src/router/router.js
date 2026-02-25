@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useLoginModal } from '../composables/useLoginModal';
 
 // Importem els teus fitxers de la carpeta 'pages'
 import Index from '../pages/index.vue'
@@ -32,7 +33,7 @@ const routes = [
     name: 'Login',
     component: elmeulogin
   },
-  
+
   // --- RUTES PROTEGIDES ---
   {
     path: '/admin/dashboard',
@@ -54,15 +55,16 @@ const routes = [
   },
   // -------------------------
   {
-  path: '/joc/camera/:id', // Ha de tenir els dos punts (:) per a la ID
-  name: 'camara',
-  component: camara
-},
+    path: '/joc/camera/:id', // Ha de tenir els dos punts (:) per a la ID
+    name: 'camara',
+    component: camara
+  },
 
   {
     path: '/social',
     name: 'social',
-    component: Social
+    component: Social,
+    meta: { requiereAuth: true } // Protegit: cal iniciar sessió
   },
   {
     path: '/cercador',
@@ -77,7 +79,7 @@ const routes = [
   {
     path: '/mapa/:id',
     name: 'mapa-joc',
-    component: mapajoc 
+    component: mapajoc
   },
 
   {
@@ -88,7 +90,8 @@ const routes = [
   {
     path: '/peticions',
     name: 'peticions',
-    component: Peticions
+    component: Peticions,
+    meta: { requiereAuth: true } // Protegit: cal iniciar sessió
   },
   {
     path: '/perfil-visita/:id',
@@ -104,7 +107,8 @@ const routes = [
     path: '/lloc/:id',
     name: 'detall-lloc',
     component: DetallLloc,
-    props: true // Això permet passar l'id directament com a prop
+    props: true, // Això permet passar l'id directament com a prop
+    meta: { requiereAuth: true } // Protegit: cal iniciar sessió
   },
 
   {
@@ -112,7 +116,7 @@ const routes = [
     name: 'sala-espera',
     component: SalaEspera
   },
-  
+
   {
     path: '/leaderboard-final/:id', // L'ID de la sessió de joc
     name: 'leaderboard-final',
@@ -126,35 +130,68 @@ const router = createRouter({
   routes,
 })
 
-// GUÀRDIA DE NAVEGACIÓ CORREGIDA
+// GUÀRDIA DE NAVEGACIÓ
 router.beforeEach((to, from, next) => {
-  // 1. Intentamos leer la sesión, pero SIN MIEDO a que falle
+  // 1. Llegim la sessió d'admin
   const sessioRaw = localStorage.getItem('admin_session');
   let sessio = null;
 
   try {
-    // Solo intentamos parsear si hay algo y parece un objeto
     if (sessioRaw && sessioRaw.startsWith('{')) {
       sessio = JSON.parse(sessioRaw);
     }
   } catch (e) {
-    // Si el JSON está mal, no hacemos nada, sessio se queda null
     console.warn("Sessió no vàlida, continuant com a convidat");
   }
 
-  // 2. Definimos si la ruta es protegida
+  // 2. Definim si la ruta requereix admin o auth normal
   const requereixAdmin = to.matched.some(record => record.meta.requiereAdmin);
+  const requereixAuth = to.matched.some(record => record.meta.requiereAuth);
 
-  // 3. LÓGICA DE NAVEGACIÓN
+  // 3. LÒGICA DE NAVEGACIÓ
   if (requereixAdmin) {
-    // SOLO si la ruta pide admin, comprobamos la sesión
+    // Ruta d'admin: comprovem sessió d'admin
     if (sessio && sessio.rol === 'admin') {
-      next(); // Es admin, pasa
+      next();
     } else {
-      next({ name: 'home' }); // No es admin, fuera de aquí (a la home)
+      next({ name: 'home' });
     }
+
+  } else if (requereixAuth) {
+    // Ruta protegida per a usuaris normals: comprovem sessió d'usuari
+    const usuariRaw = localStorage.getItem('usuari');
+    let usuariSessio = null;
+    try {
+      if (usuariRaw) usuariSessio = JSON.parse(usuariRaw);
+    } catch (e) { /* ignore */ }
+
+    if (usuariSessio) {
+      // Usuari autenticat: deixem passar
+      next();
+    } else {
+      // Usuari NO autenticat: bloquejem la navegació i obrim el modal
+      const missatgesPerRuta = {
+        'social': 'Uneix-te a la comunitat! Inicia sessió per veure el muro, el rànquing i interactuar amb altres exploradors.',
+        'detall-lloc': 'Per veure el detall d\'aquest lloc i començar la ruta, has d\'iniciar sessió primer.',
+        'peticions': 'Vols proposar un nou lloc? Genial! Només cal que iniciis sessió primer.',
+      };
+      const missatge = missatgesPerRuta[to.name] || 'Has d\'iniciar sessió per accedir a aquesta secció.';
+
+      // Guardem la ruta a la qual l'usuari volia anar
+      const rutaDesitjada = { name: to.name, params: to.params, query: to.query };
+
+      // Ens quedem a la pàgina actual (no canviem de ruta)
+      next(false);
+
+      // Obrim el modal en el proper tick per assegurar que el router ha acabat
+      setTimeout(() => {
+        const { obrirModal } = useLoginModal();
+        obrirModal(missatge, rutaDesitjada);
+      }, 0);
+    }
+
   } else {
-    // SI LA RUTA NO PIDE ADMIN (como la Home), PASA SIEMPRE
+    // Ruta normal sense protecció: passa sempre
     next();
   }
 });
