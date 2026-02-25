@@ -15,13 +15,13 @@ router.post('/', async function (req, res) {
 
     try {
         const lloc = await Lloc.findById(idLloc);
-        if (!lloc || !lloc.foto_mapa) {
+        if (!lloc || !lloc.imatge_referencia) {
             return res.status(404).json({ missatge: "No s'ha trobat la imatge de referència per a aquest lloc." });
         }
 
         const nomFitxer = 'captura_' + Date.now() + '.jpg'; // Millor PNG per a la comparació
         const camiUsuari = path.join(__dirname, '../../public/fotos_partides_usuaris', nomFitxer);
-        const camiReferencia = path.join(__dirname, '../../public/fotos_historiques', lloc.foto_mapa);
+        const camiReferencia = path.join(__dirname, '../../public/fotos_historiques', lloc.imatge_referencia);
 
         try {
             // Creem la carpeta si no existeix
@@ -78,7 +78,6 @@ router.post('/', async function (req, res) {
 
             console.log(`[Càmera] IdLloc: ${idLloc} | Similitud: ${similitud.toFixed(2)}%`);
 
-            // Llindar del 30% (fotos reals vs fotos històriques tenen llum/angle diferent)
             if (similitud >= 10) {
                 res.json({
                     exit: true,
