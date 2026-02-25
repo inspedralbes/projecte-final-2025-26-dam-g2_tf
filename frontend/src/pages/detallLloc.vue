@@ -90,6 +90,10 @@ function obrirGoogleMaps() {
 
 
 function anarACamara() {
+  if (!usuari.value) {
+    obrirModal('Has d\'iniciar sessió per poder usar la càmera i desbloquejar col·leccionables!');
+    return;
+  }
   router.push({ name: 'camara', params: { id: route.params.id } });
 }
 
@@ -105,13 +109,7 @@ function comencarJoc() {
   });
 }
 
-function anarACamara() {
-  if (!usuari.value) {
-    obrirModal('Has d\'iniciar sessió per poder usar la càmera i desbloquejar col·leccionables!');
-    return;
-  }
-  router.push({ name: 'camara', params: { id: route.params.id } });
-} 
+
 
 onMounted(async () => {
   try {
