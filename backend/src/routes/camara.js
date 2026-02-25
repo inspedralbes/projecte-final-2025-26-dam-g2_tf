@@ -3,39 +3,48 @@ const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
+const { Lloc } = require('../models/index');
 
-router.post('/validar-foto', async function(req, res) {
-    const imatgeBase64 = req.body.imatge; 
-    const idLloc = req.body.idLloc; // Necessitem rebre quin lloc és per buscar la referència
+router.post('/validar-foto', async function (req, res) {
+    const imatgeBase64 = req.body.imatge;
+    const idLloc = req.body.idLloc;
 
-    const nomFitxer = 'captura_' + Date.now() + '.jpg'; // Millor PNG per a la comparació
+    // Busquem el nom del fitxer de referència a la BD
+    const lloc = await Lloc.findById(idLloc);
+    if (!lloc || !lloc.fotos_historiques || lloc.fotos_historiques.length === 0) {
+        return res.status(404).json({ missatge: "No s'ha trobat cap foto de refer\u00e8ncia per a aquest lloc." });
+    }
+
+    const nomFitxer = 'captura_' + Date.now() + '.jpg';
     const camiUsuari = path.join(__dirname, '../../public/fotos_partides_usuaris', nomFitxer);
-    const camiReferencia = path.join(__dirname, '../../public/fotos_historiques', idLloc + '.jpg'); 
+    const camiReferencia = path.join(__dirname, '../../public/fotos_historiques', lloc.fotos_historiques[0]);
 
-        try{ 
-            //aqui guardem la imatge que ens envia l usuari
-            const dadesNetes = imatgeBase64.replace(/^data:image\/.*;base64,/, "");
+    try {
+        //aqui guardem la imatge que ens envia l usuari
+        const dadesNetes = imatgeBase64.replace(/^data:image\/.*;base64,/, "");
         fs.writeFileSync(camiUsuari, dadesNetes, 'base64');
 
         /*començem el processament d'imatges amb sharp
         - les pasem a 100x100 per ignorar detalls
         - pasem a grisos
         - fem el convolve (filtre de detecció de vorerers per ignorar problemes de llum*/
-        
+
         const opcionsProcessat = {
             width: 100,
             height: 100,
             kernel: [-1, -1, -1, -1, 8, -1, -1, -1, -1] // Filtre per ressaltar línies
         };
 
-        const bufferRef = await sharp(camiReferencia)                           // Agafa la imatge original i la transforma 
-            .resize(opcionsProcessat.width, opcionsProcessat.height)            //en numeros que sharp pugui comparar
+        const bufferRef = await sharp(camiReferencia)
+            .resize(opcionsProcessat.width, opcionsProcessat.height)
             .greyscale()
             .convolve({
                 width: 3,
                 height: 3,
                 kernel: opcionsProcessat.kernel
             })
+            .raw()
+            .toBuffer();
 
         const bufferUsuari = await sharp(camiUsuari)
             .resize(opcionsProcessat.width, opcionsProcessat.height)
@@ -51,7 +60,7 @@ router.post('/validar-foto', async function(req, res) {
         let diferenciaAcumulada = 0;
         for (let i = 0; i < bufferRef.length; i++) {
             diferenciaAcumulada += Math.abs(bufferRef[i] - bufferUsuari[i]);
-        } 
+        }
 
         // El valor màxim de diferència seria 100x100 píxels * 255 (valor màxim d'un píxel)
         const maxDiferencia = 100 * 100 * 255;
@@ -59,17 +68,17 @@ router.post('/validar-foto', async function(req, res) {
 
         // 5. Verifiquem si supera el llindar del 75% de similitud 
         if (similitud >= 75) {
-            res.json({ 
+            res.json({
                 exit: true,
                 coincidencia: similitud.toFixed(2) + "%",
                 missatge: "Cromo guardat! Has trobat l'angle correcte.",
-                url: "/fotos_partides_usuaris/" + nomFitxer 
+                url: "/fotos_partides_usuaris/" + nomFitxer
             });
         } else {
-            res.json({ 
+            res.json({
                 exit: false,
                 coincidencia: similitud.toFixed(2) + "%",
-                missatge: "No coincideix prou. Revisa l'angle." 
+                missatge: "No coincideix prou. Revisa l'angle."
             });
         }
 

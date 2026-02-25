@@ -84,6 +84,10 @@ function obrirGoogleMaps() {
 
 
 
+function anarACamara() {
+  router.push({ name: 'camara', params: { id: route.params.id } });
+}
+
 function comencarJoc() {
   console.log("Iniciando ruta para:", route.params.id);
   

@@ -36,9 +36,10 @@ async function startServer() {
         app.use('/api/peticions', require('./src/routes/peticions'));
         app.use('/api/admin', require('./src/routes/admin'));
         app.use('/api/auth', require('./src/routes/auth'));
+        app.use('/api/camara', require('./src/routes/camara'));
 
-        
-      
+
+
 
         // 4. Configurar Socket.io
         const http = require('http');
