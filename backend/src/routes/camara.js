@@ -5,7 +5,7 @@ const path = require('path');
 const sharp = require('sharp');
 const { Lloc } = require('../models');
 
-router.post('/validar-foto', async function (req, res) {
+router.post('/', async function (req, res) {
     const imatgeBase64 = req.body.imatge;
     const idLloc = req.body.idLloc; // Necessitem rebre quin lloc és per buscar la referència
 
