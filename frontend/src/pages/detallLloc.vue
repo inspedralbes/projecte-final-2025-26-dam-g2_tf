@@ -104,8 +104,8 @@ function comencarJoc() {
   }
 
   router.push({ 
-    path: '/sala-espera/crear', 
-    query: { idLloc: route.params.id } 
+    name: 'inici-joc', 
+    params: { id: route.params.id } 
   });
 }
 

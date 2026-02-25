@@ -92,7 +92,7 @@ const submensajeModal = ref('')
 // Funció per simular la creació d'una sala
 // Funció per crear una sala (anar a la sala d'espera amb mode crear)
 function crearSala() {
-  router.push({ name: 'sala-espera', params: { id: 'crear' } })
+  router.push({ name: 'sala-espera', params: { id: 'crear' }, query: { idLloc: route.params.id } })
 }
 
 // Funció per unir-se si l'usuari ha escrit un codi
@@ -114,7 +114,7 @@ function confirmarInicio() {
 
 // Aquesta funció és la que realment ens porta a la pantalla del mapa
 function irAlJuego() {
-  router.push({ name: 'mapa' })
+  router.push({ name: 'mapa-joc', params: { id: route.params.id } })
 }
 </script>
 
