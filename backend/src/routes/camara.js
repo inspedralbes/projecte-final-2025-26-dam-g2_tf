@@ -88,7 +88,7 @@ router.post('/', async function (req, res) {
 
             console.log(`[Càmera] IdLloc: ${idLloc} | Similitud: ${similitud.toFixed(2)}%`);
 
-            if (similitud >= 10) {
+            if (similitud >= 75) {
                 res.json({
                     exit: true,
                     coincidencia: similitud.toFixed(2) + "%",
