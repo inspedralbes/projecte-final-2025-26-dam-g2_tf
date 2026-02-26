@@ -27,9 +27,8 @@
         <table class="w-full">
           <thead class="bg-gray-50 border-b text-left">
             <tr class="text-[11px] text-[#bc85ab] uppercase tracking-[0.2em] font-black">
-              <th class="p-6">Lloc / Barri</th>
+              <th class="p-6">Lloc </th>
               <th class="p-6 text-center">Estat</th>
-              <th class="p-6 text-center">Dificultat</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
@@ -52,9 +51,6 @@
                 </span>
               </td>
               <td class="p-6 text-center">
-                <span class="text-xs font-black italic uppercase px-3 py-1 bg-gray-100 rounded-full text-gray-400">
-                  {{ item.dificultat }}
-                </span>
               </td>
             </tr>
           </tbody>
