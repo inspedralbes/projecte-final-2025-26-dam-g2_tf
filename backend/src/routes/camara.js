@@ -3,7 +3,7 @@ const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
-const { Lloc } = require('../models');
+const { Lloc, Perfil } = require('../models');
 
 // 1. Importem TensorFlow.js per a Node i el model MobileNet
 const tf = require('@tensorflow/tfjs-node');
@@ -45,6 +45,7 @@ function calcularSimilitudCosinus(tensor1, tensor2) {
 router.post('/', async function (req, res) {
     const imatgeBase64 = req.body.imatge;
     const idLloc = req.body.idLloc;
+    const perfilId = req.body.perfilId;
 
     if (!idLloc) {
         return res.status(400).json({ missatge: "Falta l'ID del lloc." });
@@ -118,11 +119,44 @@ router.post('/', async function (req, res) {
             console.log(`[Càmera IA] IdLloc: ${idLloc} | Similitud: ${similitud.toFixed(2)}%`);
 
             if (similitud >= 50) {
+                // Guardar cromo al perfil de l'usuari de forma persistent
+                let cromoGuardat = null;
+                if (perfilId) {
+                    try {
+                        const perfil = await Perfil.findById(perfilId);
+                        if (perfil) {
+                            // Comprovar que no tingui ja aquest cromo (evitar duplicats)
+                            const jaTeElCromo = perfil.inventari_cromos.some(
+                                c => c.id_lloc && c.id_lloc.toString() === idLloc.toString()
+                            );
+                            if (!jaTeElCromo) {
+                                const nouCromo = {
+                                    id_lloc: idLloc,
+                                    imatge_usuari: "/fotos_partides_usuaris/" + nomFitxer,
+                                    data_obtencio: new Date()
+                                };
+                                perfil.inventari_cromos.push(nouCromo);
+                                perfil.punts = perfil.inventari_cromos.length;
+                                await perfil.save();
+                                cromoGuardat = nouCromo;
+                                console.log(`[Cromo] Cromo del lloc ${idLloc} guardat al perfil ${perfilId}`);
+                            } else {
+                                console.log(`[Cromo] L'usuari ${perfilId} ja té el cromo del lloc ${idLloc}`);
+                            }
+                        }
+                    } catch (errCromo) {
+                        console.error("[Cromo] Error al guardar el cromo:", errCromo);
+                    }
+                }
+
                 res.json({
                     exit: true,
                     coincidencia: similitud.toFixed(2) + "%",
-                    missatge: "Cromo guardat! Has trobat l'angle correcte.",
-                    url: "/fotos_partides_usuaris/" + nomFitxer
+                    missatge: cromoGuardat
+                        ? "Cromo guardat! Has trobat l'angle correcte."
+                        : "Foto validada! (Cromo ja obtingut anteriorment)",
+                    url: "/fotos_partides_usuaris/" + nomFitxer,
+                    cromo_nou: !!cromoGuardat
                 });
             } else {
                 res.json({

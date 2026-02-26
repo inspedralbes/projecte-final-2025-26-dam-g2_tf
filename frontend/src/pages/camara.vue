@@ -1,8 +1,10 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
+import { useAuth } from '../composables/useAuth';
 
 const route = useRoute();
+const { usuari } = useAuth();
 const idLloc = route.params.id;
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
@@ -62,7 +64,11 @@ async function enviarDadesAlBackend(imatgeEnText) {
   const paquet = {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ imatge: imatgeEnText, idLloc: idLloc })
+    body: JSON.stringify({
+      imatge: imatgeEnText,
+      idLloc: idLloc,
+      perfilId: usuari.value?._id || null
+    })
   };
 
   try {
@@ -77,7 +83,11 @@ async function enviarDadesAlBackend(imatgeEnText) {
     }
 
     if (dades.exit) {
-      alert('✅ ' + dades.missatge + ' (Similitud: ' + dades.coincidencia + ')');
+      if (dades.cromo_nou) {
+        alert('🏆 ' + dades.missatge + '\n📸 Similitud: ' + dades.coincidencia + '\n\n✅ Cromo afegit al teu perfil!');
+      } else {
+        alert('✅ ' + dades.missatge + ' (Similitud: ' + dades.coincidencia + ')');
+      }
     } else {
       alert('❌ ' + dades.missatge + ' (Similitud: ' + dades.coincidencia + ')');
     }
