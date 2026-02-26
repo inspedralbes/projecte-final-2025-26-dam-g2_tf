@@ -102,7 +102,7 @@
 
         <div class="aspect-[4/5] overflow-hidden bg-black/40">
           <img 
-            :src="cromo.imatge_usuari" 
+            :src="imatgeCromo(cromo.imatge_usuari)" 
             class="w-full h-full object-cover sepia-[0.3] hover:sepia-0 transition-all duration-500"
           >
         </div>
@@ -290,6 +290,13 @@ function tancarSessio() {
   logout(); // Neteja l'estat reactiu global + localStorage
   window.location.href = '/'; 
 }
+// Retorna la URL completa de la imatge del cromo (afegeix API_URL si és una ruta relativa)
+function imatgeCromo(src) {
+  if (!src) return '';
+  if (src.startsWith('http://') || src.startsWith('https://')) return src;
+  return API_URL + src;
+}
+
 // Dades de prova per visualitzar l'àlbum estil llibre
 const cromosExemple = [
   {
