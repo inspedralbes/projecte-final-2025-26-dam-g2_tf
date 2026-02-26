@@ -10,21 +10,21 @@ const idLloc = route.params.id;
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 const videoRef = ref(null);
 const canvasRef = ref(null);
-const imatgeHistoricaSrc = ref('');
 const carregant = ref(false);
+const fotosActuals = ref([]);
+const indexFotoActual = ref(0);
 let stream = null;
 
 onMounted(async () => {
+  // Carreguem les fotos de la carpeta fotos_actuals
   try {
-    if (idLloc) {
-      const resposta = await fetch(`${API_URL}/api/mapa/punts/${idLloc}`);
-      const dades = await resposta.json();
-      if (dades.fotos_historiques && dades.fotos_historiques.length > 0) {
-        imatgeHistoricaSrc.value = `${API_URL}/fotos_historiques/${dades.fotos_historiques[0]}`;
-      }
+    const resposta = await fetch(`${API_URL}/api/fotos-actuals`);
+    const dades = await resposta.json();
+    if (dades.fotos && dades.fotos.length > 0) {
+      fotosActuals.value = dades.fotos.map(f => `${API_URL}/fotos_actuals/${f}`);
     }
   } catch (err) {
-    console.error('Error carregant la foto històrica:', err);
+    console.error('Error carregant les fotos actuals:', err);
   }
 
   try {
@@ -44,6 +44,16 @@ onUnmounted(() => {
     stream.getTracks().forEach(track => track.stop());
   }
 });
+
+function fotoAnterior() {
+  if (fotosActuals.value.length === 0) return;
+  indexFotoActual.value = (indexFotoActual.value - 1 + fotosActuals.value.length) % fotosActuals.value.length;
+}
+
+function fotoSeguent() {
+  if (fotosActuals.value.length === 0) return;
+  indexFotoActual.value = (indexFotoActual.value + 1) % fotosActuals.value.length;
+}
 
 async function executarTotElProces() {
   if (!videoRef.value || !canvasRef.value || carregant.value) return;
@@ -111,12 +121,14 @@ async function enviarDadesAlBackend(imatgeEnText) {
 
     <canvas ref="canvasRef" class="hidden"></canvas>
 
+    <!-- Foto actual superposada (en lloc de la foto històrica) -->
     <img 
-      v-if="imatgeHistoricaSrc"
-      :src="imatgeHistoricaSrc" 
+      v-if="fotosActuals.length > 0"
+      :src="fotosActuals[indexFotoActual]" 
       class="absolute inset-0 w-full h-full object-cover z-10 opacity-40 pointer-events-none" 
     />
 
+    <!-- Quadrícula -->
     <div class="absolute inset-0 z-15 pointer-events-none flex flex-col justify-evenly">
       <div class="w-full h-[1px] bg-white/50"></div>
       <div class="w-full h-[1px] bg-white/50"></div>
@@ -124,6 +136,21 @@ async function enviarDadesAlBackend(imatgeEnText) {
     <div class="absolute inset-0 z-15 pointer-events-none flex justify-evenly">
       <div class="h-full w-[1px] bg-white/50"></div>
       <div class="h-full w-[1px] bg-white/50"></div>
+    </div>
+
+    <!-- Navegació entre fotos actuals (si n'hi ha més d'una) -->
+    <div v-if="fotosActuals.length > 1" class="absolute top-4 right-4 z-30 flex items-center gap-2">
+      <button
+        @click="fotoAnterior"
+        class="text-white bg-black/60 rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-black/80 transition"
+      >‹</button>
+      <span class="text-white text-xs bg-black/60 px-2 py-1 rounded-full">
+        {{ indexFotoActual + 1 }}/{{ fotosActuals.length }}
+      </span>
+      <button
+        @click="fotoSeguent"
+        class="text-white bg-black/60 rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-black/80 transition"
+      >›</button>
     </div>
 
     <div class="absolute bottom-10 w-full flex flex-col items-center gap-4 z-20">
