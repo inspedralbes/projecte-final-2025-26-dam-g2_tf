@@ -1,67 +1,61 @@
 <template>
-  <div class="min-h-screen bg-gray-100 flex flex-col md:flex-row text-gray-800 pb-24 md:pb-0">
-    
+  <div class="min-h-screen bg-gray-50 flex flex-col md:flex-row pb-20 md:pb-0 font-sans">
     <AdminNav />
 
-    <main class="flex-1 p-6 md:p-10">
-      <div class="flex justify-between items-center mb-8">
-        <h1 class="text-2xl font-bold text-[#9f6795]">
-          {{ mostrarFormulari ? 'Gestió de Lloc' : 'Llocs Històrics' }}
+    <main class="flex-1 p-4 md:p-8">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-purple-800">
+          {{ mostrarForm ? (editandoId ? 'Editar Lloc' : 'Nou Lloc') : 'Llocs Històrics' }}
         </h1>
-        <button @click="alternarFormulari" class="bg-[#9f6795] text-white px-6 py-2 rounded-lg font-bold">
-          {{ mostrarFormulari ? 'Tornar a la llista' : '+ Nou Lloc' }}
+        <button @click="alternarVista" class="bg-purple-600 text-white px-6 py-2 rounded-xl font-bold shadow-md hover:bg-purple-700 transition-all">
+          {{ mostrarForm ? 'Tornar' : '+ Nou Lloc' }}
         </button>
       </div>
 
-      <div v-if="mostrarFormulari" class="grid grid-cols-1 lg:grid-cols-2 gap-6 bg-white p-6 rounded-xl shadow-md border-t-4 border-[#804f7f]">
-        
-        <form @submit.prevent="guardarLloc" class="space-y-4">
-          <input v-model="formulari.nom" placeholder="Nom del lloc" class="w-full border p-3 rounded-xl outline-none" required>
-          <input v-model="formulari.imatge_portada" placeholder="URL de la imatge" class="w-full border p-3 rounded-xl outline-none" required>
-          <textarea v-model="formulari.descripcio" placeholder="Descripció" class="w-full border p-3 rounded-xl outline-none" rows="4"></textarea>
-          
-          <div class="bg-gray-100 p-3 rounded-xl text-center text-xs font-mono">
-            Ubicació: {{ formulari.lat.toFixed(4) }}, {{ formulari.lng.toFixed(4) }}
-          </div>
+      <AdminFormLloc 
+        v-if="mostrarForm" 
+        :datosIniciales="form" 
+        :editandoId="editandoId"
+        @save="guardarLloc"
+        @eliminar="eliminarLloc"
+      />
 
-          <button type="submit" class="w-full bg-[#9f6795] text-white py-4 rounded-xl font-bold uppercase shadow-md">
-            {{ idEditant ? 'Actualitzar dades' : 'Crear nou lloc' }}
-          </button>
-        </form>
-
-        <div class="space-y-2">
-          <p class="text-xs font-bold text-gray-400 uppercase text-center">Arrossega el marcador al lloc correcte</p>
-          <div id="mapSelector" class="h-80 lg:h-full min-h-[350px] rounded-xl border"></div>
-        </div>
-      </div>
-
-      <div v-else class="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div v-else class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
         <table class="w-full">
-          <thead class="bg-gray-50 border-b">
-            <tr class="text-xs text-gray-400 uppercase text-left">
-              <th class="p-4">Lloc</th>
-              <th class="p-4 text-right">Accions</th>
+          <thead class="bg-gray-50 border-b text-left">
+            <tr class="text-[11px] text-gray-400 uppercase tracking-[0.2em] font-black">
+              <th class="p-6">Lloc </th>
+              <th class="p-6 text-center">Estat</th>
+    
             </tr>
           </thead>
-          <tbody class="divide-y">
-            <tr v-for="lloc in llistaLlocs" :key="lloc._id" class="hover:bg-gray-50 transition">
-              <td class="p-4 flex items-center gap-4">
-                <img :src="lloc.imatge_referencia" class="h-12 w-16 object-cover rounded-lg">
-                <span class="font-bold text-[#9f6795]">{{ lloc.nom }}</span>
+          <tbody class="divide-y divide-gray-50">
+            <tr v-for="lloc in llista" :key="lloc._id" @click="prepararEdicion(lloc)" class="hover:bg-purple-50/50 cursor-pointer transition-all group">
+              <td class="p-6 flex items-center gap-6">
+                <img :src="lloc.imatge_referencia" class="w-24 h-16 object-cover rounded-2xl shadow-sm group-hover:scale-105 transition-transform">
+                <div>
+                  <div class="font-bold text-purple-800 text-lg">{{ lloc.nom }}</div>
+                  <div class="text-[10px] text-gray-400 font-black uppercase tracking-widest">
+                    {{ lloc.barri || 'Sense barri' }}
+                  </div>
+                </div>
               </td>
-              <td class="p-4 text-right">
-                <button @click="carregarEdicio(lloc)" 
-                class="text-[#804f7f] hover:text-[#402749] font-bold mr-4 transition-colors"
-                >
-                  Editar
-                </button>
 
-                <button 
-                  @click="eliminarLloc(lloc._id)" 
-                  class="text-[#632a2a] hover:text-red-700 font-bold transition-colors"
-                >
-                  Eliminar
-                </button>
+              <td class="p-6 text-center">
+                <div class="flex flex-col items-center gap-1">
+                  <span 
+                    :class="lloc.control_horari?.actiu ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-400'"
+                    class="text-[9px] font-black uppercase px-3 py-1 rounded-full"
+                  >
+                    {{ lloc.control_horari?.actiu ? 'Actiu' : 'Inactiu' }}
+                  </span>
+                  <span v-if="lloc.control_horari?.actiu" class="text-[10px] text-gray-400 font-mono">
+                    {{ lloc.control_horari?.hora_tancament }}
+                  </span>
+                </div>
+              </td>
+
+              <td class="p-6 text-center">
               </td>
             </tr>
           </tbody>
@@ -72,134 +66,97 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, onMounted } from 'vue';
 import AdminNav from './components/AdminNav.vue';
+import AdminFormLloc from './components/AdminFormLloc.vue';
 
-// Imports marcador mapa
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+const API_URL = "http://localhost:8088/api/admin/llocs";
+const llista = ref([]);
+const mostrarForm = ref(false);
+const editandoId = ref(null);
 
-// Icones mapa corregides
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
+const resetForm = () => ({
+  nom: '', 
+  barri: '', 
+  dificultat: 'Baixa', 
+  descripcio: '', 
+  explicacio_historica: '',
+  imatge_referencia: '', 
+  foto_mapa: '', 
+  tags: [], 
+  punts_missio: [],
+  control_horari: { hora_tancament: '20:00', actiu: false },
+  lat: 41.3879, 
+  lng: 2.1699
 });
 
-// Variables d'estat
-const llistaLlocs = ref([]);
-const mostrarFormulari = ref(false);
-const idEditant = ref(null);
-const formulari = ref({ nom: '', descripcio: '', imatge_portada: '', lat: 41.3879, lng: 2.1699 });
+const form = ref(resetForm());
 
-// Variables Mapa
-let mapa = null;
-let marcador = null;
+onMounted(cargarLlocs);
 
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8088').replace(/\/$/, '');
-
-onMounted(obtenirLlocs);
-
-async function obtenirLlocs() {
+async function cargarLlocs() {
   try {
-    const resposta = await fetch(`${API_URL}/api/admin/llocs`);
-    llistaLlocs.value = await resposta.json();
-  } catch (error) {
-    console.error("Error al obtenir els llocs:", error);
+    const res = await fetch(API_URL);
+    llista.value = await res.json();
+  } catch (err) {
+    console.error("Error carregar:", err);
   }
 }
 
-async function guardarLloc() {
-  const dadesPerEnviar = {
-    nom: formulari.value.nom,
-    descripcio: formulari.value.descripcio,
-    imatge_referencia: formulari.value.imatge_portada,
-    ubicacio: { type: 'Point', coordinates: [formulari.value.lng, formulari.value.lat] }
+function alternarVista() {
+  if (mostrarForm.value) {
+    mostrarForm.value = false;
+  } else {
+    editandoId.value = null;
+    form.value = resetForm();
+    mostrarForm.value = true;
+  }
+}
+
+function prepararEdicion(lloc) {
+  editandoId.value = lloc._id;
+  form.value = { 
+    ...lloc, 
+    lat: lloc.ubicacio.coordinates[1], 
+    lng: lloc.ubicacio.coordinates[0],
+    // Aseguramos que el control_horari existe para evitar errores en el form
+    control_horari: lloc.control_horari || { hora_tancament: '20:00', actiu: false }
   };
+  mostrarForm.value = true;
+}
 
-  const url = idEditant.value 
-    ? `${API_URL}/api/admin/llocs/${idEditant.value}` 
-    : `${API_URL}/api/admin/llocs`;
-
+async function guardarLloc(datos) {
   try {
-    await fetch(url, {
-      method: idEditant.value ? 'PUT' : 'POST',
+    const payload = { 
+      ...datos, 
+      ubicacio: { 
+        type: 'Point', 
+        coordinates: [Number(datos.lng), Number(datos.lat)] 
+      } 
+    };
+
+    const respuesta = await fetch(editandoId.value ? `${API_URL}/${editandoId.value}` : API_URL, {
+      method: editandoId.value ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dadesPerEnviar)
+      body: JSON.stringify(payload)
     });
-    tancarIRefrescar();
+
+    if (!respuesta.ok) throw new Error("Error al guardar");
+
+    mostrarForm.value = false;
+    editandoId.value = null;
+    await cargarLlocs(); 
   } catch (error) {
-    console.error("Error al guardar el lloc:", error);
+    console.error("ERROR:", error);
+    alert("No s'ha pogut guardar.");
   }
 }
 
 async function eliminarLloc(id) {
-  if (confirm("Segur que vols eliminar aquest lloc?")) {
-    try {
-      await fetch(`${API_URL}/api/admin/llocs/${id}`, { method: 'DELETE' });
-      obtenirLlocs();
-    } catch (error) {
-      console.error("Error al eliminar el lloc:", error);
-    }
+  if (confirm("Segur que vols eliminar-ho?")) {
+    await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+    mostrarForm.value = false;
+    await cargarLlocs();
   }
-}
-
-function alternarFormulari() {
-  if (mostrarFormulari.value) {
-    tancarIRefrescar();
-  } else {
-    obrirFormulariNou();
-  }
-}
-
-function obrirFormulariNou() {
-  idEditant.value = null;
-  formulari.value = { nom: '', descripcio: '', imatge_portada: '', lat: 41.3879, lng: 2.1699 };
-  mostrarFormulari.value = true;
-  iniciarMapa();
-}
-
-function carregarEdicio(lloc) {
-  idEditant.value = lloc._id;
-  formulari.value = {
-    nom: lloc.nom,
-    descripcio: lloc.descripcio,
-    imatge_portada: lloc.imatge_referencia,
-    lat: lloc.ubicacio.coordinates[1],
-    lng: lloc.ubicacio.coordinates[0]
-  };
-  mostrarFormulari.value = true;
-  iniciarMapa();
-}
-
-function tancarIRefrescar() {
-  mostrarFormulari.value = false;
-  idEditant.value = null;
-  obtenirLlocs();
-}
-
-async function iniciarMapa() {
-  await nextTick();
-  
-  if (mapa) mapa.remove(); 
-
-  mapa = L.map('mapSelector').setView([formulari.value.lat, formulari.value.lng], 15);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapa);
-
-  marcador = L.marker([formulari.value.lat, formulari.value.lng], { draggable: true }).addTo(mapa);
-
-  marcador.on('dragend', () => {
-    const posicio = marcador.getLatLng();
-    formulari.value.lat = posicio.lat;
-    formulari.value.lng = posicio.lng;
-  });
 }
 </script>
-
-<style>
-#mapSelector { cursor: crosshair; }
-</style>
