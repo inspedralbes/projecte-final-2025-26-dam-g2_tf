@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
+const sharp = require('sharp');
 const { Lloc } = require('../models');
 
 // 1. Importem TensorFlow.js per a Node i el model MobileNet
@@ -87,9 +88,13 @@ router.post('/', async function (req, res) {
 
             // --- INICI PROCESSAMENT AMB IA ---
 
-            // 1. Convertim les imatges a "Tensors" (matrius de números 3D que entén la IA)
-            const tensorUsuari = tf.node.decodeImage(bufferUsuari, 3); // 3 significa RGB
-            const tensorRef = tf.node.decodeImage(bufferRef, 3);
+            // 1. Convertim les imatges a JPEG (sharp les normalitza, evita errors amb HEIC/WebP de iPhone)
+            const bufferUsuariJpeg = await sharp(bufferUsuari).jpeg().toBuffer();
+            const bufferRefJpeg = await sharp(bufferRef).jpeg().toBuffer();
+
+            // 2. Convertim les imatges a "Tensors" (matrius de números 3D que entén la IA)
+            const tensorUsuari = tf.node.decodeImage(bufferUsuariJpeg, 3); // 3 significa RGB
+            const tensorRef = tf.node.decodeImage(bufferRefJpeg, 3);
 
             // 2. Extraiem els "embeddings" o punts clau. 
             // El 'true' indica que no volem saber quin objecte és, sinó el seu codi estructural
