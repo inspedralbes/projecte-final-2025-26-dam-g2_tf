@@ -94,14 +94,18 @@ const form = ref(resetForm());
 
 onMounted(cargarLlocs);
 
-async function cargarLlocs() {
+const cargarLlocs = async () => {
   try {
-    const res = await fetch(API_URL);
-    llista.value = await res.json();
+    const res = await fetch(`${API_URL}/api/mapa/punts`);
+    
+    if (!res.ok) throw new Error("No s'han trobat els punts");
+    
+    const data = await res.json();
+    llista.value = data;
   } catch (err) {
-    console.error("Error carregar:", err);
+    console.error("Error al carregar:", err);
   }
-}
+};
 
 function alternarVista() {
   if (mostrarForm.value) {
@@ -119,13 +123,12 @@ function prepararEdicion(lloc) {
     ...lloc, 
     lat: lloc.ubicacio.coordinates[1], 
     lng: lloc.ubicacio.coordinates[0],
-    // Aseguramos que el control_horari existe para evitar errores en el form
     control_horari: lloc.control_horari || { hora_tancament: '20:00', actiu: false }
   };
   mostrarForm.value = true;
 }
 
-async function guardarLloc(datos) {
+const guardarLloc = async (datos) => {
   try {
     const payload = { 
       ...datos, 
@@ -135,28 +138,42 @@ async function guardarLloc(datos) {
       } 
     };
 
-    const respuesta = await fetch(editandoId.value ? `${API_URL}/${editandoId.value}` : API_URL, {
+    const url = editandoId.value 
+      ? `${API_URL}/api/mapa/punts/${editandoId.value}` 
+      : `${API_URL}/api/mapa/punts`;
+    
+    const respuesta = await fetch(url, {
       method: editandoId.value ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
-    if (!respuesta.ok) throw new Error("Error al guardar");
+    if (!respuesta.ok) {
+        const errorData = await respuesta.json();
+        throw new Error(errorData.error || "Error al guardar");
+    }
 
     mostrarForm.value = false;
     editandoId.value = null;
     await cargarLlocs(); 
   } catch (error) {
-    console.error("ERROR:", error);
-    alert("No s'ha pogut guardar.");
+    console.error("Error detallat:", error);
+    alert("No s'ha pogut guardar: " + error.message);
   }
-}
+};
 
-async function eliminarLloc(id) {
-  if (confirm("Segur que vols eliminar-ho?")) {
-    await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-    mostrarForm.value = false;
-    await cargarLlocs();
+const eliminarLloc = async (id) => {
+  if (!confirm("Vols eliminar aquest lloc definitivament?")) return;
+  try {
+    const res = await fetch(`${API_URL}/api/mapa/punts/${id}`, { 
+      method: 'DELETE' 
+    });
+    if (res.ok) {
+      mostrarForm.value = false;
+      await cargarLlocs();
+    }
+  } catch (error) {
+    console.error("Error al eliminar:", error);
   }
-}
+};
 </script>
