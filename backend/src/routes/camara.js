@@ -150,6 +150,18 @@ router.post('/', async function (req, res) {
                     }
                 }
 
+                // Determinar la imatge histórica a mostrar com a cromo
+                let imatgeHistorica = lloc.imatge_referencia || '';
+                if (lloc.fotos_historiques && lloc.fotos_historiques.length > 0) {
+                    const primerFoto = lloc.fotos_historiques[0];
+                    // Si és relativa, construïm la URL completa
+                    if (primerFoto.startsWith('http')) {
+                        imatgeHistorica = primerFoto;
+                    } else {
+                        imatgeHistorica = '/fotos_historiques/' + primerFoto;
+                    }
+                }
+
                 res.json({
                     exit: true,
                     coincidencia: similitud.toFixed(2) + "%",
@@ -157,7 +169,9 @@ router.post('/', async function (req, res) {
                         ? "Cromo guardat! Has trobat l'angle correcte."
                         : "Foto validada! (Cromo ja obtingut anteriorment)",
                     url: "/fotos_partides_usuaris/" + nomFitxer,
-                    cromo_nou: !!cromoGuardat
+                    cromo_nou: !!cromoGuardat,
+                    imatge_historica: imatgeHistorica,
+                    nom_lloc: lloc.nom || ''
                 });
             } else {
                 res.json({
