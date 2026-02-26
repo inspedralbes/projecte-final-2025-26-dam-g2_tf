@@ -18,6 +18,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 
 app.use('/foto_mapa', express.static(path.join(__dirname, 'public/foto_mapa')));
+app.use('/fotos_actuals', express.static(path.join(__dirname, 'public/fotos_actuals')));
 
 async function startServer() {
     try {
@@ -33,6 +34,22 @@ async function startServer() {
         app.use('/api/admin', require('./src/routes/admin'));
         app.use('/api/auth', require('./src/routes/auth'));
         app.use('/api/validar-foto', require('./src/routes/camara'));
+
+        // Endpoint per llistar les fotos de la carpeta fotos_actuals
+        const fs = require('fs');
+        app.get('/api/fotos-actuals', (req, res) => {
+            const carpeta = path.join(__dirname, 'public/fotos_actuals');
+            if (!fs.existsSync(carpeta)) {
+                fs.mkdirSync(carpeta, { recursive: true });
+                return res.json({ fotos: [] });
+            }
+            const extensionsValides = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+            const fitxers = fs.readdirSync(carpeta).filter(f => {
+                const ext = path.extname(f).toLowerCase();
+                return extensionsValides.includes(ext);
+            });
+            res.json({ fotos: fitxers });
+        });
 
         // 4. Configurar Socket.io
         const http = require('http');
