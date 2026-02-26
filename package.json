@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "@capacitor-community/camera-preview": "^7.0.5",
+    "@tensorflow-models/mobilenet": "^2.1.1",
+    "@tensorflow/tfjs-node": "^4.22.0",
     "leaflet": "^1.9.4",
     "socket.io": "^4.8.3"
   }

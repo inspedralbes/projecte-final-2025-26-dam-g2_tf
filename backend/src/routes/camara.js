@@ -2,91 +2,115 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
-const sharp = require('sharp');
 const { Lloc } = require('../models');
+
+// 1. Importem TensorFlow.js per a Node i el model MobileNet
+const tf = require('@tensorflow/tfjs-node');
+const mobilenet = require('@tensorflow-models/mobilenet');
+
+// 2. Variable global per guardar el model (així no el carreguem a cada petició i va més ràpid)
+let modelMobileNet = null;
+
+async function carregarModel() {
+    if (!modelMobileNet) {
+        console.log("[IA] Carregant el model MobileNet...");
+        // Utilitzem la versió 2 del model, que és ràpida i precisa per a telèfons
+        modelMobileNet = await mobilenet.load({ version: 2, alpha: 1.0 });
+        console.log("[IA] Model MobileNet carregat correctament!");
+    }
+}
+// El carreguem només engegar el servidor
+carregarModel();
+
+// 3. Funció matemàtica per comparar els "punts clau" (Similitud del Cosinus)
+function calcularSimilitudCosinus(tensor1, tensor2) {
+    const dades1 = tensor1.dataSync();
+    const dades2 = tensor2.dataSync();
+
+    let productePunt = 0;
+    let norma1 = 0;
+    let norma2 = 0;
+
+    for (let i = 0; i < dades1.length; i++) {
+        productePunt += dades1[i] * dades2[i];
+        norma1 += dades1[i] * dades1[i];
+        norma2 += dades2[i] * dades2[i];
+    }
+
+    if (norma1 === 0 || norma2 === 0) return 0;
+    return productePunt / (Math.sqrt(norma1) * Math.sqrt(norma2));
+}
 
 router.post('/', async function (req, res) {
     const imatgeBase64 = req.body.imatge;
-    const idLloc = req.body.idLloc; // Necessitem rebre quin lloc és per buscar la referència
+    const idLloc = req.body.idLloc;
 
     if (!idLloc) {
         return res.status(400).json({ missatge: "Falta l'ID del lloc." });
     }
 
     try {
+        // Assegurem-nos que l'IA està llesta
+        await carregarModel();
+
         const lloc = await Lloc.findById(idLloc);
         if (!lloc || !lloc.imatge_referencia) {
-            return res.status(404).json({ missatge: "No s'ha trobat la imatge de referència per a aquest lloc." });
+            return res.status(404).json({ missatge: "No s'ha trobat la imatge de referència." });
         }
 
-        const nomFitxer = 'captura_' + Date.now() + '.jpg'; // Millor PNG per a la comparació
+        const nomFitxer = 'captura_' + Date.now() + '.jpg';
         const camiUsuari = path.join(__dirname, '../../public/fotos_partides_usuaris', nomFitxer);
 
-        let inputRef;
+        // Preparem la imatge de referència com a Buffer
+        let bufferRef;
         if (lloc.imatge_referencia.startsWith('http://') || lloc.imatge_referencia.startsWith('https://')) {
             const response = await fetch(lloc.imatge_referencia);
             if (!response.ok) {
-                return res.status(500).json({ missatge: "No s'ha pogut descarregar la imatge de referència externa." });
+                return res.status(500).json({ missatge: "Error en descarregar la imatge externa." });
             }
             const arrayBuffer = await response.arrayBuffer();
-            inputRef = Buffer.from(arrayBuffer);
+            bufferRef = Buffer.from(arrayBuffer);
         } else {
-            inputRef = path.join(__dirname, '../../public/fotos_historiques', lloc.imatge_referencia);
+            const rutaLocal = path.join(__dirname, '../../public/fotos_historiques', lloc.imatge_referencia);
+            bufferRef = fs.readFileSync(rutaLocal);
         }
 
         try {
+            // Guardem la imatge que ens envia l'usuari
             const carpetaUsuari = path.dirname(camiUsuari);
             if (!fs.existsSync(carpetaUsuari)) {
                 fs.mkdirSync(carpetaUsuari, { recursive: true });
             }
-
-            //aqui guardem la imatge que ens envia l usuari
             const dadesNetes = imatgeBase64.replace(/^data:image\/.*;base64,/, "");
-            fs.writeFileSync(camiUsuari, dadesNetes, 'base64');
+            const bufferUsuari = Buffer.from(dadesNetes, 'base64');
+            fs.writeFileSync(camiUsuari, bufferUsuari);
 
-            /*començem el processament d'imatges amb sharp
-            - les pasem a 100x100 per ignorar detalls
-            - pasem a grisos
-            - fem el convolve (filtre de detecció de vorerers per ignorar problemes de llum*/
+            // --- INICI PROCESSAMENT AMB IA ---
 
-            const opcionsProcessat = {
-                width: 100,
-                height: 100,
-                kernel: [-1, -1, -1, -1, 8, -1, -1, -1, -1] // Filtre per ressaltar línies
-            };
+            // 1. Convertim les imatges a "Tensors" (matrius de números 3D que entén la IA)
+            const tensorUsuari = tf.node.decodeImage(bufferUsuari, 3); // 3 significa RGB
+            const tensorRef = tf.node.decodeImage(bufferRef, 3);
 
-            const bufferRef = await sharp(inputRef)                           // Agafa la imatge original i la transforma 
-                .resize(opcionsProcessat.width, opcionsProcessat.height)            //en numeros que sharp pugui comparar
-                .greyscale()
-                .convolve({
-                    width: 3,
-                    height: 3,
-                    kernel: opcionsProcessat.kernel
-                })
-                .raw()
-                .toBuffer();
+            // 2. Extraiem els "embeddings" o punts clau. 
+            // El 'true' indica que no volem saber quin objecte és, sinó el seu codi estructural
+            const caracteristiquesUsuari = modelMobileNet.infer(tensorUsuari, true);
+            const caracteristiquesRef = modelMobileNet.infer(tensorRef, true);
 
-            const bufferUsuari = await sharp(camiUsuari)
-                .resize(opcionsProcessat.width, opcionsProcessat.height)
-                .greyscale()
-                .convolve({
-                    width: 3,
-                    height: 3,
-                    kernel: opcionsProcessat.kernel
-                })
-                .raw()
-                .toBuffer();
+            // 3. Calculem la similitud
+            const similitudDecimal = calcularSimilitudCosinus(caracteristiquesUsuari, caracteristiquesRef);
+            // Si l'angle és completament oposat, podria donar negatiu, ens assegurem que el mínim sigui 0
+            const similitud = Math.max(0, similitudDecimal) * 100;
 
-            let diferenciaAcumulada = 0;
-            for (let i = 0; i < bufferRef.length; i++) {
-                diferenciaAcumulada += Math.abs(bufferRef[i] - bufferUsuari[i]);
-            }
+            // 4. IMPORTANT: Buidar la memòria RAM. A diferència de JavaScript normal, 
+            // TensorFlow requereix esborrar manualment els Tensors per no col·lapsar el servidor.
+            tensorUsuari.dispose();
+            tensorRef.dispose();
+            caracteristiquesUsuari.dispose();
+            caracteristiquesRef.dispose();
 
-            // El valor màxim de diferència seria 100x100 píxels * 255 (valor màxim d'un píxel)
-            const maxDiferencia = 100 * 100 * 255;
-            const similitud = (1 - (diferenciaAcumulada / maxDiferencia)) * 100;
+            // --- FI PROCESSAMENT AMB IA ---
 
-            console.log(`[Càmera] IdLloc: ${idLloc} | Similitud: ${similitud.toFixed(2)}%`);
+            console.log(`[Càmera IA] IdLloc: ${idLloc} | Similitud: ${similitud.toFixed(2)}%`);
 
             if (similitud >= 75) {
                 res.json({
@@ -99,13 +123,13 @@ router.post('/', async function (req, res) {
                 res.json({
                     exit: false,
                     coincidencia: similitud.toFixed(2) + "%",
-                    missatge: "No coincideix prou. Revisa l'angle."
+                    missatge: "No coincideix prou. Revisa l'angle i torna-ho a provar."
                 });
             }
 
         } catch (error) {
-            console.error("Error al backend:", error);
-            res.status(500).json({ missatge: "Error en el processament d'imatges." });
+            console.error("Error al processar amb IA:", error);
+            res.status(500).json({ missatge: "Error en el processament d'imatges amb TensorFlow." });
         }
     } catch (err) {
         console.error("Error buscant el lloc:", err);
