@@ -27,6 +27,7 @@ const PerfilSchema = new mongoose.Schema({
   invitacions: { type: Array, default: [] },
   inventari_cromos: [{
     id_lloc: { type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' },
+    nom_lloc: { type: String, default: '' },
     data_obtencio: { type: Date, default: Date.now },
     imatge_usuari: String
   }]

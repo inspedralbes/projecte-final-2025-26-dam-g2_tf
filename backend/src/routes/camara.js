@@ -132,6 +132,7 @@ router.post('/', async function (req, res) {
                             if (!jaTeElCromo) {
                                 const nouCromo = {
                                     id_lloc: idLloc,
+                                    nom_lloc: lloc.nom,
                                     imatge_usuari: "/fotos_partides_usuaris/" + nomFitxer,
                                     data_obtencio: new Date()
                                 };
