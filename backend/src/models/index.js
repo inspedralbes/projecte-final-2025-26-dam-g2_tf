@@ -54,7 +54,9 @@ const LlocSchema = new mongoose.Schema({
   barri: String,
   tags: [String],
   control_horari: { hora_tancament: String, actiu: Boolean },
-  millors_temps: [{ usuari: String, temps_segons: Number }]
+  millors_temps: [{ usuari: String, temps_segons: Number }],
+  fotos_historiques: [String],
+  fotos_actuals: [String]
 });
 
 // 4. SessioJoc (sessions)
