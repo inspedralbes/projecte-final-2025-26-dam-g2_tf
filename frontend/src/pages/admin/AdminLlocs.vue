@@ -1,14 +1,17 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col md:flex-row pb-20 md:pb-0 font-sans">
+  <div class="min-h-screen bg-gray-100 flex flex-col md:flex-row text-gray-800 pb-24 md:pb-0">
     <AdminNav />
 
-    <main class="flex-1 p-4 md:p-8">
-      <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-purple-800">
+    <main class="flex-1 p-4 md:p-10">
+      <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold text-[#402749]">
           {{ mostrarForm ? (editandoId ? 'Editar Lloc' : 'Nou Lloc') : 'Llocs Històrics' }}
         </h1>
-        <button @click="alternarVista" class="bg-purple-600 text-white px-6 py-2 rounded-xl font-bold shadow-md hover:bg-purple-700 transition-all">
-          {{ mostrarForm ? 'Tornar' : '+ Nou Lloc' }}
+        <button 
+          @click="alternarVista" 
+          class="bg-[#bc85ab] text-white px-5 py-2 rounded-lg font-bold text-sm shadow-sm hover:bg-[#9f6795] transition-colors"
+        >
+          {{ mostrarForm ? '← Tornar' : '+ Nou Lloc' }}
         </button>
       </div>
 
@@ -20,42 +23,38 @@
         @eliminar="eliminarLloc"
       />
 
-      <div v-else class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+      <div v-else class="bg-white rounded-xl shadow-md border-t-8 border-[#804f7f] overflow-hidden">
         <table class="w-full">
           <thead class="bg-gray-50 border-b text-left">
-            <tr class="text-[11px] text-gray-400 uppercase tracking-[0.2em] font-black">
-              <th class="p-6">Lloc </th>
+            <tr class="text-[11px] text-[#bc85ab] uppercase tracking-[0.2em] font-black">
+              <th class="p-6">Lloc / Barri</th>
               <th class="p-6 text-center">Estat</th>
-    
+              <th class="p-6 text-center">Dificultat</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
-            <tr v-for="lloc in llista" :key="lloc._id" @click="prepararEdicion(lloc)" class="hover:bg-purple-50/50 cursor-pointer transition-all group">
+            <tr v-for="item in llista" :key="item._id" @click="prepararEdicion(item)" class="hover:bg-[#f5cbdd]/10 cursor-pointer transition-all group">
               <td class="p-6 flex items-center gap-6">
-                <img :src="lloc.imatge_referencia" class="w-24 h-16 object-cover rounded-2xl shadow-sm group-hover:scale-105 transition-transform">
+                <img :src="item.imatge_referencia" class="h-16 w-24 object-cover rounded-lg border-2 border-[#d9a6c2] shadow-sm">
                 <div>
-                  <div class="font-bold text-purple-800 text-lg">{{ lloc.nom }}</div>
-                  <div class="text-[10px] text-gray-400 font-black uppercase tracking-widest">
-                    {{ lloc.barri || 'Sense barri' }}
+                  <div class="font-bold text-[#402749] text-lg">{{ item.nom }}</div>
+                  <div class="text-[10px] text-[#bc85ab] font-black uppercase tracking-widest">
+                    {{ item.barri || 'Sense barri' }}
                   </div>
                 </div>
               </td>
-
               <td class="p-6 text-center">
-                <div class="flex flex-col items-center gap-1">
-                  <span 
-                    :class="lloc.control_horari?.actiu ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-400'"
-                    class="text-[9px] font-black uppercase px-3 py-1 rounded-full"
-                  >
-                    {{ lloc.control_horari?.actiu ? 'Actiu' : 'Inactiu' }}
-                  </span>
-                  <span v-if="lloc.control_horari?.actiu" class="text-[10px] text-gray-400 font-mono">
-                    {{ lloc.control_horari?.hora_tancament }}
-                  </span>
-                </div>
+                <span 
+                  :class="item.control_horari?.actiu ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-400'"
+                  class="text-[9px] font-black uppercase px-3 py-1 rounded-full"
+                >
+                  {{ item.control_horari?.actiu ? 'Actiu' : 'Inactiu' }}
+                </span>
               </td>
-
               <td class="p-6 text-center">
+                <span class="text-xs font-black italic uppercase px-3 py-1 bg-gray-100 rounded-full text-gray-400">
+                  {{ item.dificultat }}
+                </span>
               </td>
             </tr>
           </tbody>
@@ -71,109 +70,77 @@ import AdminNav from './components/AdminNav.vue';
 import AdminFormLloc from './components/AdminFormLloc.vue';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const PATH = `${API_URL}/api/mapa/punts`;
+
 const llista = ref([]);
 const mostrarForm = ref(false);
 const editandoId = ref(null);
 
 const resetForm = () => ({
-  nom: '', 
-  barri: '', 
-  dificultat: 'Baixa', 
-  descripcio: '', 
-  explicacio_historica: '',
-  imatge_referencia: '', 
-  foto_mapa: '', 
-  tags: [], 
-  punts_missio: [],
+  nom: '', barri: '', dificultat: 'Baixa', descripcio: '', explicacio_historica: '',
+  imatge_referencia: '', foto_mapa: '', tags: [], punts_missio: [],
   control_horari: { hora_tancament: '20:00', actiu: false },
-  lat: 41.3879, 
-  lng: 2.1699
+  lat: 41.3879, lng: 2.1699
 });
 
 const form = ref(resetForm());
 
-onMounted(cargarLlocs);
-
-const cargarLlocs = async () => {
+const cargarDatos = async () => {
   try {
-    const res = await fetch(`${API_URL}/api/mapa/punts`);
-    
-    if (!res.ok) throw new Error("No s'han trobat els punts");
-    
+    const res = await fetch(PATH);
     const data = await res.json();
-    llista.value = data;
+    llista.value = Array.isArray(data) ? data : [];
   } catch (err) {
-    console.error("Error al carregar:", err);
+    console.error("Error:", err);
   }
 };
 
-function alternarVista() {
-  if (mostrarForm.value) {
-    mostrarForm.value = false;
-  } else {
+const alternarVista = () => {
+  mostrarForm.value = !mostrarForm.value;
+  if (!mostrarForm.value) {
     editandoId.value = null;
     form.value = resetForm();
-    mostrarForm.value = true;
   }
-}
+};
 
-function prepararEdicion(lloc) {
-  editandoId.value = lloc._id;
+const prepararEdicion = (item) => {
+  editandoId.value = item._id;
   form.value = { 
-    ...lloc, 
-    lat: lloc.ubicacio.coordinates[1], 
-    lng: lloc.ubicacio.coordinates[0],
-    control_horari: lloc.control_horari || { hora_tancament: '20:00', actiu: false }
+    ...item, 
+    lat: item.ubicacio?.coordinates[1] || 41.3879, 
+    lng: item.ubicacio?.coordinates[0] || 2.1699,
+    control_horari: item.control_horari || { hora_tancament: '20:00', actiu: false }
   };
   mostrarForm.value = true;
-}
+};
 
 const guardarLloc = async (datos) => {
   try {
     const payload = { 
       ...datos, 
-      ubicacio: { 
-        type: 'Point', 
-        coordinates: [Number(datos.lng), Number(datos.lat)] 
-      } 
+      ubicacio: { type: 'Point', coordinates: [Number(datos.lng), Number(datos.lat)] } 
     };
-
-    const url = editandoId.value 
-      ? `${API_URL}/api/mapa/punts/${editandoId.value}` 
-      : `${API_URL}/api/mapa/punts`;
-    
-    const respuesta = await fetch(url, {
+    const url = editandoId.value ? `${PATH}/${editandoId.value}` : PATH;
+    const res = await fetch(url, {
       method: editandoId.value ? 'PUT' : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-
-    if (!respuesta.ok) {
-        const errorData = await respuesta.json();
-        throw new Error(errorData.error || "Error al guardar");
+    if (res.ok) {
+      mostrarForm.value = false;
+      cargarDatos();
     }
-
-    mostrarForm.value = false;
-    editandoId.value = null;
-    await cargarLlocs(); 
   } catch (error) {
-    console.error("Error detallat:", error);
-    alert("No s'ha pogut guardar: " + error.message);
+    alert("Error al guardar");
   }
 };
 
 const eliminarLloc = async (id) => {
-  if (!confirm("Vols eliminar aquest lloc definitivament?")) return;
-  try {
-    const res = await fetch(`${API_URL}/api/mapa/punts/${id}`, { 
-      method: 'DELETE' 
-    });
-    if (res.ok) {
-      mostrarForm.value = false;
-      await cargarLlocs();
-    }
-  } catch (error) {
-    console.error("Error al eliminar:", error);
-  }
+  if (!confirm("Eliminar?")) return;
+  await fetch(`${PATH}/${id}`, { method: 'DELETE' });
+  mostrarForm.value = false;
+  cargarDatos();
 };
+
+onMounted(cargarDatos);
 </script>
