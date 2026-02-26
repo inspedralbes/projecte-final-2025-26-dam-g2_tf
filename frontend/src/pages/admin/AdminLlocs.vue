@@ -70,7 +70,7 @@ import { ref, onMounted } from 'vue';
 import AdminNav from './components/AdminNav.vue';
 import AdminFormLloc from './components/AdminFormLloc.vue';
 
-const API_URL = "http://localhost:8088/api/admin/llocs";
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 const llista = ref([]);
 const mostrarForm = ref(false);
 const editandoId = ref(null);
