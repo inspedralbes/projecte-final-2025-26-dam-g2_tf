@@ -64,24 +64,59 @@
         <div class="lg:col-span-2 pt-6 border-t border-gray-50">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-sm font-black text-purple-400 uppercase tracking-widest">Punts de Missió ({{ form.punts_missio.length }})</h3>
-            <button type="button" @click="afegirPunt" class="text-xs bg-purple-50 text-purple-600 px-4 py-2 rounded-xl font-bold hover:bg-purple-100">+ Afegir Punt</button>
           </div>
 
+          <!-- Imatge del mapa per clicar -->
+          <div v-if="form.foto_mapa" class="mb-4">
+            <p class="text-xs text-gray-400 mb-2 font-bold uppercase">📍 Fes clic a la imatge per afegir un punt</p>
+            <div
+              class="relative border-4 border-purple-100 rounded-2xl overflow-hidden cursor-crosshair"
+              style="max-width: 100%;"
+            >
+              <img
+                :src="baseApi + '/foto_mapa/' + form.foto_mapa"
+                ref="imatgeMapaRef"
+                class="w-full block select-none"
+                @click="clicAlMapa"
+                alt="Mapa"
+              />
+              <!-- Marcadors sobre la imatge -->
+              <div
+                v-for="(punt, i) in form.punts_missio"
+                :key="i"
+                class="absolute flex items-center justify-center rounded-full font-bold text-xs shadow-md border-2 border-white"
+                :style="{ left: punt.posicio_x + '%', top: punt.posicio_y + '%', width:'28px', height:'28px', background:'#bc85ab', color:'#fff', transform:'translate(-50%,-50%)' }"
+                :title="punt.nom_punt"
+              >
+                {{ i + 1 }}
+              </div>
+            </div>
+
+            <!-- Mini formulari quan es clica -->
+            <div v-if="puntPendent" class="mt-3 p-4 border-2 border-purple-100 rounded-2xl bg-purple-50/40">
+              <p class="text-xs font-black text-purple-400 uppercase mb-2">Nou punt ({{ puntPendent.posicio_x.toFixed(1) }}%, {{ puntPendent.posicio_y.toFixed(1) }}%)</p>
+              <input v-model="puntPendent.nom_punt" placeholder="Nom del punt (ex: Façana principal)" class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm mb-2 outline-none" />
+              <input v-model="puntPendent.pista" placeholder="Pista per a l'usuari..." class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm mb-3 italic outline-none" />
+              <div class="flex gap-2">
+                <button type="button" @click="confirmarPunt" class="flex-1 bg-purple-600 text-white py-2 rounded-xl text-sm font-bold hover:bg-purple-700">✅ Afegir punt</button>
+                <button type="button" @click="puntPendent = null" class="flex-1 bg-gray-100 text-gray-500 py-2 rounded-xl text-sm font-bold">✕ Cancel·lar</button>
+              </div>
+            </div>
+          </div>
+          <div v-else class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-2xl text-sm text-yellow-700">
+            ⚠️ Afegeix el nom del fitxer de <strong>Foto Mapa</strong> a dalt per poder col·locar els punts visualment.
+          </div>
+
+          <!-- Llista de punts amb opció d'editar nom/pista i eliminar -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div v-for="(punt, i) in form.punts_missio" :key="i" class="p-4 border-2 border-gray-50 rounded-2xl bg-white relative group">
               <button @click="eliminarPunt(i)" type="button" class="absolute top-2 right-2 text-gray-300 hover:text-red-500 font-bold">×</button>
-              <input v-model="punt.nom_punt" placeholder="Nom del punt (Ex: La Gàrgola)" class="w-full font-bold text-sm border-b mb-2 outline-none">
-              <div class="flex gap-2 mb-2">
-                <div class="w-1/2">
-                  <label class="text-[9px] text-gray-400 uppercase font-bold">Eix X (%)</label>
-                  <input v-model.number="punt.posicio_x" type="number" class="w-full text-xs p-1 border rounded bg-gray-50">
-                </div>
-                <div class="w-1/2">
-                  <label class="text-[9px] text-gray-400 uppercase font-bold">Eix Y (%)</label>
-                  <input v-model.number="punt.posicio_y" type="number" class="w-full text-xs p-1 border rounded bg-gray-50">
-                </div>
+              <div class="flex items-center gap-2 mb-2">
+                <span class="w-6 h-6 rounded-full bg-[#bc85ab] text-white text-xs font-bold flex items-center justify-center flex-shrink-0">{{ i + 1 }}</span>
+                <input v-model="punt.nom_punt" placeholder="Nom del punt" class="flex-1 font-bold text-sm border-b outline-none" />
               </div>
-              <input v-model="punt.pista" placeholder="Pista per trobar el punt..." class="w-full text-xs italic text-gray-500 outline-none">
+              <input v-model="punt.pista" placeholder="Pista per trobar el punt..." class="w-full text-xs italic text-gray-500 outline-none mb-2" />
+              <p class="text-[10px] text-gray-400">X: {{ punt.posicio_x?.toFixed(1) }}% / Y: {{ punt.posicio_y?.toFixed(1) }}%</p>
             </div>
           </div>
         </div>
@@ -116,7 +151,6 @@ import { ref, onMounted, nextTick, watch } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -127,6 +161,10 @@ L.Icon.Default.mergeOptions({
   iconUrl: markerIcon,
   shadowUrl: markerShadow,
 });
+
+const baseApi = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const imatgeMapaRef = ref(null);
+const puntPendent = ref(null);
 
 const props = defineProps({
   datosIniciales: Object,
@@ -173,8 +211,27 @@ const afegirTag = (e) => {
   }
 };
 const eliminarTag = (index) => form.value.tags.splice(index, 1);
-const afegirPunt = () => form.value.punts_missio.push({ nom_punt: '', posicio_x: 50, posicio_y: 50, pista: '' });
 const eliminarPunt = (index) => form.value.punts_missio.splice(index, 1);
+
+function clicAlMapa(event) {
+  if (puntPendent.value) return; // ja n'hi ha un pendent
+  const img = imatgeMapaRef.value;
+  const rect = img.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) / rect.width) * 100;
+  const y = ((event.clientY - rect.top) / rect.height) * 100;
+  puntPendent.value = {
+    posicio_x: parseFloat(x.toFixed(2)),
+    posicio_y: parseFloat(y.toFixed(2)),
+    nom_punt: '',
+    pista: ''
+  };
+}
+
+function confirmarPunt() {
+  if (!puntPendent.value) return;
+  form.value.punts_missio.push({ ...puntPendent.value });
+  puntPendent.value = null;
+}
 
 function procesarCoordenadas() {
   const partes = inputCoordenadas.value.split(/[\s,]+/);
