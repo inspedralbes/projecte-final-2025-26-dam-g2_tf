@@ -34,10 +34,17 @@
             </div>
 
             <div v-if="peticionSeleccionada.estat_validacio === 'pendent'" class="flex flex-col sm:flex-row gap-4 pt-4">
-              <button @click="votar(peticionSeleccionada._id, 'acceptada')" class="flex-1 bg-[#402749] text-[#f5cbdd] py-4 rounded-xl font-bold uppercase shadow-lg hover:bg-[#5d3962] transition-all transform hover:-translate-y-1">
+              <button 
+                @click="votar(peticionSeleccionada, 'acceptada')" 
+                class="flex-1 bg-[#402749] text-[#f5cbdd] py-4 rounded-xl font-bold uppercase shadow-lg hover:bg-[#5d3962] transition-all"
+              >
                 Aprovar i Publicar
               </button>
-              <button @click="votar(peticionSeleccionada._id, 'rebutjada')" class="flex-1 bg-white text-[#402749] border-2 border-[#402749] py-4 rounded-xl font-bold uppercase shadow-md hover:bg-gray-50 transition-all">
+
+              <button 
+                @click="votar(peticionSeleccionada, 'rebutjada')" 
+                class="flex-1 bg-white text-[#402749] border-2 border-[#402749] py-4 rounded-xl font-bold uppercase shadow-md hover:bg-gray-50 transition-all"
+              >
                 Rebutjar
               </button>
             </div>
@@ -105,21 +112,47 @@ const peticions = ref([]);
 const peticionSeleccionada = ref(null);
 
 const cargarPeticiones = async () => {
-  const res = await fetch(`${API_URL}/api/admin/peticions`);
-  peticions.value = await res.json();
+  try {
+    const res = await fetch(`${API_URL}/api/admin/peticions`);
+    const data = await res.json();
+    peticions.value = data.map(p => ({
+      ...p,
+      id: p._id 
+    }));
+  } catch (err) {
+    console.error("Error carregar peticions:", err);
+  }
 };
 
-const votar = async (id, nouEstat) => {
+const votar = async (peticion, nouEstat) => {
+
+  const id = peticion._id || peticion.id;
+
+  if (!id) {
+    console.error("Dades de la petició:", peticion);
+    alert("Error: No s'ha pogut trobar l'ID en l'objecte.");
+    return;
+  }
+
   if (!confirm(`Vols marcar aquesta petició com a ${nouEstat}?`)) return;
   
-  const res = await fetch(`${API_URL}/api/admin/peticions/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ estat_validacio: nouEstat })
-  });
-  
-  peticionSeleccionada.value = null;
-  cargarPeticiones();
+  try {
+    const res = await fetch(`${API_URL}/api/admin/peticions/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estat_validacio: nouEstat })
+    });
+    
+    if (res.ok) {
+      peticionSeleccionada.value = null; 
+      await cargarPeticiones(); 
+    } else {
+      alert("Error en el servidor al actualitzar l'estat.");
+    }
+  } catch (err) {
+    console.error("Error al votar:", err);
+    alert("Error de connexió.");
+  }
 };
 
 const colorEstado = (s) => {
