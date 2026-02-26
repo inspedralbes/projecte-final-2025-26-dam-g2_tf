@@ -21,6 +21,7 @@ import camara from '../pages/camara.vue'
 import AdminDashboard from '../pages/admin/AdminDashboard.vue'
 import AdminLlocs from '../pages/admin/AdminLlocs.vue'
 import AdminPeticions from '../pages/admin/AdminPeticions.vue'
+import MapEditor from '../pages/admin/MapEditor.vue'
 
 const routes = [
   {
@@ -51,7 +52,13 @@ const routes = [
     path: '/admin/peticions',
     name: 'admin-peticions',
     component: AdminPeticions,
-    meta: { requiereAdmin: true } // Protegit
+    meta: { requiereAdmin: true }
+  },
+  {
+    path: '/admin/mapa-editor/:id',
+    name: 'admin-mapa-editor',
+    component: MapEditor,
+    meta: { requiereAdmin: true }
   },
   // -------------------------
   {
