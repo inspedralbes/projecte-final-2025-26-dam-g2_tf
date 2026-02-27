@@ -86,12 +86,12 @@ export default {
   async mounted() {
     try {
       // 1. Primer busquem la SESSIÓ per saber quin monument estem jugant
-    const respSessio = await fetch(this.baseApi + '/api/sessions/' + this.idLloc);
+    const respSessio = await fetch(this.baseApi + '/api/sessionsJoc/' + this.idLloc);
     if (!respSessio.ok) throw new Error("No s'ha trobat la sessió de joc");
     const sessio = await respSessio.json();
 
     // 2. Ara que sabem que el monument és sessio.idLloc, el carreguem
-    const idRealMonument = sessio.idLloc; 
+    const idRealMonument = sessio.id_lloc_desti; 
     const resposta = await fetch(this.baseApi + '/api/mapa/punts/' + idRealMonument);
 
     if (!resposta.ok) throw new Error("No s'ha pogut carregar el lloc");
@@ -128,7 +128,7 @@ export default {
       } else {
         // Podem mostrar la imatge de referència del lloc com a fallback
         try {
-          const resposta = await fetch(this.baseApi + '/api/mapa/punts/' + this.idLloc);
+          const resposta = await fetch(this.baseApi + '/api/mapa/punts/' + this.llocRealId);
           const lloc = await resposta.json();
           if (lloc.imatge_referencia) {
             this.fotoActual = lloc.imatge_referencia;

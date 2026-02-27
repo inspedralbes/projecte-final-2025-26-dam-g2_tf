@@ -118,7 +118,7 @@ async function irAlJuego() {
   try {
     // 1. Recuperem l'ID del perfil 
     const dadesUsuari = JSON.parse(localStorage.getItem('usuari') || '{}');
-    const perfilId = dadesUsuari.perfilId; 
+    const perfilId = dadesUsuari.perfilId || dadesUsuari._id; 
 
     if (!perfilId) {
         alert("Sessió caducada. Torna a fer login.");
@@ -141,7 +141,8 @@ async function irAlJuego() {
     router.push({ name: 'mapa-joc', params: { id: sessioNova._id } });
 
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error a la petició:", error);
+    alert("Error de xarxa o de codi: " + error.message);
   }
 }
 </script>
