@@ -49,12 +49,7 @@
       >
         COMENÇAR RUTA
       </button>
-      <button 
-        @click="anarACamara"
-        class="relative z-30 w-full bg-purple-600 text-white font-black py-5 rounded-[20px] mt-10 shadow-xl shadow-purple-200 active:scale-95 transition-all uppercase tracking-widest text-sm"
-      >
-        OBRIR CÀMERA
-      </button>
+      
     </div>
   </div>
 </template>

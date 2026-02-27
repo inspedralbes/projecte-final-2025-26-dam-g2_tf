@@ -5,7 +5,7 @@ const fs = require('fs');
 
 const extensionsValides = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
 
-// Funció auxiliar: filtra un array de noms de fitxer i retorna només les imatges
+// filtra un array de noms de fitxer i retorna només les imatges
 function filtrarImagenes(fitxers) {
     const resultat = [];
     for (let i = 0; i < fitxers.length; i++) {
@@ -17,7 +17,7 @@ function filtrarImagenes(fitxers) {
     return resultat;
 }
 
-// GET /api/fotos-actuals — llista fotos a l'arrel de fotos_actuals/
+// llista fotos a l'arrel de fotos_actuals
 router.get('/', function (req, res) {
     const carpeta = path.join(__dirname, '../../public/fotos_actuals');
 
@@ -31,7 +31,7 @@ router.get('/', function (req, res) {
     res.json({ fotos: imatges });
 });
 
-// GET /api/fotos-actuals/totes — retorna TOTES les fotos de totes les subcarpetes
+//retorna totes les fotos de totes les subcarpetes
 router.get('/totes', function (req, res) {
     const base = path.join(__dirname, '../../public/fotos_actuals');
 
@@ -41,10 +41,8 @@ router.get('/totes', function (req, res) {
 
     const resultat = [];
 
-    // 1. Llegim tots els elements de la carpeta base
     const items = fs.readdirSync(base);
 
-    // 2. Filtrem per quedar-nos només amb les subcarpetes
     const carpetes = [];
     for (let i = 0; i < items.length; i++) {
         const rutaCompleta = path.join(base, items[i]);
