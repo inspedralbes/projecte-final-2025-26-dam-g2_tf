@@ -135,13 +135,28 @@ export default {
       this.puntSeleccionat = null;
     },
 
+    // Quan premen el botó general "HE ARRIBAT"
     anarACamera() {
-      this.$router.push('/joc/camera/' + this.idLloc);
+      this.$router.push({
+        name: 'camara',
+        params: {
+          codi_sala: this.$route.params.id, // L'ID de la sessió/sala que ja tens a la URL del mapa
+          id: this.idLloc // L'ID del monument (que en el teu cas sembla que és la mateixa variable)
+        }
+      });
     },
 
+    // Quan premen "FER LA FOTO" dins del modal d'un punt concret
     anarACameraDesPunt() {
       this.modalVisible = false;
-      this.$router.push('/joc/camera/' + this.idLloc);
+      
+      this.$router.push({
+        name: 'camara',
+        params: {
+          codi_sala: this.$route.params.id, // El codi de la sala/sessió
+          id: this.idLloc // L'ID del monument o del punt específic
+        }
+      });
     }
   }
 };
