@@ -73,7 +73,7 @@ function tancarModal() {
     // Si la llista està completa, anem al Leaderboard
     router.push({ 
       name: 'Leaderboard', 
-      params: { sala: route.params.codi_sala } 
+      params: { id: route.params.codi_sala }
     });
   } else {
     // Si no, tornem al mapa
@@ -96,36 +96,42 @@ async function executarTotElProces() {
 }
 
 async function enviarDadesAlBackend(imatgeEnText) {
-  carregant.value = true;
-  const paquet = {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      imatge: imatgeEnText,
-      idLloc: idLloc,
-      perfilId: usuari.value?._id || null,
-      codi_sala: route.params.codi_sala 
-    })
+  // 1. EXTRACTE DE DADES (Mira la consola F12 per veure quin és null)
+  const dadesAEnviar = {
+    imatge: imatgeEnText ? imatgeEnText.substring(0, 20) + "..." : null, // Només per log
+    idLloc: route.params.id, 
+    perfilId: usuari.value?._id, 
+    codi_sala: route.params.codi_sala || route.params.sala // Intenta agafar-ho de varis noms
   };
 
+  console.log("DADES QUE ESTEM A PUNT D'ENVIAR:", dadesAEnviar);
+
+  // 2. VALIDACIÓ PREVIA AL FRONTEND
+  if (!imatgeEnText) return alert("Error: No s'ha capturat la imatge.");
+  if (!dadesAEnviar.idLloc) return alert("Error: Falta l'ID del Lloc a la URL.");
+  if (!dadesAEnviar.perfilId) return alert("Error: No s'ha trobat el perfil de l'usuari (estàs loguejat?).");
+  if (!dadesAEnviar.codi_sala) return alert("Error: No s'ha trobat el codi de la sala a la URL.");
+
+  carregant.value = true;
   try {
     const resposta = await fetch(`${API_URL}/api/validar-foto`, paquet);
     const dades = await resposta.json();
 
-    if (dades.exit) {
+    if (resposta.ok && dades.exit) {
       modalDades.value = {
-        nom_lloc: dades.nom_lloc || '',
-        imatge_historica: dades.imatge_historica || '',
-        coincidencia: dades.coincidencia || '',
-        cromo_nou: dades.cromo_nou || false,
-        completat_tot: dades.completat_tot || false 
+        nom_lloc: dades.nom_lloc,
+        imatge_historica: dades.imatge_historica,
+        coincidencia: dades.coincidencia,
+        cromo_nou: dades.cromo_nou,
+        completat_tot: dades.completat_tot || false
       };
       mostrarModal.value = true;
     } else {
-      alert('❌ ' + dades.missatge + ' (Similitud: ' + dades.coincidencia + ')');
+      alert('❌ ' + (dades.missatge || 'Error en validar'));
     }
   } catch (error) {
-    alert('Error de connexió: ' + error.message);
+    console.error(error);
+    alert('Error de connexió amb el servidor.');
   } finally {
     carregant.value = false;
   }
