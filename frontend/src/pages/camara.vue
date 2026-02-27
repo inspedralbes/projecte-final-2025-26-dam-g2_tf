@@ -114,10 +114,23 @@ async function enviarDadesAlBackend(imatgeEnText) {
 
   carregant.value = true;
   try {
+    // DEFINIM EL PAQUET (Això és el que et faltava)
+    const paquet = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        imatge: imatgeEnText, // Enviem la imatge real, no el substring del log
+        idLloc: dadesAEnviar.idLloc,
+        perfilId: dadesAEnviar.perfilId,
+        codi_sala: dadesAEnviar.codi_sala
+      })
+    };
+
+    // ARA SÍ, FEM EL FETCH
     const resposta = await fetch(`${API_URL}/api/validar-foto`, paquet);
     const dades = await resposta.json();
 
-    if (resposta.ok && dades.exit) {
+    if (resposta.ok) { // He tret el 'dades.exit' perquè si ok és true, ja podem processar
       modalDades.value = {
         nom_lloc: dades.nom_lloc,
         imatge_historica: dades.imatge_historica,
@@ -130,7 +143,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
       alert('❌ ' + (dades.missatge || 'Error en validar'));
     }
   } catch (error) {
-    console.error(error);
+    console.error("ERROR REAL:", error); // Això et dirà "paquet is not defined" si no ho canvies
     alert('Error de connexió amb el servidor.');
   } finally {
     carregant.value = false;
