@@ -118,7 +118,12 @@ async function irAlJuego() {
   try {
     // 1. Recuperem l'ID del perfil 
     const dadesUsuari = JSON.parse(localStorage.getItem('usuari') || '{}');
-    const perfilId = dadesUsuari.perfilId || dadesUsuari._id; 
+    const perfilId = dadesUsuari._id;
+
+    console.log("Dades enviades al POST:", {
+      idLloc: route.params.id,
+      perfilId: perfilId
+    });
 
     if (!perfilId) {
         alert("Sessió caducada. Torna a fer login.");
@@ -135,7 +140,15 @@ async function irAlJuego() {
       })
     });
 
+    if (!resposta.ok) {
+      const errorText = await resposta.text();
+      throw new Error("El servidor ha fallat al crear la sessió: " + errorText);
+    }
+
     const sessioNova = await resposta.json();
+    console.log("Sessió creada correctament:", sessioNova);
+
+
 
     // 3. Anem al mapa amb l'ID de la SESSIÓ
     router.push({ name: 'mapa-joc', params: { id: sessioNova._id } });
