@@ -269,11 +269,11 @@ function procesarCoordenadas() {
   }
 }
 
-const enviarFormulario = () => {
-    emit('save', { ...form.value });
-};
+function enviarFormulario() {
+  emit('save', { ...form.value });
+}
 
-const carregarFotos = async () => {
+async function carregarFotos() {
   try {
     const resposta = await fetch(baseApi + '/api/fotos-actuals/totes');
     if (!resposta.ok) return;
@@ -282,9 +282,9 @@ const carregarFotos = async () => {
   } catch (err) {
     console.error('Error carregant fotos:', err);
   }
-};
+}
 
-onMounted(() => {
+onMounted(function() {
   initMapa();
   carregarFotos();
 });

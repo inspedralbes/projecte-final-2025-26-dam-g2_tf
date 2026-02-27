@@ -208,9 +208,9 @@ export default {
           body: JSON.stringify({ punts_missio: this.puntsMissio })
         });
         if (!resposta.ok) throw new Error('Error al desar');
-        this.missatgeDesar = '✅ Punts desats correctament!';
+        this.missatgeDesar = 'Punts desats correctament!';
       } catch (err) {
-        this.missatgeDesar = '❌ Error al desar: ' + err.message;
+        this.missatgeDesar = ' Error al desar: ' + err.message;
       } finally {
         this.desant = false;
         setTimeout(() => { this.missatgeDesar = ''; }, 3000);
