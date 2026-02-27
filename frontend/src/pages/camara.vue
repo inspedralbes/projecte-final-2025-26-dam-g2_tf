@@ -148,6 +148,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
   } finally {
     carregant.value = false;
   }
+}
 </script>
 
 <template>
