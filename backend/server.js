@@ -35,6 +35,7 @@ async function startServer() {
         app.use('/api/auth', require('./src/routes/auth'));
         app.use('/api/validar-foto', require('./src/routes/camara'));
         app.use('/api/fotos-actuals', require('./src/routes/fotos'));
+        app.use('/api/sessionsJoc', require('./src/routes/sessionsJoc'));
 
         // Configurar Socket.io
         const http = require('http');
