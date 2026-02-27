@@ -61,35 +61,40 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 const resultatsSessio = ref([]);
 const puntuacio = ref(0);
 
+// Funció comparadora per ordenar jugadors per temps (més ràpid primer)
+function compararPerTemps(a, b) {
+  return parseInt(a.temps) - parseInt(b.temps);
+}
+
 // Funció per carregar les dades de la partida que acabem de fer
-onMounted(async () => {
+async function carregarResultats() {
   // El 'id' ve de la URL (ex: /leaderboard-final/SALA123)
   const sId = route.params.id;
   if (!sId) return;
 
   try {
     // Demanem al backend les dades d'aquesta sessió específica
-    const res = await fetch(`${API_URL}/api/sessio/${sId}`);
+    const res = await fetch(API_URL + '/api/sessio/' + sId);
     if (res.ok) {
       const dadesSessio = await res.json();
-      
-      // Ordenem els jugadors perquè el que ha tret més exactitud o menys temps surti primer
-      resultatsSessio.value = dadesSessio.jugadors.sort((a, b) => {
-        // Ordenem per temps (més ràpid millor)
-        return parseInt(a.temps) - parseInt(b.temps);
-      });
+
+      // Ordenem els jugadors perquè el més ràpid surti primer
+      resultatsSessio.value = dadesSessio.jugadors.sort(compararPerTemps);
     }
   } catch (err) {
     console.error("Error carregant rànquing:", err);
   }
-});
+}
 
-const enviarRessenya = () => {
+// Funció per enviar la valoració i tornar al mapa
+function enviarRessenya() {
   if (puntuacio.value === 0) {
     alert("Si us plau, posa una estrella abans de marxar!");
     return;
   }
   // Un cop valorat, enviem l'usuari de tornada al mapa principal
   router.push('/mapa');
-};
+}
+
+onMounted(carregarResultats);
 </script>
