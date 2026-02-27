@@ -46,14 +46,39 @@
     <!-- Formulari nou punt -->
     <div v-if="puntNou" class="formulari-nou-punt">
       <h3>📍 Nou punt: ({{ puntNou.posicio_x.toFixed(1) }}%, {{ puntNou.posicio_y.toFixed(1) }}%)</h3>
+
       <div class="camp">
         <label>Nom del punt</label>
         <input v-model="puntNou.nom_punt" type="text" placeholder="Ex: Façana principal" />
       </div>
+
       <div class="camp">
         <label>Pista per a l'usuari</label>
         <input v-model="puntNou.pista" type="text" placeholder="Ex: Busca la torre central..." />
       </div>
+
+      <!-- Selector d'imatge de referència -->
+      <div class="camp">
+        <label>🖼️ Imatge de referència</label>
+        <select v-model="puntNou.imatge_referencia">
+          <option value="">-- Sense imatge --</option>
+          <option
+            v-for="foto in fotosDisponibles"
+            :key="foto.path"
+            :value="foto.path"
+          >{{ foto.carpeta }} / {{ foto.nom }}</option>
+        </select>
+      </div>
+
+      <!-- Previsualització de la imatge seleccionada -->
+      <div v-if="puntNou.imatge_referencia" class="preview-imatge">
+        <img :src="baseApi + puntNou.imatge_referencia" alt="Previsualització" />
+        <p class="preview-nom">{{ nomFoto(puntNou.imatge_referencia) }}</p>
+      </div>
+      <div v-else-if="fotosDisponibles.length === 0" class="preview-buit">
+        <span>No s'han trobat imatges a la carpeta</span>
+      </div>
+
       <div class="botons-formulari">
         <button class="btn-desar" @click="confirmarPunt">✅ Desar punt</button>
         <button class="btn-cancel" @click="cancellarPunt">✕ Cancel·lar</button>
@@ -69,7 +94,15 @@
           <strong>{{ punt.nom_punt || 'Sense nom' }}</strong>
           <span v-if="punt.pista">{{ punt.pista }}</span>
           <small>X: {{ punt.posicio_x.toFixed(1) }}% / Y: {{ punt.posicio_y.toFixed(1) }}%</small>
+          <span v-if="punt.imatge_referencia" class="punt-foto-badge">🖼️ {{ nomFoto(punt.imatge_referencia) }}</span>
         </div>
+        <!-- Miniatura de la imatge assignada -->
+        <img
+          v-if="punt.imatge_referencia"
+          :src="baseApi + punt.imatge_referencia"
+          class="miniatura-punt"
+          alt="Imatge del punt"
+        />
         <button class="btn-eliminar" @click="eliminarPunt(index)">🗑️</button>
       </div>
     </div>
@@ -94,7 +127,8 @@ export default {
       puntsMissio: [],
       puntNou: null,
       desant: false,
-      missatgeDesar: ''
+      missatgeDesar: '',
+      fotosDisponibles: []
     };
   },
 
@@ -110,14 +144,33 @@ export default {
         : 'mapa_' + lloc.nom.toLowerCase().replace(/\s+/g, '') + '.jpg';
       this.urlMapa = this.baseApi + '/foto_mapa/' + nomImatge;
       this.puntsMissio = (lloc.punts_missio || []).map(p => ({ ...p }));
+
+      // Carreguem totes les fotos de totes les subcarpetes
+      await this.carregarFotos();
     } catch (err) {
       console.error('Error carregant el lloc:', err);
     }
   },
 
   methods: {
+    async carregarFotos() {
+      try {
+        const resposta = await fetch(this.baseApi + '/api/fotos-actuals/totes');
+        if (!resposta.ok) return;
+        const dades = await resposta.json();
+        // Cada element ja té { nom, carpeta, path }
+        this.fotosDisponibles = dades.fotos || [];
+      } catch (err) {
+        console.error('Error carregant fotos:', err);
+      }
+    },
+
+    nomFoto(path) {
+      return path ? path.split('/').pop() : '';
+    },
+
     afegirPunt(event) {
-      if (this.puntNou) return; // ja n'hi ha un pendent
+      if (this.puntNou) return;
       const img = this.$refs.imatgeRef;
       const rect = img.getBoundingClientRect();
       const x = ((event.clientX - rect.left) / rect.width) * 100;
@@ -126,7 +179,8 @@ export default {
         posicio_x: parseFloat(x.toFixed(2)),
         posicio_y: parseFloat(y.toFixed(2)),
         nom_punt: '',
-        pista: ''
+        pista: '',
+        imatge_referencia: ''
       };
     },
 
@@ -266,7 +320,7 @@ export default {
 
 .camp { margin-bottom: 10px; display: flex; flex-direction: column; gap: 4px; }
 .camp label { font-size: 12px; color: #d9a6c2; }
-.camp input {
+.camp input, .camp select {
   padding: 8px 12px;
   border-radius: 8px;
   border: 1px solid #bc85ab;
@@ -275,6 +329,41 @@ export default {
   font-size: 14px;
 }
 .camp input::placeholder { color: rgba(255,255,255,0.3); }
+.camp select option { background: #2a1030; color: white; }
+
+/* Previsualització imatge */
+.preview-imatge {
+  margin: 4px 0 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid #bc85ab;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.preview-imatge img {
+  width: 100%;
+  max-height: 160px;
+  object-fit: cover;
+  display: block;
+}
+.preview-nom {
+  font-size: 11px;
+  color: #d9a6c2;
+  padding: 4px 8px;
+  margin: 0;
+  background: rgba(0,0,0,0.4);
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+}
+.preview-buit {
+  margin: 4px 0 12px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  text-align: center;
+  padding: 8px;
+}
 
 .botons-formulari { display: flex; gap: 10px; margin-top: 12px; }
 
@@ -329,6 +418,17 @@ export default {
 .punt-info strong { color: #fff; }
 .punt-info span { color: #d9a6c2; font-size: 12px; }
 .punt-info small { color: rgba(255,255,255,0.4); font-size: 11px; }
+.punt-foto-badge { color: #ffd700 !important; font-size: 11px !important; }
+
+/* Miniatura a la llista de punts */
+.miniatura-punt {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #bc85ab;
+  flex-shrink: 0;
+}
 
 .btn-eliminar {
   background: none;

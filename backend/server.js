@@ -25,7 +25,7 @@ async function startServer() {
         await connectDB();
         console.log("MongoDB Connectat correctament");
 
-        // 3. Rutes (Ara aquestes rutes usaran els Models de Mongoose internament)
+        // Rutes
         app.use('/api/cercador', require('./src/routes/cercador'));
         app.use('/api/usuari', require('./src/routes/usuari'));
         app.use('/api/social', require('./src/routes/social'));
@@ -34,28 +34,12 @@ async function startServer() {
         app.use('/api/admin', require('./src/routes/admin'));
         app.use('/api/auth', require('./src/routes/auth'));
         app.use('/api/validar-foto', require('./src/routes/camara'));
+        app.use('/api/fotos-actuals', require('./src/routes/fotos'));
 
-        // Endpoint per llistar les fotos de la carpeta fotos_actuals
-        const fs = require('fs');
-        app.get('/api/fotos-actuals', (req, res) => {
-            const carpeta = path.join(__dirname, 'public/fotos_actuals');
-            if (!fs.existsSync(carpeta)) {
-                fs.mkdirSync(carpeta, { recursive: true });
-                return res.json({ fotos: [] });
-            }
-            const extensionsValides = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
-            const fitxers = fs.readdirSync(carpeta).filter(f => {
-                const ext = path.extname(f).toLowerCase();
-                return extensionsValides.includes(ext);
-            });
-            res.json({ fotos: fitxers });
-        });
-
-        // 4. Configurar Socket.io
+        // Configurar Socket.io
         const http = require('http');
         const server = http.createServer(app);
 
-        // 4. Configurar Socket.io
         require('./src/routes/gameSocket')(server);
         server.listen(PORT, '0.0.0.0', function () {
             console.log("Servidor funcionant a: http://localhost:" + PORT);

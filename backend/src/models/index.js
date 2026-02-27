@@ -49,7 +49,8 @@ const LlocSchema = new mongoose.Schema({
     nom_punt: String,
     posicio_x: Number, // Valor de 0 a 100
     posicio_y: Number, // Valor de 0 a 100
-    pista: String
+    pista: String,
+    imatge_referencia: String
   }],
   barri: String,
   tags: [String],
