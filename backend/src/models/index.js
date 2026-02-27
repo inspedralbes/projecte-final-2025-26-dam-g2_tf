@@ -114,7 +114,15 @@ const PostSchema = new mongoose.Schema({
   tags: [String],
   timestamp: { type: Date, default: Date.now },
   likes: [String],
-  comentaris: { type: Array, default: [] }
+  // Utilitza SEMPRE aquesta estructura detallada per als comentaris:
+  comentaris: [{
+    id_comentari: { type: String },
+    id_usuari: { type: String },
+    nom_usuari: { type: String },
+    avatar_usuari: { type: String },
+    text: { type: String },
+    timestamp: { type: Date, default: Date.now }
+  }]
 });
 
 
