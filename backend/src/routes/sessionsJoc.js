@@ -6,10 +6,11 @@ const { SessioJoc, Lloc } = require('../models');
 router.post('/crear', async (req, res) => {
     try {
         const { idLloc, perfilId } = req.body; // perfilId vindrà del frontend
-
-        const lloc = await Lloc.findById(idLloc);
-        if (!lloc) return res.status(404).json({ missatge: "Monument no trobat" });
-
+        
+        
+        if (!idLloc || !perfilId) {
+            return res.status(400).json({ missatge: "Falten dades: idLloc o perfilId" });
+        }
         // Extraiem els IDs dels punts de missió del monument
         const puntsIds = lloc.punts_missio.map(p => p._id);
 
