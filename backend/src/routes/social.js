@@ -84,8 +84,8 @@ router.get('/posts', async (req, res) => {
 
 router.post('/posts', async (req, res) => {
    try {
-       // 1. Extraemos 'ubicacio' del cuerpo de la petición
-       const { id_usuari, nom_usuari, avatar_usuari, text, imatge_post, tags, ubicacio } = req.body;
+       // 1. Extraiem 'imatges_post' (en plural) que és el que envia el frontend
+       const { id_usuari, nom_usuari, avatar_usuari, text, imatges_post, tags, ubicacio } = req.body;
 
        if (!id_usuari) {
            return res.status(400).json({ message: "ID d'usuari requerit" });
@@ -96,44 +96,43 @@ router.post('/posts', async (req, res) => {
            nom_usuari,
            avatar_usuari: avatar_usuari || '',
            text: text || '',
-           imatge_post: imatge_post || '',
+           // Ara fem servir la variable correcta que hem extret a dalt
+           imatges_post: imatges_post || [], 
            tags: tags || [],
-           ubicacio: ubicacio || '', // 2. Guardamos la ubicación aquí
+           ubicacio: ubicacio || '', 
            likes: [],
            comentaris: []
        });
 
-       await nouPost.save();
+      await nouPost.save();
        res.status(201).json({ success: true, post: nouPost });
    } catch (error) {
+       // Aquest console.log et mostrarà l'error real a la teva terminal de VS Code
        console.error("Error creando post:", error);
-       res.status(500).json({ message: "Error al guardar la publicació" });
+       res.status(500).json({ message: "Error al guardar la publicació", detall: error.message });
    }
 });
 
-// 3. Gestionar Like
+
 router.post('/posts/:postId/like', async (req, res) => {
    try {
        const { postId } = req.params;
        const { id_usuari } = req.body;
 
-
        const post = await Post.findById(postId);
        if (!post) return res.status(404).json({ message: "Post no trobat" });
 
-
        const index = post.likes.indexOf(id_usuari);
 
-
        if (index === -1) {
-           post.likes.push(id_usuari); // Donar Like
+           post.likes.push(id_usuari); 
        } else {
-           post.likes.splice(index, 1); // Treure Like
+           post.likes.splice(index, 1); 
        }
 
-
        await post.save();
-       res.json({ success: true, jaTeLike: index === -1 });
+       // DEVOLVEMOS EL ARRAY ACTUALIZADO
+       res.json({ success: true, likes: post.likes }); 
    } catch (error) {
        res.status(500).json({ message: "Error al gestionar el m'agrada" });
    }
