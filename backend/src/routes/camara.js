@@ -41,23 +41,34 @@ function calcularSimilitudCosinus(tensor1, tensor2) {
     if (norma1 === 0 || norma2 === 0) return 0;
     return productePunt / (Math.sqrt(norma1) * Math.sqrt(norma2));
 }
-
 router.post('/', async function (req, res) {
-    const imatgeBase64 = req.body.imatge;
-    const idLloc = req.body.idLloc;
-    const perfilId = req.body.perfilId;
+    const { imatge, idLloc, perfilId, codi_sala } = req.body;
 
-    if (!idLloc) {
-        return res.status(400).json({ missatge: "Falta l'ID del lloc." });
+    if (!idLloc || !codi_sala || !perfilId) {
+        return res.status(400).json({ missatge: "Falten dades obligatòries (Lloc, Sala o Perfil)." });
     }
 
     try {
         // Assegurem-nos que l'IA està llesta
         await carregarModel();
 
-        const lloc = await Lloc.findById(idLloc);
+        // Busquem la sessió i el lloc en paral·lel per anar més ràpid
+        const [sessio, lloc] = await Promise.all([
+            SessioJoc.findOne({ codi_sala: codi_sala }),
+            Lloc.findById(idLloc)
+        ]);
+
+        if (!sessio) return res.status(404).json({ missatge: "Sessió no trobada." });
         if (!lloc || !lloc.imatge_referencia) {
             return res.status(404).json({ missatge: "No s'ha trobat la imatge de referència." });
+        }
+
+        // SEGURETAT: Validar que l'usuari no intenta saltar-se l'ordre
+        if (sessio.id_objetivo_actual.toString() !== idLloc.toString()) {
+            return res.status(400).json({ 
+                exit: false, 
+                missatge: "Aquest no és el teu objectiu actual. Mira el mapa!" 
+            });
         }
 
         const nomFitxer = 'captura_' + Date.now() + '.jpg';
@@ -83,7 +94,7 @@ router.post('/', async function (req, res) {
             if (!fs.existsSync(carpetaUsuari)) {
                 fs.mkdirSync(carpetaUsuari, { recursive: true });
             }
-            const dadesNetes = imatgeBase64.replace(/^data:image\/.*;base64,/, "");
+            const dadesNetes = imatge.replace(/^data:image\/.*;base64,/, "");
             const bufferUsuari = Buffer.from(dadesNetes, 'base64');
             fs.writeFileSync(camiUsuari, bufferUsuari);
 
@@ -93,11 +104,11 @@ router.post('/', async function (req, res) {
             const bufferUsuariJpeg = await sharp(bufferUsuari).jpeg().toBuffer();
             const bufferRefJpeg = await sharp(bufferRef).jpeg().toBuffer();
 
-            // 2. Convertim les imatges a "Tensors" (matrius de números 3D que entén la IA)
+            // 2. Convertim les imatges a "Tensors" (matrius de números 3D que entén l'IA)
             const tensorUsuari = tf.node.decodeImage(bufferUsuariJpeg, 3); // 3 significa RGB
             const tensorRef = tf.node.decodeImage(bufferRefJpeg, 3);
 
-            // 2. Extraiem els "embeddings" o punts clau. 
+            // Extraiem els "embeddings" o punts clau. 
             // El 'true' indica que no volem saber quin objecte és, sinó el seu codi estructural
             const caracteristiquesUsuari = modelMobileNet.infer(tensorUsuari, true);
             const caracteristiquesRef = modelMobileNet.infer(tensorRef, true);
@@ -107,8 +118,7 @@ router.post('/', async function (req, res) {
             // Si l'angle és completament oposat, podria donar negatiu, ens assegurem que el mínim sigui 0
             const similitud = Math.max(0, similitudDecimal) * 100;
 
-            // 4. IMPORTANT: Buidar la memòria RAM. A diferència de JavaScript normal, 
-            // TensorFlow requereix esborrar manualment els Tensors per no col·lapsar el servidor.
+            // 4. IMPORTANT: Buidar la memòria RAM.
             tensorUsuari.dispose();
             tensorRef.dispose();
             caracteristiquesUsuari.dispose();
@@ -119,60 +129,61 @@ router.post('/', async function (req, res) {
             console.log(`[Càmera IA] IdLloc: ${idLloc} | Similitud: ${similitud.toFixed(2)}%`);
 
             if (similitud >= 50) {
-                // Guardar cromo al perfil de l'usuari de forma persistent
-                let cromoGuardat = null;
-                if (perfilId) {
-                    try {
-                        const perfil = await Perfil.findById(perfilId);
-                        if (perfil) {
-                            // Comprovar que no tingui ja aquest cromo (evitar duplicats)
-                            const jaTeElCromo = perfil.inventari_cromos.some(
-                                c => c.id_lloc && c.id_lloc.toString() === idLloc.toString()
-                            );
-                            if (!jaTeElCromo) {
-                                const nouCromo = {
-                                    id_lloc: idLloc,
-                                    nom_lloc: lloc.nom,
-                                    imatge_usuari: "/fotos_partides_usuaris/" + nomFitxer,
-                                    data_obtencio: new Date()
-                                };
-                                perfil.inventari_cromos.push(nouCromo);
-                                perfil.punts = perfil.inventari_cromos.length;
-                                await perfil.save();
-                                cromoGuardat = nouCromo;
-                                console.log(`[Cromo] Cromo del lloc ${idLloc} guardat al perfil ${perfilId}`);
-                            } else {
-                                console.log(`[Cromo] L'usuari ${perfilId} ja té el cromo del lloc ${idLloc}`);
-                            }
-                        }
-                    } catch (errCromo) {
-                        console.error("[Cromo] Error al guardar el cromo:", errCromo);
-                    }
+                const jugador = sessio.jugadors.find(j => j.id_usuari.toString() === perfilId);
+                if (!jugador) return res.status(404).json({ missatge: "Jugador no trobat a la sessió." });
+
+                // 1. Marquem el punt actual com a fet en la llista del jugador
+                if (!jugador.punts_completats.includes(idLloc)) {
+                    jugador.punts_completats.push(idLloc);
+                    
+                    // Calculem el temps total en segons des de l'inici
+                    const segons = Math.floor((new Date() - sessio.temps_inici) / 1000);
+                    jugador.temps = segons.toString();
+                    
+                    // Calculem la mitjana d'exactitud
+                    const totalFetes = jugador.punts_completats.length;
+                    jugador.exactitud_media = ((jugador.exactitud_media * (totalFetes - 1)) + similitud) / totalFetes;
                 }
 
-                // Determinar la imatge histórica a mostrar com a cromo
-                let imatgeHistorica = lloc.imatge_referencia || '';
-                if (lloc.fotos_historiques && lloc.fotos_historiques.length > 0) {
-                    const primerFoto = lloc.fotos_historiques[0];
-                    // Si és relativa, construïm la URL completa
-                    if (primerFoto.startsWith('http')) {
-                        imatgeHistorica = primerFoto;
-                    } else {
-                        imatgeHistorica = '/fotos_historiques/' + primerFoto;
+                // 2. Comprovem si ha completat tota la llista de la partida
+                const haAcabatLaLlista = jugador.punts_completats.length === sessio.id_puntos_de_la_partida.length;
+                let medalla = null;
+
+                if (haAcabatLaLlista) {
+                    jugador.completat = true;
+                    
+                    // Calculem rànquing (quants han acabat ja)
+                    const guanyadors = sessio.jugadors.filter(j => j.completat).length;
+                    medalla = guanyadors === 1 ? "Or" : guanyadors === 2 ? "Plata" : "Bronze";
+
+                    // GUARDAR CROMO AL PERFIL DE L'USUARI
+                    const perfil = await Perfil.findById(perfilId);
+                    if (perfil) {
+                        perfil.inventari_cromos.push({
+                            id_lloc: sessio.id_lloc_desti, // Cromo del mapa/zona general
+                            rango: medalla,
+                            imatge_usuari: "/fotos_partides_usuaris/" + nomFitxer,
+                            data_obtencio: new Date()
+                        });
+                        await perfil.save();
                     }
+                } else {
+                    // SI NO HA ACABAT: Passem al següent objectiu de la llista
+                    const seguentIndex = jugador.punts_completats.length;
+                    sessio.id_objetivo_actual = sessio.id_puntos_de_la_partida[seguentIndex];
                 }
+
+                await sessio.save();
 
                 res.json({
                     exit: true,
+                    completat_tot: haAcabatLaLlista,
+                    rango: medalla,
                     coincidencia: similitud.toFixed(2) + "%",
-                    missatge: cromoGuardat
-                        ? "Cromo guardat! Has trobat l'angle correcte."
-                        : "Foto validada! (Cromo ja obtingut anteriorment)",
-                    url: "/fotos_partides_usuaris/" + nomFitxer,
-                    cromo_nou: !!cromoGuardat,
-                    imatge_historica: imatgeHistorica,
-                    nom_lloc: lloc.nom || ''
+                    missatge: haAcabatLaLlista ? "🏆 Partida finalitzada!" : "📍 Punt trobat! Torna al mapa pel següent.",
+                    url_foto: "/fotos_partides_usuaris/" + nomFitxer
                 });
+
             } else {
                 res.json({
                     exit: false,

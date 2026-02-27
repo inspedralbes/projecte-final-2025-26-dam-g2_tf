@@ -71,10 +71,17 @@ const SessioJocSchema = new mongoose.Schema({
     pistes_gastades: { type: Number, default: 0 },
     completat: { type: Boolean, default: false },
     puntsPartida: { type: Number, default: 0 },
-    temps: { type: String, default: "0" }
+    temps: { type: String, default: "0" },
+
+    punts_completats: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' }], // IDs dels punts
+    exactitud_media: { type: Number, default: 0 } // Para el leaderboard 
+
   }],
   temps_inici: { type: Date, default: Date.now },
-  id_lloc_desti: { type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' }
+  id_lloc_desti: { type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' },
+
+  id_puntos_de_la_partida: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' }], // Llista objectius 
+  id_objetivo_actual: { type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' }        // Punt actual 
 });
 
 

@@ -124,12 +124,12 @@ const routes = [
     component: SalaEspera
   },
 
-  {
-    path: '/leaderboard-final/:id', // L'ID de la sessió de joc
-    name: 'leaderboard-final',
+  { 
+    path: '/leaderboard/:sala', // Canviem :id per :sala per coherència
+    name: 'Leaderboard',        // Nom exactament igual al del router.push
     component: LeaderboardFinal,
-    props: true // Permet que el component rebi 'id' com a prop
-  },
+    props: true 
+},
 ]
 
 const router = createRouter({

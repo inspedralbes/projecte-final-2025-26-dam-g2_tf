@@ -1,9 +1,10 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router'; // [CORREGIT] Importació única i neta
 import { useAuth } from '../composables/useAuth';
 
 const route = useRoute();
+const router = useRouter(); 
 const { usuari } = useAuth();
 const idLloc = route.params.id;
 
@@ -17,7 +18,13 @@ let stream = null;
 
 // Modal cromo
 const mostrarModal = ref(false);
-const modalDades = ref({ nom_lloc: '', imatge_historica: '', coincidencia: '', cromo_nou: false });
+const modalDades = ref({ 
+  nom_lloc: '', 
+  imatge_historica: '', 
+  coincidencia: '', 
+  cromo_nou: false,
+  completat_tot: false 
+});
 
 onMounted(async () => {
   try {
@@ -58,8 +65,20 @@ function fotoSeguent() {
   indexFotoActual.value = (indexFotoActual.value + 1) % fotosActuals.value.length;
 }
 
+// [CORREGIT] La funció tancarModal ara inclou la lògica de navegació correctament
 function tancarModal() {
   mostrarModal.value = false;
+
+  if (modalDades.value.completat_tot) {
+    // Si la llista està completa, anem al Leaderboard
+    router.push({ 
+      name: 'Leaderboard', 
+      params: { sala: route.params.codi_sala } 
+    });
+  } else {
+    // Si no, tornem al mapa
+    router.push('/mapa');
+  }
 }
 
 async function executarTotElProces() {
@@ -84,28 +103,22 @@ async function enviarDadesAlBackend(imatgeEnText) {
     body: JSON.stringify({
       imatge: imatgeEnText,
       idLloc: idLloc,
-      perfilId: usuari.value?._id || null
+      perfilId: usuari.value?._id || null,
+      codi_sala: route.params.codi_sala 
     })
   };
 
   try {
     const resposta = await fetch(`${API_URL}/api/validar-foto`, paquet);
-    const text = await resposta.text();
-    let dades;
-    try {
-      dades = JSON.parse(text);
-    } catch {
-      alert('Error del servidor. Torna-ho a provar.');
-      return;
-    }
+    const dades = await resposta.json();
 
     if (dades.exit) {
-      // Mostrem el modal amb la foto histórica
       modalDades.value = {
         nom_lloc: dades.nom_lloc || '',
         imatge_historica: dades.imatge_historica || '',
         coincidencia: dades.coincidencia || '',
-        cromo_nou: dades.cromo_nou || false
+        cromo_nou: dades.cromo_nou || false,
+        completat_tot: dades.completat_tot || false 
       };
       mostrarModal.value = true;
     } else {
@@ -131,14 +144,12 @@ async function enviarDadesAlBackend(imatgeEnText) {
 
     <canvas ref="canvasRef" class="hidden"></canvas>
 
-    <!-- Foto actual superposada -->
     <img 
       v-if="fotosActuals.length > 0"
       :src="fotosActuals[indexFotoActual]" 
       class="absolute inset-0 w-full h-full object-cover z-10 opacity-40 pointer-events-none" 
     />
 
-    <!-- Quadrícula -->
     <div class="absolute inset-0 z-15 pointer-events-none flex flex-col justify-evenly">
       <div class="w-full h-[1px] bg-white/50"></div>
       <div class="w-full h-[1px] bg-white/50"></div>
@@ -148,14 +159,12 @@ async function enviarDadesAlBackend(imatgeEnText) {
       <div class="h-full w-[1px] bg-white/50"></div>
     </div>
 
-    <!-- Navegació entre fotos actuals -->
     <div v-if="fotosActuals.length > 1" class="absolute top-4 right-4 z-30 flex items-center gap-2">
       <button @click="fotoAnterior" class="text-white bg-black/60 rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-black/80 transition">‹</button>
       <span class="text-white text-xs bg-black/60 px-2 py-1 rounded-full">{{ indexFotoActual + 1 }}/{{ fotosActuals.length }}</span>
       <button @click="fotoSeguent" class="text-white bg-black/60 rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-black/80 transition">›</button>
     </div>
 
-    <!-- Botó fer foto -->
     <div class="absolute bottom-10 w-full flex flex-col items-center gap-4 z-20">
       <p class="text-white bg-black/60 px-4 py-2 rounded-full text-sm backdrop-blur-sm">
         Quadra l'edifici fent servir la quadrícula
@@ -170,7 +179,6 @@ async function enviarDadesAlBackend(imatgeEnText) {
       </button>
     </div>
 
-    <!-- ===== MODAL CROMO ADQUIRIT ===== -->
     <Transition name="fade">
       <div
         v-if="mostrarModal"
@@ -182,16 +190,14 @@ async function enviarDadesAlBackend(imatgeEnText) {
           class="relative flex flex-col items-center rounded-2xl overflow-hidden shadow-2xl mx-6"
           style="background: linear-gradient(160deg, #2a1030 0%, #402749 60%, #1a0820 100%); border: 2px solid #d9a6c2; max-width: 340px; width: 100%;"
         >
-          <!-- Capçalera -->
           <div class="w-full flex flex-col items-center pt-6 pb-3 px-6">
-            <span class="text-3xl mb-1">{{ modalDades.cromo_nou ? '🏆' : '✅' }}</span>
+            <span class="text-3xl mb-1">{{ modalDades.completat_tot ? '🏆' : (modalDades.cromo_nou ? '⭐' : '✅') }}</span>
             <h2 class="text-white font-bold text-lg text-center leading-tight">
-              {{ modalDades.cromo_nou ? 'Cromo adquirit!' : 'Ja tenies aquest cromo' }}
+              {{ modalDades.completat_tot ? 'Partida Finalitzada!' : (modalDades.cromo_nou ? 'Cromo adquirit!' : 'Ja tenies aquest cromo') }}
             </h2>
             <p class="text-pink-300 text-sm mt-1 text-center">{{ modalDades.nom_lloc }}</p>
           </div>
 
-          <!-- Foto histórica (el cromo) -->
           <div class="w-full px-6 pb-3">
             <div
               class="w-full rounded-xl overflow-hidden shadow-lg"
@@ -209,20 +215,21 @@ async function enviarDadesAlBackend(imatgeEnText) {
             </div>
           </div>
 
-          <!-- Similitud -->
-          <div class="flex items-center gap-2 pb-3">
+          <div class="flex flex-col items-center gap-2 pb-3">
             <span class="text-pink-200 text-xs bg-black/40 px-3 py-1 rounded-full">
               📸 Similitud: {{ modalDades.coincidencia }}
             </span>
+            <p v-if="modalDades.completat_tot && modalDades.rango" class="text-yellow-400 font-black text-xs uppercase tracking-widest">
+              Medalla d'{{ modalDades.rango }}
+            </p>
           </div>
 
-          <!-- Botó tancar -->
           <button
             @click="tancarModal"
             class="w-full py-4 font-bold text-sm transition-opacity hover:opacity-80 active:scale-95"
             style="background-color: #d9a6c2; color: #2a1030;"
           >
-            {{ modalDades.cromo_nou ? '🎉 GENIAL!' : '👍 D\'ACORD' }}
+            {{ modalDades.completat_tot ? 'VEURE RESULTATS FINALS' : (modalDades.cromo_nou ? '🎉 GENIAL!' : '👍 D\'ACORD') }}
           </button>
         </div>
       </div>
@@ -230,6 +237,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
 
   </div>
 </template>
+
 
 <style scoped>
 .fade-enter-active, .fade-leave-active {
