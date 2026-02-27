@@ -163,6 +163,10 @@ export default {
       params: {
         codi_sala: this.$route.params.id, // L'ID de la sessió (de la URL)
         id: this.llocRealId              // L'ID real del monument (Sagrada Família)
+      },
+      query: {
+        imatge: this.puntSeleccionat?.imatge_referencia || '',
+        idPunt: this.puntSeleccionat?._id || ''
       }
     });
   }

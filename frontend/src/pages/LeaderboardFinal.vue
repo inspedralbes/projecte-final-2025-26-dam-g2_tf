@@ -68,13 +68,13 @@ function compararPerTemps(a, b) {
 
 // Funció per carregar les dades de la partida que acabem de fer
 async function carregarResultats() {
-  // El 'id' ve de la URL (ex: /leaderboard-final/SALA123)
-  const sId = route.params.id;
+  // El 'sala' ve de la URL (ex: /leaderboard/abc123sessioId)
+  const sId = route.params.sala || route.params.id;
   if (!sId) return;
 
   try {
-    // Demanem al backend les dades d'aquesta sessió específica
-    const res = await fetch(API_URL + '/api/sessio/' + sId);
+    // Demanem al backend les dades d'aquesta sessió específica (amb jugadors populats)
+    const res = await fetch(API_URL + '/api/sessionsJoc/' + sId);
     if (res.ok) {
       const dadesSessio = await res.json();
 

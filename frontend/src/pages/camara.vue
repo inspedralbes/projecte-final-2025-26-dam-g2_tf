@@ -65,19 +65,19 @@ function fotoSeguent() {
   indexFotoActual.value = (indexFotoActual.value + 1) % fotosActuals.value.length;
 }
 
-// [CORREGIT] La funció tancarModal ara inclou la lògica de navegació correctament
 function tancarModal() {
   mostrarModal.value = false;
 
   if (modalDades.value.completat_tot) {
-    // Si la llista està completa, anem al Leaderboard
+    // La partida ha acabat → anem al Leaderboard amb l'ID de la sessió
+    const sessioId = modalDades.value.sessioId || route.params.codi_sala;
     router.push({ 
       name: 'Leaderboard', 
-      params: { id: route.params.codi_sala }
+      params: { sala: sessioId }
     });
   } else {
-    // Si no, tornem al mapa
-    router.push('/mapa');
+    // Si no ha acabat → tornem al mapa amb l'ID de la sessió
+    router.push('/mapa/' + route.params.codi_sala);
   }
 }
 
@@ -96,37 +96,34 @@ async function executarTotElProces() {
 }
 
 async function enviarDadesAlBackend(imatgeEnText) {
-  // 1. EXTRACTE DE DADES (Mira la consola F12 per veure quin és null)
-  const dadesAEnviar = {
-    imatge: imatgeEnText ? imatgeEnText.substring(0, 20) + "..." : null, // Només per log
-    idLloc: route.params.id, 
-    perfilId: usuari.value?._id, 
-    codi_sala: route.params.codi_sala || route.params.sala // Intenta agafar-ho de varis noms
-  };
+  const idLloc = route.params.id;
+  const perfilId = usuari.value?._id;
+  const codi_sala = route.params.codi_sala;  // L'_id de la SessioJoc
+  const idPunt = route.query.idPunt || null; // El _id del punt_missio concret
 
-  console.log("DADES QUE ESTEM A PUNT D'ENVIAR:", dadesAEnviar);
+  console.log("DADES QUE ESTEM A PUNT D'ENVIAR:", { idLloc, perfilId, codi_sala, idPunt });
 
-  // 2. VALIDACIÓ PREVIA AL FRONTEND
+  // Validació prèvia al frontend
   if (!imatgeEnText) return alert("Error: No s'ha capturat la imatge.");
-  if (!dadesAEnviar.idLloc) return alert("Error: Falta l'ID del Lloc a la URL.");
-  if (!dadesAEnviar.perfilId) return alert("Error: No s'ha trobat el perfil de l'usuari (estàs loguejat?).");
-  if (!dadesAEnviar.codi_sala) return alert("Error: No s'ha trobat el codi de la sala a la URL.");
+  if (!idLloc) return alert("Error: Falta l'ID del Lloc a la URL.");
+  if (!perfilId) return alert("Error: No s'ha trobat el perfil de l'usuari (estàs loguejat?).");
+  if (!codi_sala) return alert("Error: No s'ha trobat el codi de la sala a la URL.");
 
   carregant.value = true;
   try {
-    // DEFINIM EL PAQUET (Això és el que et faltava)
     const paquet = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        imatge: imatgeEnText, // Enviem la imatge real, no el substring del log
-        idLloc: dadesAEnviar.idLloc,
-        perfilId: dadesAEnviar.perfilId,
-        codi_sala: dadesAEnviar.codi_sala
+        imatge: imatgeEnText,
+        idLloc: idLloc,
+        perfilId: perfilId,
+        codi_sala: codi_sala,
+        idPunt: idPunt
       })
     };
 
-    // ARA SÍ, FEM EL FETCH
+    // Fem la petició al backend
     const resposta = await fetch(`${API_URL}/api/validar-foto`, paquet);
     const dades = await resposta.json();
 
