@@ -62,10 +62,6 @@
                rows="2"
              ></textarea>
             
-             <div v-if="nouPostImatge" class="relative inline-block">
-               <img :src="nouPostImatge" class="h-32 w-32 object-cover rounded-2xl border-2 border-[#f5cbdd]">
-               <button @click="nouPostImatge = null" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full text-[10px]">✕</button>
-             </div>
 
 
              <div v-if="mostrantUbicacioInput" class="flex items-center gap-2 bg-[#f5cbdd]/20 p-2 rounded-xl">
@@ -92,22 +88,29 @@
          </div>
 
 
-         <div class="flex justify-between items-center pt-2 border-t border-gray-50">
-           <div class="flex gap-2">
-              <button @click="triggerFileInput" class="p-2.5 rounded-xl bg-gray-50 hover:bg-[#f5cbdd]/30 transition-colors text-xl">📸</button>
-              <button @click="mostrantUbicacioInput = !mostrantUbicacioInput" class="p-2.5 rounded-xl bg-gray-50 hover:bg-[#f5cbdd]/30 transition-colors text-xl">📍</button>
-              <input type="file" ref="fileInput" class="hidden" @change="handleFileUpload" accept="image/*">
-           </div>
+      <div v-if="nouPostImatges.length > 0" class="flex flex-wrap gap-2 mb-4">
+  <div v-for="(img, index) in nouPostImatges" :key="index" class="relative inline-block">
+    <img :src="img" class="h-24 w-24 object-cover rounded-2xl border-2 border-[#f5cbdd]">
+    <button @click="nouPostImatges.splice(index, 1)" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full text-[10px] shadow-sm">✕</button>
+  </div>
+</div>
+
+<div class="flex justify-between items-center pt-2 border-t border-gray-50">
+  <div class="flex gap-2">
+    <button @click="triggerFileInput" class="p-2.5 rounded-xl bg-gray-50 hover:bg-[#f5cbdd]/30 transition-colors text-xl">📸</button>
+    <button @click="mostrantUbicacioInput = !mostrantUbicacioInput" class="p-2.5 rounded-xl bg-gray-50 hover:bg-[#f5cbdd]/30 transition-colors text-xl">📍</button>
+    <input type="file" ref="fileInput" class="hidden" @change="handleFileUpload" accept="image/*" multiple>
+  </div>
           
-           <button
-  @click="publicarPost"
-  :disabled="(!nouPostText.trim() && !nouPostImatge) || publicant"
-  class="bg-[#5d3962] text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
->
-  <span v-if="publicant" class="animate-spin inline-block">🌀</span>
-  {{ publicant ? 'PUBLICANT...' : 'COMPARTEIX' }}
-</button>
-         </div>
+  <button
+    @click="publicarPost"
+    :disabled="(!nouPostText.trim() && nouPostImatges.length === 0) || publicant"
+    class="bg-[#5d3962] text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+  >
+    <span v-if="publicant" class="animate-spin inline-block">🌀</span>
+    {{ publicant ? 'PUBLICANT...' : 'COMPARTEIX' }}
+  </button>
+</div>
        </div>
 
 
@@ -138,13 +141,20 @@
 
 
            <div class="px-6 pb-4">
-             <p v-if="post.text" class="text-gray-600 text-sm leading-relaxed font-medium mb-4">
-               {{ post.text }}
-             </p>
-             <div v-if="post.imatge_post" class="rounded-[25px] overflow-hidden border border-gray-50 shadow-sm mb-4">
-               <img :src="post.imatge_post" class="w-full h-auto max-h-[400px] object-cover">
-             </div>
-             <div class="flex flex-wrap gap-2">
+  <p v-if="post.text" class="text-gray-600 text-sm leading-relaxed font-medium mb-4">
+    {{ post.text }}
+  </p>
+
+  <div v-if="post.imatges_post && post.imatges_post.length > 0" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mb-4">
+    <div v-for="(img, idx) in post.imatges_post" :key="idx" class="min-w-[80%] rounded-[25px] overflow-hidden border border-gray-50 shadow-sm">
+      <img :src="img" class="w-full h-64 object-cover">
+    </div>
+  </div>
+  <div v-else-if="post.imatge_post" class="rounded-[25px] overflow-hidden border border-gray-50 shadow-sm mb-4">
+    <img :src="post.imatge_post" class="w-full h-auto max-h-[400px] object-cover">
+  </div>
+
+  <div class="flex flex-wrap gap-2">
                <span 
   v-for="tag in post.tags" 
   :key="tag" 
@@ -282,7 +292,7 @@ const filtreActiu = ref('Tots');
 
 // Post creation refs
 const nouPostText = ref('');
-const nouPostImatge = ref(null);
+const nouPostImatges = ref([]);
 const nouPostUbicacio = ref('');
 const nouPostTags = ref([]);
 const nouPostTagInput = ref('');
@@ -320,29 +330,27 @@ async function carregarPosts() {
 }
 
 async function publicarPost() {
-  // 1. Validaciones previas
   if (!usuari.value) {
     obrirModal('Inicia sessió per poder publicar a la comunitat!');
     return;
   }
-  if (!nouPostText.value.trim() && !nouPostImatge.value) return;
+  // Cambiado: Ahora comprueba el texto o que el array de imágenes no esté vacío
+  if (!nouPostText.value.trim() && nouPostImatges.value.length === 0) return;
 
   publicant.value = true;
   try {
-    // 2. Preparamos el paquete de datos (Payload)
-    // Usamos 'id_usuari' para que coincida con tu base de datos
     const payload = {
       id_usuari: usuari.value._id,
       nom_usuari: usuari.value.nom_usuari,
-avatar_usuari: usuari.value.avatar || usuari.value.avatar_usuari || '',      text: nouPostText.value,
-      imatge_post: nouPostImatge.value, // String Base64 de la imagen
+      avatar_usuari: usuari.value.avatar || usuari.value.avatar_usuari || '',
+      text: nouPostText.value,
+      imatges_post: nouPostImatges.value, // Enviamos el array
       tags: nouPostTags.value,
       ubicacio: nouPostUbicacio.value,
       likes: [],
       comentaris: []
     };
 
-    // 3. Enviamos la petición POST al backend
     const res = await fetch(`${API_URL}/api/social/posts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -350,14 +358,13 @@ avatar_usuari: usuari.value.avatar || usuari.value.avatar_usuari || '',      tex
     });
 
     if (res.ok) {
-      // 4. Limpiamos el formulario si todo ha ido bien
+      // Limpiamos todo
       nouPostText.value = '';
-      nouPostImatge.value = null;
+      nouPostImatges.value = []; // Limpiamos el array
       nouPostTags.value = [];
       nouPostUbicacio.value = '';
       mostrantUbicacioInput.value = false;
       
-      // 5. Refrescamos el feed para ver el nuevo post
       await carregarPosts();
     } else {
       const errorData = await res.json();
@@ -365,7 +372,6 @@ avatar_usuari: usuari.value.avatar || usuari.value.avatar_usuari || '',      tex
     }
   } catch (err) {
     console.error("Error al publicar:", err);
-    alert("No s'ha pogut connectar amb el servidor.");
   } finally {
     publicant.value = false;
   }
@@ -483,21 +489,28 @@ function visitarPerfil(item) {
 
 async function ferLike(postId) {
  if (!usuari.value) {
-   obrirModal('Inicia sessió per poder donar likes i interactuar amb la comunitat!');
+   obrirModal('Inicia sessió per poder donar likes!');
    return;
  }
  try {
-   await fetch(`${API_URL}/api/social/posts/${postId}/like`, {
+   const res = await fetch(`${API_URL}/api/social/posts/${postId}/like`, {
      method: 'POST',
      headers: { 'Content-Type': 'application/json' },
      body: JSON.stringify({ id_usuari: usuari.value._id })
    });
-   await carregarPosts();
+   
+   if (res.ok) {
+     const data = await res.json();
+     // Buscamos el post en nuestra lista local y actualizamos sus likes
+     const postIndex = posts.value.findIndex(p => p._id === postId);
+     if (postIndex !== -1) {
+       posts.value[postIndex].likes = data.likes;
+     }
+   }
  } catch (err) {
    console.error("Error like:", err);
  }
 }
-
 
 function toggleComentaris(postId) {
  // Si clicamos en el mismo post, se cierra. Si es otro, se abre el nuevo.
@@ -568,13 +581,24 @@ function triggerFileInput() {
 }
 
 
+// 2. Actualiza la función de subida para manejar múltiples archivos
 function handleFileUpload(event) {
- const file = event.target.files[0];
- if (file) {
-   const reader = new FileReader();
-   reader.onload = (e) => { nouPostImatge.value = e.target.result; };
-   reader.readAsDataURL(file);
- }
+  const files = Array.from(event.target.files);
+  
+  // Validamos el límite total de 3
+  if (nouPostImatges.value.length + files.length > 3) {
+    alert("Només pots pujar un màxim de 3 fotos.");
+    return;
+  }
+
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => { 
+      nouPostImatges.value.push(e.target.result); 
+    };
+    reader.readAsDataURL(file);
+  });
+  event.target.value = ''; // Reset para poder subir la misma foto si se borra
 }
 
 

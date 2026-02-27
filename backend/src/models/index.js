@@ -111,12 +111,14 @@ const PostSchema = new mongoose.Schema({
   nom_usuari: String,
   avatar_usuari: String,
   text: String,
-  imatge_post: String,
+  // MODIFICACIÓ AQUÍ: Canviem imatge_post per imatges_post com a array
+  imatges_post: [String], 
+  // Opcional: pots mantenir imatge_post (singular) per compatibilitat amb posts antics
+  imatge_post: String, 
   tags: [String],
-  ubicacio: String, // <--- AFEGEIX AQUESTA LÍNIA AQUÍ
+  ubicacio: String,
   timestamp: { type: Date, default: Date.now },
   likes: [String],
-  // Utilitza SEMPRE aquesta estructura detallada per als comentaris:
   comentaris: [{
     id_comentari: { type: String },
     id_usuari: { type: String },
@@ -126,7 +128,6 @@ const PostSchema = new mongoose.Schema({
     timestamp: { type: Date, default: Date.now }
   }]
 });
-
 module.exports = {
   Usuari: mongoose.model('Usuari', UsuariSchema, 'Usuari'),
   Perfil: mongoose.model('Perfil', PerfilSchema, 'Perfil'),
