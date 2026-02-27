@@ -3,7 +3,7 @@ const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
-const { Lloc, Perfil } = require('../models');
+const { Lloc, Perfil, SessioJoc } = require('../models');
 
 // 1. Importem TensorFlow.js per a Node i el model MobileNet
 const tf = require('@tensorflow/tfjs-node');
@@ -42,7 +42,11 @@ function calcularSimilitudCosinus(tensor1, tensor2) {
     return productePunt / (Math.sqrt(norma1) * Math.sqrt(norma2));
 }
 router.post('/', async function (req, res) {
-    const { imatge, idLloc, perfilId, codi_sala } = req.body;
+    const imatge = req.body.imatge;
+    const idLloc = req.body.idLloc;
+    const perfilId = req.body.perfilId;
+    const codi_sala = req.body.codi_sala; // Aquí és l'_id de la SessioJoc
+    const idPunt = req.body.idPunt;       // El _id del punt_missio concret
 
     if (!idLloc || !codi_sala || !perfilId) {
         return res.status(400).json({ missatge: "Falten dades obligatòries (Lloc, Sala o Perfil)." });
@@ -52,23 +56,27 @@ router.post('/', async function (req, res) {
         // Assegurem-nos que l'IA està llesta
         await carregarModel();
 
-        // Busquem la sessió i el lloc en paral·lel per anar més ràpid
-        const [sessio, lloc] = await Promise.all([
-            SessioJoc.findOne({ codi_sala: codi_sala }),
-            Lloc.findById(idLloc)
-        ]);
+        // Busquem la sessió per _id i el lloc en paral·lel
+        const sessio = await SessioJoc.findById(codi_sala);
+        const lloc = await Lloc.findById(idLloc);
 
         if (!sessio) return res.status(404).json({ missatge: "Sessió no trobada." });
-        if (!lloc || !lloc.imatge_referencia) {
-            return res.status(404).json({ missatge: "No s'ha trobat la imatge de referència." });
+        if (!lloc) return res.status(404).json({ missatge: "Lloc no trobat." });
+
+        // Busquem la imatge de referència: primer mirem si el punt concret en té, si no usem la del lloc
+        let imatgeReferencia = lloc.imatge_referencia;
+        if (idPunt) {
+            for (let i = 0; i < lloc.punts_missio.length; i++) {
+                const p = lloc.punts_missio[i];
+                if (p._id.toString() === idPunt.toString() && p.imatge_referencia) {
+                    imatgeReferencia = p.imatge_referencia;
+                    break;
+                }
+            }
         }
 
-        // SEGURETAT: Validar que l'usuari no intenta saltar-se l'ordre
-        if (sessio.id_objetivo_actual.toString() !== idLloc.toString()) {
-            return res.status(400).json({ 
-                exit: false, 
-                missatge: "Aquest no és el teu objectiu actual. Mira el mapa!" 
-            });
+        if (!imatgeReferencia) {
+            return res.status(404).json({ missatge: "No s'ha trobat la imatge de referència per a aquest punt." });
         }
 
         const nomFitxer = 'captura_' + Date.now() + '.jpg';
@@ -76,15 +84,21 @@ router.post('/', async function (req, res) {
 
         // Preparem la imatge de referència com a Buffer
         let bufferRef;
-        if (lloc.imatge_referencia.startsWith('http://') || lloc.imatge_referencia.startsWith('https://')) {
-            const response = await fetch(lloc.imatge_referencia);
+        if (imatgeReferencia.startsWith('http://') || imatgeReferencia.startsWith('https://')) {
+            const response = await fetch(imatgeReferencia);
             if (!response.ok) {
                 return res.status(500).json({ missatge: "Error en descarregar la imatge externa." });
             }
             const arrayBuffer = await response.arrayBuffer();
             bufferRef = Buffer.from(arrayBuffer);
         } else {
-            const rutaLocal = path.join(__dirname, '../../public/fotos_historiques', lloc.imatge_referencia);
+            // Pot ser una ruta relativa a fotos_actuals o fotos_historiques
+            let rutaLocal;
+            if (imatgeReferencia.startsWith('/fotos_actuals/')) {
+                rutaLocal = path.join(__dirname, '../../public', imatgeReferencia);
+            } else {
+                rutaLocal = path.join(__dirname, '../../public/fotos_historiques', imatgeReferencia);
+            }
             bufferRef = fs.readFileSync(rutaLocal);
         }
 
@@ -129,48 +143,67 @@ router.post('/', async function (req, res) {
             console.log(`[Càmera IA] IdLloc: ${idLloc} | Similitud: ${similitud.toFixed(2)}%`);
 
             if (similitud >= 50) {
-                const jugador = sessio.jugadors.find(j => j.id_usuari.toString() === perfilId);
+                // Trobem el jugador dins la sessió
+                let jugador = null;
+                for (let i = 0; i < sessio.jugadors.length; i++) {
+                    if (sessio.jugadors[i].id_usuari.toString() === perfilId) {
+                        jugador = sessio.jugadors[i];
+                        break;
+                    }
+                }
                 if (!jugador) return res.status(404).json({ missatge: "Jugador no trobat a la sessió." });
 
-                // 1. Marquem el punt actual com a fet en la llista del jugador
-                if (!jugador.punts_completats.includes(idLloc)) {
-                    jugador.punts_completats.push(idLloc);
-                    
+                // Quin punt s'ha completat? Usem idPunt si existeix, si no idLloc
+                const puntAMarcar = idPunt || idLloc;
+
+                // Marquem el punt si no estava ja completat
+                let jaComplet = false;
+                for (let i = 0; i < jugador.punts_completats.length; i++) {
+                    if (jugador.punts_completats[i].toString() === puntAMarcar.toString()) {
+                        jaComplet = true;
+                        break;
+                    }
+                }
+
+                if (!jaComplet) {
+                    jugador.punts_completats.push(puntAMarcar);
+
                     // Calculem el temps total en segons des de l'inici
                     const segons = Math.floor((new Date() - sessio.temps_inici) / 1000);
                     jugador.temps = segons.toString();
-                    
+
                     // Calculem la mitjana d'exactitud
                     const totalFetes = jugador.punts_completats.length;
                     jugador.exactitud_media = ((jugador.exactitud_media * (totalFetes - 1)) + similitud) / totalFetes;
                 }
 
-                // 2. Comprovem si ha completat tota la llista de la partida
-                const haAcabatLaLlista = jugador.punts_completats.length === sessio.id_puntos_de_la_partida.length;
+                // Comprovem si ha completat tota la llista
+                const haAcabatLaLlista = jugador.punts_completats.length >= sessio.id_puntos_de_la_partida.length;
                 let medalla = null;
 
                 if (haAcabatLaLlista) {
                     jugador.completat = true;
-                    
+                    sessio.estat = 'finalitzada';
+
                     // Calculem rànquing (quants han acabat ja)
-                    const guanyadors = sessio.jugadors.filter(j => j.completat).length;
+                    let guanyadors = 0;
+                    for (let i = 0; i < sessio.jugadors.length; i++) {
+                        if (sessio.jugadors[i].completat) guanyadors++;
+                    }
                     medalla = guanyadors === 1 ? "Or" : guanyadors === 2 ? "Plata" : "Bronze";
 
                     // GUARDAR CROMO AL PERFIL DE L'USUARI
                     const perfil = await Perfil.findById(perfilId);
                     if (perfil) {
                         perfil.inventari_cromos.push({
-                            id_lloc: sessio.id_lloc_desti, // Cromo del mapa/zona general
+                            id_lloc: sessio.id_lloc_desti,
+                            nom_lloc: lloc.nom,
                             rango: medalla,
                             imatge_usuari: "/fotos_partides_usuaris/" + nomFitxer,
                             data_obtencio: new Date()
                         });
                         await perfil.save();
                     }
-                } else {
-                    // SI NO HA ACABAT: Passem al següent objectiu de la llista
-                    const seguentIndex = jugador.punts_completats.length;
-                    sessio.id_objetivo_actual = sessio.id_puntos_de_la_partida[seguentIndex];
                 }
 
                 await sessio.save();
@@ -180,7 +213,10 @@ router.post('/', async function (req, res) {
                     completat_tot: haAcabatLaLlista,
                     rango: medalla,
                     coincidencia: similitud.toFixed(2) + "%",
-                    missatge: haAcabatLaLlista ? "🏆 Partida finalitzada!" : "📍 Punt trobat! Torna al mapa pel següent.",
+                    nom_lloc: lloc.nom,
+                    imatge_historica: imatgeReferencia,
+                    sessioId: codi_sala,
+                    missatge: haAcabatLaLlista ? "Partida finalitzada!" : "Punt trobat! Torna al mapa pel següent.",
                     url_foto: "/fotos_partides_usuaris/" + nomFitxer
                 });
 

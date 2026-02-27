@@ -72,7 +72,8 @@
 export default {
   data() {
     return {
-      idLloc: this.$route.params.id,
+      idLloc: this.$route.params.id, /// id codi sessió
+      llocRealId: null, // ide lloc real(sagrada famila...)
       urlFinal: '',
       puntsMissio: [],
       modalVisible: false,
@@ -84,25 +85,33 @@ export default {
 
   async mounted() {
     try {
-      const resposta = await fetch(this.baseApi + '/api/mapa/punts/' + this.idLloc);
-      if (!resposta.ok) throw new Error("No s'ha pogut carregar el lloc");
-      const lloc = await resposta.json();
+      // 1. Primer busquem la SESSIÓ per saber quin monument estem jugant
+    const respSessio = await fetch(this.baseApi + '/api/sessionsJoc/' + this.idLloc);
+    if (!respSessio.ok) throw new Error("No s'ha trobat la sessió de joc");
+    const sessio = await respSessio.json();
 
-      const nomImatge = lloc.foto_mapa
-        ? lloc.foto_mapa
-        : 'mapa_' + lloc.nom.toLowerCase().replace(/\s+/g, '') + '.jpg';
+    // 2. Ara que sabem que el monument és sessio.idLloc, el carreguem
+    const idRealMonument = sessio.id_lloc_desti; 
+    const resposta = await fetch(this.baseApi + '/api/mapa/punts/' + idRealMonument);
 
-      this.urlFinal = this.baseApi + '/foto_mapa/' + nomImatge;
+    if (!resposta.ok) throw new Error("No s'ha pogut carregar el lloc");
+    const lloc = await resposta.json();
 
-      // Carreguem els punts de missió definits al lloc
-      this.puntsMissio = lloc.punts_missio || [];
+    // 3. Guardem l'ID real del monument per a la càmera
+    this.llocRealId = lloc._id;
 
-      console.log('Mapa carregat:', this.urlFinal);
-      console.log('Punts de missió:', this.puntsMissio);
-    } catch (error) {
-      console.error('Error carregant el mapa:', error);
-    }
-  },
+    // 4. Configurem la imatge i els punts com abans
+    const nomImatge = lloc.foto_mapa
+      ? lloc.foto_mapa
+      : 'mapa_' + lloc.nom.toLowerCase().replace(/\s+/g, '') + '.jpg';
+
+    this.urlFinal = this.baseApi + '/foto_mapa/' + nomImatge;
+    this.puntsMissio = lloc.punts_missio || [];
+
+  } catch (error) {
+    console.error('Error carregant el mapa:', error);
+  }
+},
 
   methods: {
     async obrirModal(punt) {
@@ -119,7 +128,7 @@ export default {
       } else {
         // Podem mostrar la imatge de referència del lloc com a fallback
         try {
-          const resposta = await fetch(this.baseApi + '/api/mapa/punts/' + this.idLloc);
+          const resposta = await fetch(this.baseApi + '/api/mapa/punts/' + this.llocRealId);
           const lloc = await resposta.json();
           if (lloc.imatge_referencia) {
             this.fotoActual = lloc.imatge_referencia;
@@ -148,17 +157,20 @@ export default {
 
     // Quan premen "FER LA FOTO" dins del modal d'un punt concret
     anarACameraDesPunt() {
-      this.modalVisible = false;
-      
-      this.$router.push({
-        name: 'camara',
-        params: {
-          codi_sala: this.$route.params.id, // El codi de la sala/sessió
-          id: this.idLloc // L'ID del monument o del punt específic
-        }
-      });
-    }
+    this.modalVisible = false;
+    this.$router.push({
+      name: 'camara',
+      params: {
+        codi_sala: this.$route.params.id, // L'ID de la sessió (de la URL)
+        id: this.llocRealId              // L'ID real del monument (Sagrada Família)
+      },
+      query: {
+        imatge: this.puntSeleccionat?.imatge_referencia || '',
+        idPunt: this.puntSeleccionat?._id || ''
+      }
+    });
   }
+}
 };
 </script>
 

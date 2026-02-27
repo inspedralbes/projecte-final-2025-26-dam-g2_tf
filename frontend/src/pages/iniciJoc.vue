@@ -79,6 +79,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
 
 const router = useRouter()
 const route = useRoute()
@@ -113,8 +114,49 @@ function confirmarInicio() {
 }
 
 // Aquesta funció és la que realment ens porta a la pantalla del mapa
-function irAlJuego() {
-  router.push({ name: 'mapa-joc', params: { id: route.params.id } })
+async function irAlJuego() {
+  try {
+    // 1. Recuperem l'ID del perfil 
+    const dadesUsuari = JSON.parse(localStorage.getItem('usuari') || '{}');
+    const perfilId = dadesUsuari._id;
+
+    console.log("Dades enviades al POST:", {
+      idLloc: route.params.id,
+      perfilId: perfilId
+    });
+
+    if (!perfilId) {
+        alert("Sessió caducada. Torna a fer login.");
+        return router.push('/login');
+    }
+
+    // 2. Creem la sessió real a la base de dades
+    const resposta = await fetch(`${import.meta.env.VITE_API_URL}/api/sessionsJoc/crear`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idLloc: route.params.id, // L'ID del monument (Sagrada Família)
+        perfilId: perfilId      // L'ID del PerfilSchema
+      })
+    });
+
+    if (!resposta.ok) {
+      const errorText = await resposta.text();
+      throw new Error("El servidor ha fallat al crear la sessió: " + errorText);
+    }
+
+    const sessioNova = await resposta.json();
+    console.log("Sessió creada correctament:", sessioNova);
+
+
+
+    // 3. Anem al mapa amb l'ID de la SESSIÓ
+    router.push({ name: 'mapa-joc', params: { id: sessioNova._id } });
+
+  } catch (error) {
+    console.error("Error a la petició:", error);
+    alert("Error de xarxa o de codi: " + error.message);
+  }
 }
 </script>
 

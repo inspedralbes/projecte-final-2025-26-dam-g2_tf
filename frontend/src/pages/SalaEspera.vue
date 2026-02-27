@@ -81,22 +81,24 @@ onMounted(() => {
   // El backend està exposat al port 8088 segons docker-compose.dev.yml
   socket.value = io(API_URL);
 
-  socket.value.on('connect', () => {
+  socket.value.on('connect', function() {
     const param = route.params.id; 
-    const idLlocRuta = route.query.idLloc; 
+    const idLlocRuta = route.query.idLloc;
+    // Obtenim el perfilId de l'usuari autenticat
+    const userStr = localStorage.getItem('usuari');
+    const userObj = userStr ? JSON.parse(userStr) : {};
+    const perfilId = userObj._id || null;
 
     if (param === 'crear') {
-        
         const dadesPerEnviar = {
-            nomUsuari: nomUsuari, 
-            idLloc: idLlocRuta    
+            nomUsuari: nomUsuari,
+            idLloc: idLlocRuta,
+            perfilId: perfilId
         };
-        
         socket.value.emit('create-room', dadesPerEnviar);
         isCreator.value = true;
     } else {
-        
-        socket.value.emit('join-room', { roomCode: param, nomUsuari });
+        socket.value.emit('join-room', { roomCode: param, nomUsuari: nomUsuari, perfilId: perfilId });
     }
   });
 
@@ -126,10 +128,14 @@ onMounted(() => {
       router.push({ name: 'mapa' });
   }); */
 
-  socket.value.on('game-started', (idLloc) => {
-    // Tots els jugadors marxen cap al mapa!
-    // Passem la ID a la URL del mapa
-    router.push('/mapa/' + idLloc);
+  socket.value.on('game-started', function(dades) {
+    // Tots els jugadors marxen cap al mapa amb l'ID de la sessió real
+    if (dades.sessioId) {
+      router.push('/mapa/' + dades.sessioId);
+    } else if (dades.idLloc) {
+      // Fallback: si no hi ha sessió, anem directament al lloc
+      router.push('/mapa/' + dades.idLloc);
+    }
 });
 });
 
