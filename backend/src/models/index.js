@@ -113,6 +113,7 @@ const PostSchema = new mongoose.Schema({
   text: String,
   imatge_post: String,
   tags: [String],
+  ubicacio: String, // <--- AFEGEIX AQUESTA LÍNIA AQUÍ
   timestamp: { type: Date, default: Date.now },
   likes: [String],
   // Utilitza SEMPRE aquesta estructura detallada per als comentaris:
@@ -125,7 +126,6 @@ const PostSchema = new mongoose.Schema({
     timestamp: { type: Date, default: Date.now }
   }]
 });
-
 
 module.exports = {
   Usuari: mongoose.model('Usuari', UsuariSchema, 'Usuari'),

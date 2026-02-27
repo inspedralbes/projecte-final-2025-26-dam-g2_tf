@@ -82,9 +82,9 @@ router.get('/posts', async (req, res) => {
 });
 
 
-// Ruta para recibir y guardar nuevos posts
 router.post('/posts', async (req, res) => {
    try {
+       // 1. Extraemos 'ubicacio' del cuerpo de la petición
        const { id_usuari, nom_usuari, avatar_usuari, text, imatge_post, tags, ubicacio } = req.body;
 
        if (!id_usuari) {
@@ -94,11 +94,11 @@ router.post('/posts', async (req, res) => {
        const nouPost = new Post({
            id_usuari,
            nom_usuari,
-           avatar_usuari,
-           text,
-           imatge_post,
+           avatar_usuari: avatar_usuari || '',
+           text: text || '',
+           imatge_post: imatge_post || '',
            tags: tags || [],
-           ubicacio: ubicacio || '',
+           ubicacio: ubicacio || '', // 2. Guardamos la ubicación aquí
            likes: [],
            comentaris: []
        });
@@ -110,7 +110,6 @@ router.post('/posts', async (req, res) => {
        res.status(500).json({ message: "Error al guardar la publicació" });
    }
 });
-
 
 // 3. Gestionar Like
 router.post('/posts/:postId/like', async (req, res) => {
@@ -182,33 +181,5 @@ router.post('/posts/:postId/comentari', async (req, res) => {
    }
 });
 
-// NUEVA RUTA: Para que el botón de publicar funcione
-router.post('/posts', async (req, res) => {
-    try {
-        const { id_usuari, nom_usuari, avatar_usuari, text, imatge_post, tags } = req.body;
-
-        // Validación: id_usuari es obligatorio según tu PostSchema en index.js
-        if (!id_usuari) {
-            return res.status(400).json({ message: "Error: No se ha identificado al usuario." });
-        }
-
-        const nouPost = new Post({
-            id_usuari,
-            nom_usuari,
-            avatar_usuari: avatar_usuari || '',
-            text: text || '',
-            imatge_post: imatge_post || '',
-            tags: tags || [],
-            likes: [],
-            comentaris: []
-        });
-
-        await nouPost.save();
-        res.status(201).json({ success: true, post: nouPost });
-    } catch (error) {
-        console.error("Error al publicar:", error);
-        res.status(500).json({ message: "Error interno del servidor al crear el post" });
-    }
-});
 module.exports = router;
 
