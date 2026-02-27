@@ -178,7 +178,10 @@ router.post('/', async function (req, res) {
                 }
 
                 // Comprovem si ha completat tota la llista
-                const haAcabatLaLlista = jugador.punts_completats.length >= sessio.id_puntos_de_la_partida.length;
+                // Usem lloc.punts_missio.length (nombre actual de punts)
+                // per si el lloc s'ha actualitzat després de crear la sessió
+                const totalPuntsLloc = lloc.punts_missio.length;
+                const haAcabatLaLlista = jugador.punts_completats.length >= totalPuntsLloc;
                 let medalla = null;
 
                 if (haAcabatLaLlista) {

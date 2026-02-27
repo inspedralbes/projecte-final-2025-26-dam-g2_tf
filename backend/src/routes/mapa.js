@@ -6,7 +6,7 @@ const { Lloc } = require('../models/index');
 router.get('/punts', async (req, res) => {
     try {
 
-        const llocs = await Lloc.find({}); 
+        const llocs = await Lloc.find({});
         res.json(llocs);
     } catch (error) {
         console.error("Error al carregar punts:", error);
@@ -45,11 +45,19 @@ router.post('/punts', async (req, res) => {
 // 4. ACTUALITZAR un lloc existent
 router.put('/punts/:id', async (req, res) => {
     try {
+        // Usem $set per assegurar que Mongoose desa correctament els subdocuments
+        // i generi _id per a cada punt_missio nou
         const llocActualitzat = await Lloc.findByIdAndUpdate(
-            req.params.id, 
-            req.body, 
-            { new: true } 
+            req.params.id,
+            { $set: req.body },
+            { new: true, runValidators: true }
         );
+
+        if (!llocActualitzat) {
+            return res.status(404).json({ error: "Lloc no trobat" });
+        }
+
+        console.log(`[Mapa] Lloc ${req.params.id} actualitzat: ${llocActualitzat.punts_missio.length} punts_missio desats.`);
         res.json(llocActualitzat);
     } catch (error) {
         console.error("Error al actualitzar:", error);
