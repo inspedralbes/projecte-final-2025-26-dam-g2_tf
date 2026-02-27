@@ -96,7 +96,18 @@
             <div v-if="puntPendent" class="mt-3 p-4 border-2 border-purple-100 rounded-2xl bg-purple-50/40">
               <p class="text-xs font-black text-purple-400 uppercase mb-2">Nou punt ({{ puntPendent.posicio_x.toFixed(1) }}%, {{ puntPendent.posicio_y.toFixed(1) }}%)</p>
               <input v-model="puntPendent.nom_punt" placeholder="Nom del punt (ex: Façana principal)" class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm mb-2 outline-none" />
-              <input v-model="puntPendent.pista" placeholder="Pista per a l'usuari..." class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm mb-3 italic outline-none" />
+              <input v-model="puntPendent.pista" placeholder="Pista per a l'usuari..." class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm mb-2 italic outline-none" />
+              <!-- Selector d'imatge -->
+              <div class="mb-2">
+                <label class="text-[10px] font-bold text-purple-400 uppercase mb-1 block">🖼️ Imatge del punt</label>
+                <select v-model="puntPendent.imatge_referencia" class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm outline-none bg-white">
+                  <option value="">-- Sense imatge --</option>
+                  <option v-for="foto in fotosDisponibles" :key="foto.path" :value="foto.path">{{ foto.carpeta }} / {{ foto.nom }}</option>
+                </select>
+                <div v-if="puntPendent.imatge_referencia" class="mt-2 rounded-xl overflow-hidden border-2 border-purple-100">
+                  <img :src="baseApi + puntPendent.imatge_referencia" class="w-full max-h-32 object-cover" alt="Previsualització" />
+                </div>
+              </div>
               <div class="flex gap-2">
                 <button type="button" @click="confirmarPunt" class="flex-1 bg-purple-600 text-white py-2 rounded-xl text-sm font-bold hover:bg-purple-700">✅ Afegir punt</button>
                 <button type="button" @click="puntPendent = null" class="flex-1 bg-gray-100 text-gray-500 py-2 rounded-xl text-sm font-bold">✕ Cancel·lar</button>
@@ -116,6 +127,17 @@
                 <input v-model="punt.nom_punt" placeholder="Nom del punt" class="flex-1 font-bold text-sm border-b outline-none" />
               </div>
               <input v-model="punt.pista" placeholder="Pista per trobar el punt..." class="w-full text-xs italic text-gray-500 outline-none mb-2" />
+              <!-- Selector d'imatge per punt guardat -->
+              <div class="mt-1 mb-2">
+                <label class="text-[9px] font-bold text-purple-400 uppercase mb-1 block">🖼️ Imatge del punt</label>
+                <select v-model="punt.imatge_referencia" class="w-full border border-gray-200 p-1.5 rounded-lg text-xs outline-none bg-gray-50">
+                  <option value="">-- Sense imatge --</option>
+                  <option v-for="foto in fotosDisponibles" :key="foto.path" :value="foto.path">{{ foto.carpeta }} / {{ foto.nom }}</option>
+                </select>
+                <div v-if="punt.imatge_referencia" class="mt-1.5 rounded-lg overflow-hidden border border-purple-100">
+                  <img :src="baseApi + punt.imatge_referencia" class="w-full max-h-24 object-cover" alt="Imatge assignada" />
+                </div>
+              </div>
               <p class="text-[10px] text-gray-400">X: {{ punt.posicio_x?.toFixed(1) }}% / Y: {{ punt.posicio_y?.toFixed(1) }}%</p>
             </div>
           </div>
@@ -165,6 +187,7 @@ L.Icon.Default.mergeOptions({
 const baseApi = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 const imatgeMapaRef = ref(null);
 const puntPendent = ref(null);
+const fotosDisponibles = ref([]);
 
 const props = defineProps({
   datosIniciales: Object,
@@ -223,7 +246,8 @@ function clicAlMapa(event) {
     posicio_x: parseFloat(x.toFixed(2)),
     posicio_y: parseFloat(y.toFixed(2)),
     nom_punt: '',
-    pista: ''
+    pista: '',
+    imatge_referencia: ''
   };
 }
 
@@ -249,5 +273,19 @@ const enviarFormulario = () => {
     emit('save', { ...form.value });
 };
 
-onMounted(initMapa);
+const carregarFotos = async () => {
+  try {
+    const resposta = await fetch(baseApi + '/api/fotos-actuals/totes');
+    if (!resposta.ok) return;
+    const dades = await resposta.json();
+    fotosDisponibles.value = dades.fotos || [];
+  } catch (err) {
+    console.error('Error carregant fotos:', err);
+  }
+};
+
+onMounted(() => {
+  initMapa();
+  carregarFotos();
+});
 </script>
