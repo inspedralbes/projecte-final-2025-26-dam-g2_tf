@@ -62,7 +62,7 @@ const routes = [
   },
   // -------------------------
   {
-    path: '/joc/camera/:id', // Ha de tenir els dos punts (:) per a la ID
+    path: '/joc/:codi_sala/camera/:id', // Ha de tenir els dos punts (:) per a la ID
     name: 'camara',
     component: camara
   },
