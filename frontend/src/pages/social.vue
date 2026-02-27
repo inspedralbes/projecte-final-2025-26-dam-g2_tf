@@ -74,19 +74,20 @@
              </div>
 
 
-             <div class="flex flex-wrap gap-2">
-               <span v-for="(tag, idx) in nouPostTags" :key="idx" class="bg-[#5d3962] text-white text-[9px] px-3 py-1 rounded-full font-black uppercase">
-                 #{{ tag }} <button @click="eliminarTag(idx)">✕</button>
-               </span>
-               <input
-                 v-if="!nouPostTags.length"
-                 v-model="nouPostTagInput"
-                 @blur="afegirTag"
-                 @keyup.enter="afegirTag"
-                 placeholder="#Temàtica..."
-                 class="text-[10px] bg-gray-100 px-3 py-1 rounded-full outline-none w-24"
-               >
-             </div>
+            <div class="flex flex-wrap gap-2">
+  <span v-for="(tag, idx) in nouPostTags" :key="idx" class="bg-[#5d3962] text-white text-[9px] px-3 py-1 rounded-full font-black uppercase flex items-center gap-1">
+    #{{ tag }} 
+    <button @click="eliminarTag(idx)" class="hover:text-red-300">✕</button>
+  </span>
+  <input
+    v-model="nouPostTagInput"
+    @keydown.enter.prevent="afegirTag"
+    @blur="afegirTag"
+    placeholder="#Afegeix..."
+    class="text-[10px] bg-gray-100 px-3 py-1 rounded-full outline-none w-24 focus:bg-white border border-transparent focus:border-[#bc85ab]/30"
+  >
+</div>
+
            </div>
          </div>
 
@@ -99,21 +100,20 @@
            </div>
           
            <button
-             @click="publicarPost"
-             :disabled="(!nouPostText.trim() && !nouPostImatge) || publicant"
-             class="bg-[#5d3962] text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all disabled:opacity-50"
-           >
-             COMPARTEIX
-           </button>
+  @click="publicarPost"
+  :disabled="(!nouPostText.trim() && !nouPostImatge) || publicant"
+  class="bg-[#5d3962] text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+>
+  <span v-if="publicant" class="animate-spin inline-block">🌀</span>
+  {{ publicant ? 'PUBLICANT...' : 'COMPARTEIX' }}
+</button>
          </div>
        </div>
 
 
        <div class="space-y-6 pb-12">
          <div v-for="post in posts" :key="post._id" class="bg-white rounded-[35px] shadow-sm border border-white overflow-hidden transition-all hover:shadow-md relative">
-           <div v-if="post.imatge_post" class="absolute top-4 right-4 z-10 bg-gradient-to-br from-yellow-400 to-orange-500 text-white text-[8px] font-black px-3 py-1 rounded-full shadow-lg rotate-12 uppercase tracking-tighter border-2 border-white">
-              COLECCIONABLE DESBLOQUEJAT
-           </div>
+         
 
 
            <div class="p-5 flex items-center gap-4">
@@ -128,6 +128,9 @@
                  <span v-if="post.ubicacio" class="text-[10px] bg-red-50 text-red-500 font-black px-2 py-0.5 rounded-full border border-red-100 italic">📍 {{ post.ubicacio }}</span>
                </div>
              </div>
+             <button v-if="esAutor(post)" @click="eliminarPost(post._id)" class="bg-gray-100 text-gray-500 p-2 rounded-xl hover:bg-red-50 hover:text-red-500 transition-all">
+    🗑️
+  </button>
              <button @click="reportarLloc(post)" class="bg-red-500/10 text-red-500 p-2 rounded-xl hover:bg-red-500 hover:text-white transition-all">
                🚨
              </button>
@@ -142,18 +145,24 @@
                <img :src="post.imatge_post" class="w-full h-auto max-h-[400px] object-cover">
              </div>
              <div class="flex flex-wrap gap-2">
-               <span v-for="tag in post.tags" :key="tag" class="text-[9px] font-black text-[#bc85ab] uppercase tracking-widest bg-[#f5cbdd]/20 px-3 py-1 rounded-full">
-                 #{{ tag }}
-               </span>
+               <span 
+  v-for="tag in post.tags" 
+  :key="tag" 
+  @click="filtrarPerTag(tag)"
+  class="text-[9px] font-black text-[#bc85ab] uppercase tracking-widest bg-[#f5cbdd]/20 px-3 py-1 rounded-full cursor-pointer hover:bg-[#bc85ab] hover:text-white transition-all active:scale-95"
+>
+  #{{ tag }}
+</span>
              </div>
            </div>
 
 
            <div class="px-6 py-4 border-t border-gray-50 flex items-center justify-between">
  <div class="flex gap-4">
-   <button @click="ferLike(post._id)" class="text-xl">
-     {{ post.likes?.includes(usuari?._id) ? '❤️' : '🤍' }}
-   </button>
+   <button @click="ferLike(post._id)" class="text-xl flex items-center gap-1">
+  {{ post.likes?.includes(usuari?._id) ? '❤️' : '🤍' }}
+  <span class="text-xs font-black text-gray-500">{{ post.likes?.length || 0 }}</span>
+</button>
    <button @click="toggleComentaris(post._id)" class="flex items-center gap-2">
      <span class="text-xl">💬</span>
      <span class="text-xs font-black text-gray-400">{{ post.comentaris?.length || 0 }}</span>
@@ -310,6 +319,57 @@ async function carregarPosts() {
  }
 }
 
+async function publicarPost() {
+  // 1. Validaciones previas
+  if (!usuari.value) {
+    obrirModal('Inicia sessió per poder publicar a la comunitat!');
+    return;
+  }
+  if (!nouPostText.value.trim() && !nouPostImatge.value) return;
+
+  publicant.value = true;
+  try {
+    // 2. Preparamos el paquete de datos (Payload)
+    // Usamos 'id_usuari' para que coincida con tu base de datos
+    const payload = {
+      id_usuari: usuari.value._id,
+      nom_usuari: usuari.value.nom_usuari,
+avatar_usuari: usuari.value.avatar || usuari.value.avatar_usuari || '',      text: nouPostText.value,
+      imatge_post: nouPostImatge.value, // String Base64 de la imagen
+      tags: nouPostTags.value,
+      ubicacio: nouPostUbicacio.value,
+      likes: [],
+      comentaris: []
+    };
+
+    // 3. Enviamos la petición POST al backend
+    const res = await fetch(`${API_URL}/api/social/posts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      // 4. Limpiamos el formulario si todo ha ido bien
+      nouPostText.value = '';
+      nouPostImatge.value = null;
+      nouPostTags.value = [];
+      nouPostUbicacio.value = '';
+      mostrantUbicacioInput.value = false;
+      
+      // 5. Refrescamos el feed para ver el nuevo post
+      await carregarPosts();
+    } else {
+      const errorData = await res.json();
+      alert("Error del servidor: " + errorData.message);
+    }
+  } catch (err) {
+    console.error("Error al publicar:", err);
+    alert("No s'ha pogut connectar amb el servidor.");
+  } finally {
+    publicant.value = false;
+  }
+}
 
 // 3. AFEGIT: Watcher per canviar de dades automàticament en clicar la pestanya
 watch(pestanyaActiva, (nova) => {
@@ -379,9 +439,23 @@ async function carregarRanking() {
 
 
 function filtrarPerTag(cat) {
- filtreActiu.value = cat;
-}
+  // 1. Cambiamos el filtro activo
+  // Si clicamos en el que ya está puesto, lo quitamos (volvemos a 'Tots')
+  if (filtreActiu.value === cat) {
+    filtreActiu.value = 'Tots';
+  } else {
+    filtreActiu.value = cat;
+  }
 
+  // 2. Aseguramos que estamos en la pestaña 'feed' (por si clicas desde el ranking)
+  pestanyaActiva.value = 'feed';
+
+  // 3. Hacemos un scroll suave hacia arriba para ver los resultados filtrados
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+}
 
 function filtrarData(timestamp) {
  if (!timestamp) return '';
@@ -457,20 +531,21 @@ async function enviarComentari(postId) {
    });
   
    if (res.ok) {
-     const dada = await res.json();
+  const dada = await res.json();
+  const postDesti = posts.value.find(p => p._id === postId);
+  
+  if (postDesti) {
+    // Si no existen comentarios, inicializamos el array
+    if (!postDesti.comentaris) postDesti.comentaris = [];
     
-     // 2. Busquem el post a la llista local per actualitzar-lo sense recarregar la pàgina
-     const postDesti = posts.value.find(p => p._id === postId);
-     if (postDesti) {
-       if (!postDesti.comentaris) postDesti.comentaris = [];
-      
-       // Afegim el nou comentari que ens arriba del servidor
-       postDesti.comentaris.push(dada.comentari);
-      
-       // 3. NETEJEM l'input només d'aquest post
-       comentarisInputs.value[postId] = '';
-     }
-   }
+    // Usamos el operador spread para que Vue reaccione al cambio de array
+    postDesti.comentaris = [...postDesti.comentaris, dada.comentari];
+    
+    // Limpiamos el input
+    comentarisInputs.value[postId] = '';
+  }
+}
+
  } catch (err) {
    console.error("Error enviant comentari:", err);
  }

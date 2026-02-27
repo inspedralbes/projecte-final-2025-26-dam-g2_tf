@@ -79,6 +79,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
 
 const router = useRouter()
 const route = useRoute()
@@ -113,8 +114,33 @@ function confirmarInicio() {
 }
 
 // Aquesta funció és la que realment ens porta a la pantalla del mapa
-function irAlJuego() {
-  router.push({ name: 'mapa-joc', params: { id: route.params.id } })
+async function irAlJuego() {
+  try {
+    // 1. Cridem al backend per CREAR una sessió de joc real
+    const resposta = await fetch(`${import.meta.env.VITE_API_URL}/api/sessions/crear`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        idLloc: route.params.id, // L'ID del monument (Sagrada Família)
+        // perfilId: usuari.value._id // Opcional: per saber qui ha creat la sala
+      })
+    });
+
+    const sessioNova = await resposta.json();
+
+    if (resposta.ok && sessioNova._id) {
+      // 2. Ara anem al mapa, però amb l'ID de la SESSIÓ que acabem de crear
+      router.push({ 
+        name: 'mapa-joc', 
+        params: { id: sessioNova._id } // Aquest ID sí que existirà a la BD!
+      });
+    } else {
+      alert("No s'ha pogut crear la sessió de joc");
+    }
+  } catch (error) {
+    console.error("Error al crear la partida:", error);
+    alert("Error de connexió al crear la sala");
+  }
 }
 </script>
 
