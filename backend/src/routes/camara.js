@@ -153,8 +153,13 @@ router.post('/', async function (req, res) {
                 }
                 if (!jugador) return res.status(404).json({ missatge: "Jugador no trobat a la sessió." });
 
-                // Quin punt s'ha completat? Usem idPunt si existeix, si no idLloc
+                // Quin punt s'ha completat? Usem idPunt (lliure ordre) si existeix, si no idLloc
                 const puntAMarcar = idPunt || idLloc;
+
+                console.log(`[Càmera] idPunt rebut: ${idPunt}`);
+                console.log(`[Càmera] id_puntos_de_la_partida de la sessió:`, sessio.id_puntos_de_la_partida.map(p => p.toString()));
+                console.log(`[Càmera] puntAMarcar triat: ${puntAMarcar}`);
+                console.log(`[Càmera] punts_completats ABANS:`, jugador.punts_completats.map(p => p.toString()));
 
                 // Marquem el punt si no estava ja completat
                 let jaComplet = false;
@@ -177,11 +182,15 @@ router.post('/', async function (req, res) {
                     jugador.exactitud_media = ((jugador.exactitud_media * (totalFetes - 1)) + similitud) / totalFetes;
                 }
 
-                // Comprovem si ha completat tota la llista
-                // Usem lloc.punts_missio.length (nombre actual de punts)
-                // per si el lloc s'ha actualitzat després de crear la sessió
-                const totalPuntsLloc = lloc.punts_missio.length;
-                const haAcabatLaLlista = jugador.punts_completats.length >= totalPuntsLloc;
+                console.log(`[Càmera] punts_completats DESPRÉS:`, jugador.punts_completats.map(p => p.toString()));
+
+                // Comprovem si ha completat tota la llista.
+                // Usem sessio.id_puntos_de_la_partida.length com a total autoritzat (definit al crear la partida).
+                // Si per algun motiu és 0 (sessió molt antiga), fem fallback a lloc.punts_missio.length.
+                const totalPuntsPartida = sessio.id_puntos_de_la_partida.length || lloc.punts_missio.length;
+                const haAcabatLaLlista = jugador.punts_completats.length >= totalPuntsPartida;
+
+                console.log(`[Càmera] Total punts partida: ${totalPuntsPartida} | Completats: ${jugador.punts_completats.length} | Acabat: ${haAcabatLaLlista}`);
                 let medalla = null;
 
                 if (haAcabatLaLlista) {
