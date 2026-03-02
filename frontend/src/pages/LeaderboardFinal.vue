@@ -24,8 +24,10 @@
         </div>
         
         <div class="text-right">
-          <span class="text-lg font-black text-[#f5cbdd]">{{ Math.round(jugador.exactitud_media || 0) }}%</span>
-          <p class="text-[8px] uppercase opacity-50">Exactitud</p>
+          <span class="text-lg font-black text-[#f5cbdd]">{{ (jugador.punts_completats || []).length }}</span>
+          <p class="text-[8px] uppercase opacity-50">Fotos</p>
+          <span class="text-sm font-bold text-pink-200">{{ Math.round(jugador.exactitud_media || 0) }}%</span>
+          <p class="text-[8px] uppercase opacity-50">Precisió</p>
         </div>
       </div>
     </div>
@@ -53,7 +55,6 @@
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 
-// Agafem el router per poder navegar i la ruta per llegir el codi de la sala
 const router = useRouter();
 const route = useRoute();
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
@@ -61,38 +62,38 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 const resultatsSessio = ref([]);
 const puntuacio = ref(0);
 
-// Funció comparadora per ordenar jugadors per temps (més ràpid primer)
-function compararPerTemps(a, b) {
-  return parseInt(a.temps) - parseInt(b.temps);
+/**
+ * Ordena els jugadors per:
+ * 1. Nombre de fotos completades (descendent) — qui ha completat més té millor posició
+ * 2. En empat, precisió mitjana (descendent) — qui té millor precisió guanya
+ */
+function compararJugadors(a, b) {
+  const fotesA = (a.punts_completats || []).length;
+  const fotesB = (b.punts_completats || []).length;
+  if (fotesB !== fotesA) return fotesB - fotesA;
+  return (b.exactitud_media || 0) - (a.exactitud_media || 0);
 }
 
-// Funció per carregar les dades de la partida que acabem de fer
 async function carregarResultats() {
-  // El 'sala' ve de la URL (ex: /leaderboard/abc123sessioId)
   const sId = route.params.sala || route.params.id;
   if (!sId) return;
 
   try {
-    // Demanem al backend les dades d'aquesta sessió específica (amb jugadors populats)
     const res = await fetch(API_URL + '/api/sessionsJoc/' + sId);
     if (res.ok) {
       const dadesSessio = await res.json();
-
-      // Ordenem els jugadors perquè el més ràpid surti primer
-      resultatsSessio.value = dadesSessio.jugadors.sort(compararPerTemps);
+      resultatsSessio.value = dadesSessio.jugadors.sort(compararJugadors);
     }
   } catch (err) {
     console.error("Error carregant rànquing:", err);
   }
 }
 
-// Funció per enviar la valoració i tornar al mapa
 function enviarRessenya() {
   if (puntuacio.value === 0) {
     alert("Si us plau, posa una estrella abans de marxar!");
     return;
   }
-  // Un cop valorat, enviem l'usuari de tornada al mapa principal
   router.push('/mapa');
 }
 

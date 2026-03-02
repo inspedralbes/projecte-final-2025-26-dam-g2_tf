@@ -41,7 +41,8 @@ async function startServer() {
         const http = require('http');
         const server = http.createServer(app);
 
-        require('./src/routes/gameSocket')(server);
+        const { configureSocket } = require('./src/routes/gameSocket');
+        configureSocket(server);
         server.listen(PORT, '0.0.0.0', function () {
             console.log("Servidor funcionant a: http://localhost:" + PORT);
         });

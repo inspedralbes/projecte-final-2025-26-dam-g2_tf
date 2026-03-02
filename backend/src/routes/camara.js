@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 const { Lloc, Perfil, SessioJoc } = require('../models');
+const { notifyGameOver } = require('./gameSocket');
 
 // 1. Importem TensorFlow.js per a Node i el model MobileNet
 const tf = require('@tensorflow/tfjs-node');
@@ -235,6 +236,12 @@ router.post('/', async function (req, res) {
                 }
 
                 await sessio.save();
+
+                // Si algú ha completat tots els punts, notifiquem tota la sala
+                // perquè tots els jugadors (inclosos els que no han acabat) vagin al leaderboard
+                if (haAcabatLaLlista) {
+                    notifyGameOver(codi_sala, sessio);
+                }
 
                 res.json({
                     exit: true,

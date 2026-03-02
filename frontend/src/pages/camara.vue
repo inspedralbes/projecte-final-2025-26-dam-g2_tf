@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router'; // [CORREGIT] Importació única i neta
 import { useAuth } from '../composables/useAuth';
+import { io } from 'socket.io-client';
 
 const route = useRoute();
 const router = useRouter(); 
@@ -21,6 +22,7 @@ const imatgePunt = ref(null);
 const fotosActuals = ref([]);
 const indexFotoActual = ref(0);
 let stream = null;
+let socketJoc = null; // Socket per rebre l'event game-over de la resta de jugadors
 
 
 // Modal cromo
@@ -74,11 +76,25 @@ onMounted(async () => {
   } catch (error) {
     alert("No s'ha pogut accedir a la càmera: " + error.message);
   }
+
+  // Connectem el socket i escoltem l'event 'game-over'
+  // Quan un altre jugador acabi tots els punts, el servidor emetrà aquest event
+  // i tots els jugadors (incloent els que no han acabat) aniran al leaderboard
+  const codi_sala = route.params.codi_sala;
+  if (codi_sala) {
+    socketJoc = io(API_URL);
+    socketJoc.on('game-over', function (dades) {
+      router.push({ name: 'Leaderboard', params: { sala: dades.sessioId || codi_sala } });
+    });
+  }
 });
 
 onUnmounted(() => {
   if (stream) {
     stream.getTracks().forEach(track => track.stop());
+  }
+  if (socketJoc) {
+    socketJoc.disconnect();
   }
 });
 

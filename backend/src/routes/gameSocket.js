@@ -1,6 +1,36 @@
 const { Server } = require('socket.io');
 const { SessioJoc, Lloc } = require('../models');
 
+// Mapa: sessioId (string) → roomCode (string)
+// Permet que camara.js pugui emetre 'game-over' a tota la sala quan un jugador acaba
+const sessioARoomCode = {};
+
+let ioInstance = null;
+
+/**
+ * Emet l'event 'game-over' a tots els jugadors de la sala associada a la sessió.
+ * @param {string} sessioId - L'_id de la SessioJoc
+ * @param {object} sessio   - El document Mongoose de la SessioJoc (ja guardat)
+ */
+function notifyGameOver(sessioId, sessio) {
+    const roomCode = sessioARoomCode[sessioId.toString()];
+    if (!roomCode || !ioInstance) return;
+
+    // Preparem la llista de jugadors ordenada:
+    // 1r: més fotos completades; en empat: millor precisió
+    const jugadorsOrdenats = [...sessio.jugadors].sort((a, b) => {
+        const fotesA = (a.punts_completats || []).length;
+        const fotesB = (b.punts_completats || []).length;
+        if (fotesB !== fotesA) return fotesB - fotesA;
+        return (b.exactitud_media || 0) - (a.exactitud_media || 0);
+    });
+
+    ioInstance.to(roomCode).emit('game-over', {
+        sessioId: sessioId.toString(),
+        jugadors: jugadorsOrdenats
+    });
+}
+
 function configureSocket(server) {
     const io = new Server(server, {
         cors: {
@@ -8,6 +38,8 @@ function configureSocket(server) {
             methods: ["GET", "POST"]
         }
     });
+
+    ioInstance = io;
 
     // Sales en memòria: { roomCode: { creatorId, idLloc, players } }
     const sales = {};
@@ -84,9 +116,12 @@ function configureSocket(server) {
                 });
                 await novaSessio.save();
 
+                // 5. Registrem la relació sessioId → roomCode per poder fer notifyGameOver
+                sessioARoomCode[novaSessio._id.toString()] = roomCode;
+
                 console.log('Sessió de grup creada:', novaSessio._id);
 
-                // 5. Enviem el sessioId a tots els jugadors
+                // 6. Enviem el sessioId a tots els jugadors
                 io.to(roomCode).emit('game-started', { sessioId: novaSessio._id });
 
             } catch (err) {
@@ -119,4 +154,4 @@ function configureSocket(server) {
     });
 }
 
-module.exports = configureSocket;
+module.exports = { configureSocket, notifyGameOver };
