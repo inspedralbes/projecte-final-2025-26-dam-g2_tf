@@ -7,14 +7,21 @@ const route = useRoute();
 const router = useRouter(); 
 const { usuari } = useAuth();
 const idLloc = route.params.id;
+const idPuntParam = route.query.idPunt || null;
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 const videoRef = ref(null);
 const canvasRef = ref(null);
 const carregant = ref(false);
+
+// Imatge de referència del punt concret (es carrega al mounted des del backend)
+const imatgePunt = ref(null);
+
+// Fotos genèriques (fallback quan no hi ha punt específic)
 const fotosActuals = ref([]);
 const indexFotoActual = ref(0);
 let stream = null;
+
 
 // Modal cromo
 const mostrarModal = ref(false);
@@ -27,14 +34,34 @@ const modalDades = ref({
 });
 
 onMounted(async () => {
-  try {
-    const resposta = await fetch(`${API_URL}/api/fotos-actuals`);
-    const dades = await resposta.json();
-    if (dades.fotos && dades.fotos.length > 0) {
-      fotosActuals.value = dades.fotos.map(f => `${API_URL}/fotos_actuals/${f}`);
+  // 1. Carreguem la imatge de referència del punt clicat des del backend
+  if (idLloc && idPuntParam) {
+    try {
+      const respLloc = await fetch(`${API_URL}/api/mapa/punts/${idLloc}`);
+      if (respLloc.ok) {
+        const lloc = await respLloc.json();
+        const punt = (lloc.punts_missio || []).find(p => p._id === idPuntParam || p._id?.toString() === idPuntParam);
+        if (punt && punt.imatge_referencia) {
+          const ruta = punt.imatge_referencia;
+          imatgePunt.value = ruta.startsWith('http') ? ruta : API_URL + ruta;
+        }
+      }
+    } catch (err) {
+      console.error('Error carregant la imatge del punt:', err);
     }
-  } catch (err) {
-    console.error('Error carregant les fotos actuals:', err);
+  }
+
+  // 2. Si no hi ha imatge específica del punt, carreguem les genèriques com a fallback
+  if (!imatgePunt.value) {
+    try {
+      const resposta = await fetch(`${API_URL}/api/fotos-actuals`);
+      const dades = await resposta.json();
+      if (dades.fotos && dades.fotos.length > 0) {
+        fotosActuals.value = dades.fotos.map(f => `${API_URL}/fotos_actuals/${f}`);
+      }
+    } catch (err) {
+      console.error('Error carregant les fotos actuals:', err);
+    }
   }
 
   try {
@@ -160,11 +187,18 @@ async function enviarDadesAlBackend(imatgeEnText) {
 
     <canvas ref="canvasRef" class="hidden"></canvas>
 
+    <!-- Imatge de referència del punt específic (de la BD) o genèrica de fons -->
     <img 
-      v-if="fotosActuals.length > 0"
+      v-if="imatgePunt"
+      :src="imatgePunt" 
+      class="absolute inset-0 w-full h-full object-cover z-10 opacity-40 pointer-events-none" 
+    />
+    <img 
+      v-else-if="fotosActuals.length > 0"
       :src="fotosActuals[indexFotoActual]" 
       class="absolute inset-0 w-full h-full object-cover z-10 opacity-40 pointer-events-none" 
     />
+    <!-- Controls nav (només per fotos genèriques múltiples) -->
 
     <div class="absolute inset-0 z-15 pointer-events-none flex flex-col justify-evenly">
       <div class="w-full h-[1px] bg-white/50"></div>
@@ -175,7 +209,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
       <div class="h-full w-[1px] bg-white/50"></div>
     </div>
 
-    <div v-if="fotosActuals.length > 1" class="absolute top-4 right-4 z-30 flex items-center gap-2">
+    <div v-if="!imatgePunt && fotosActuals.length > 1" class="absolute top-4 right-4 z-30 flex items-center gap-2">
       <button @click="fotoAnterior" class="text-white bg-black/60 rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-black/80 transition">‹</button>
       <span class="text-white text-xs bg-black/60 px-2 py-1 rounded-full">{{ indexFotoActual + 1 }}/{{ fotosActuals.length }}</span>
       <button @click="fotoSeguent" class="text-white bg-black/60 rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-black/80 transition">›</button>
