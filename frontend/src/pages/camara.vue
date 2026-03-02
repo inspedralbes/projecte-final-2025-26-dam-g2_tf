@@ -35,6 +35,11 @@ const modalDades = ref({
   completat_tot: false 
 });
 
+// Notificació de guanyador (per als jugadors que no han acabat)
+const mostrarNotificacioGuanyador = ref(false);
+const nomGuanyador = ref('');
+const sessioIdGuanyador = ref('');
+
 onMounted(async () => {
   // 1. Carreguem la imatge de referència del punt clicat des del backend
   if (idLloc && idPuntParam) {
@@ -84,10 +89,20 @@ onMounted(async () => {
   if (codi_sala) {
     socketJoc = io(API_URL);
     socketJoc.on('game-over', function (dades) {
-      router.push({ name: 'Leaderboard', params: { sala: dades.sessioId || codi_sala } });
+      const meuId = usuari.value?._id?.toString();
+      // Si soc el guanyador, ignoro l'event: el modal de "Partida Finalitzada!" ja em redirigirà
+      if (meuId && meuId === dades.guanyadorId) return;
+      // Mostrar notificació als altres jugadors en comptes de redirigir automàticament
+      sessioIdGuanyador.value = dades.sessioId || codi_sala;
+      nomGuanyador.value = dades.nomGuanyador || 'Un jugador';
+      mostrarNotificacioGuanyador.value = true;
     });
   }
 });
+
+function anirAlLeaderboard() {
+  router.push({ name: 'Leaderboard', params: { sala: sessioIdGuanyador.value } });
+}
 
 onUnmounted(() => {
   if (stream) {
@@ -296,6 +311,35 @@ async function enviarDadesAlBackend(imatgeEnText) {
             style="background-color: #d9a6c2; color: #2a1030;"
           >
             {{ modalDades.completat_tot ? 'VEURE RESULTATS FINALS' : (modalDades.cromo_nou ? '🎉 GENIAL!' : '👍 D\'ACORD') }}
+          </button>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Notificació: un altre jugador ha guanyat -->
+    <Transition name="fade">
+      <div
+        v-if="mostrarNotificacioGuanyador"
+        class="absolute inset-0 z-50 flex items-center justify-center"
+        style="background: rgba(0,0,0,0.88); backdrop-filter: blur(8px);"
+      >
+        <div
+          class="relative flex flex-col items-center rounded-2xl overflow-hidden shadow-2xl mx-6 text-center"
+          style="background: linear-gradient(160deg, #2a1030 0%, #402749 60%, #1a0820 100%); border: 2px solid #d9a6c2; max-width: 340px; width: 100%; padding: 2rem 1.5rem;"
+        >
+          <span class="text-5xl mb-3">🏆</span>
+          <h2 class="text-white font-black text-xl mb-1">La partida ha acabat!</h2>
+          <p class="text-pink-300 text-base font-bold mb-1">
+            <span class="text-white">{{ nomGuanyador }}</span> ha completat totes les fotos!
+          </p>
+          <p class="text-white/50 text-xs mb-6">Vés al leaderboard per veure els resultats finals.</p>
+
+          <button
+            @click="anirAlLeaderboard"
+            class="w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest transition-all active:scale-95 hover:opacity-90"
+            style="background-color: #d9a6c2; color: #2a1030;"
+          >
+            🏅 VEURE RESULTATS FINALS
           </button>
         </div>
       </div>

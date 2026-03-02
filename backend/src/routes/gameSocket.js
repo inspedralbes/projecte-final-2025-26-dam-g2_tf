@@ -9,10 +9,12 @@ let ioInstance = null;
 
 /**
  * Emet l'event 'game-over' a tots els jugadors de la sala associada a la sessió.
- * @param {string} sessioId - L'_id de la SessioJoc
- * @param {object} sessio   - El document Mongoose de la SessioJoc (ja guardat)
+ * @param {string} sessioId      - L'_id de la SessioJoc
+ * @param {object} sessio        - El document Mongoose de la SessioJoc (ja guardat)
+ * @param {string} guanyadorId   - El perfilId del jugador que ha acabat (string)
+ * @param {string} nomGuanyador  - El nom d'usuari del guanyador
  */
-function notifyGameOver(sessioId, sessio) {
+function notifyGameOver(sessioId, sessio, guanyadorId, nomGuanyador) {
     const roomCode = sessioARoomCode[sessioId.toString()];
     if (!roomCode || !ioInstance) return;
 
@@ -27,6 +29,8 @@ function notifyGameOver(sessioId, sessio) {
 
     ioInstance.to(roomCode).emit('game-over', {
         sessioId: sessioId.toString(),
+        guanyadorId: guanyadorId ? guanyadorId.toString() : null,
+        nomGuanyador: nomGuanyador || 'Un jugador',
         jugadors: jugadorsOrdenats
     });
 }

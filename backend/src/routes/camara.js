@@ -238,9 +238,11 @@ router.post('/', async function (req, res) {
                 await sessio.save();
 
                 // Si algú ha completat tots els punts, notifiquem tota la sala
-                // perquè tots els jugadors (inclosos els que no han acabat) vagin al leaderboard
+                // El guanyador rep l'event però l'ignora (el modal ja el redirigeix)
+                // La resta de jugadors veuran una notificació amb el nom del guanyador
                 if (haAcabatLaLlista) {
-                    notifyGameOver(codi_sala, sessio);
+                    const nomGuanyador = perfil ? perfil.nom_usuari : 'Un jugador';
+                    notifyGameOver(codi_sala, sessio, perfilId, nomGuanyador);
                 }
 
                 res.json({
