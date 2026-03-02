@@ -65,13 +65,24 @@ router.post('/', async function (req, res) {
 
         // Busquem la imatge de referència: primer mirem si el punt concret en té, si no usem la del lloc
         let imatgeReferencia = lloc.imatge_referencia;
+        let puntTrobat = false;
         if (idPunt) {
             for (let i = 0; i < lloc.punts_missio.length; i++) {
                 const p = lloc.punts_missio[i];
-                if (p._id.toString() === idPunt.toString() && p.imatge_referencia) {
-                    imatgeReferencia = p.imatge_referencia;
+                if (p._id.toString() === idPunt.toString()) {
+                    puntTrobat = true;
+                    if (p.imatge_referencia) {
+                        imatgeReferencia = p.imatge_referencia;
+                        console.log(`[Càmera] Punt trobat: "${p.nom_punt}" | imatge: ${imatgeReferencia}`);
+                    } else {
+                        console.log(`[Càmera] Punt "${p.nom_punt}" NO té imatge_referencia pròpia → usant la del lloc`);
+                    }
                     break;
                 }
+            }
+            if (!puntTrobat) {
+                console.warn(`[Càmera] ATENCIÓ: idPunt "${idPunt}" NO existeix a lloc.punts_missio!`);
+                console.warn(`[Càmera] IDs dels punts al lloc:`, lloc.punts_missio.map(p => p._id.toString()));
             }
         }
 
@@ -98,6 +109,11 @@ router.post('/', async function (req, res) {
                 rutaLocal = path.join(__dirname, '../../public', imatgeReferencia);
             } else {
                 rutaLocal = path.join(__dirname, '../../public/fotos_historiques', imatgeReferencia);
+            }
+            console.log(`[Càmera] Carregant imatge local: ${rutaLocal}`);
+            if (!fs.existsSync(rutaLocal)) {
+                console.error(`[Càmera] ERROR: fitxer no trobat: ${rutaLocal}`);
+                return res.status(404).json({ missatge: `Imatge de referència no trobada: ${imatgeReferencia}` });
             }
             bufferRef = fs.readFileSync(rutaLocal);
         }
