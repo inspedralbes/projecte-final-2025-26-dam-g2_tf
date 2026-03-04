@@ -119,46 +119,53 @@ router.post('/', async function (req, res) {
             bufferRef = fs.readFileSync(rutaLocal);
         }
 
+        // Guardem la imatge que ens envia l'usuari
+        const carpetaUsuari = path.dirname(camiUsuari);
+        if (!fs.existsSync(carpetaUsuari)) {
+            fs.mkdirSync(carpetaUsuari, { recursive: true });
+        }
+        const dadesNetes = imatge.replace(/^data:image\/.*;base64,/, "");
+        const bufferUsuari = Buffer.from(dadesNetes, 'base64');
+        fs.writeFileSync(camiUsuari, bufferUsuari);
+
+        // --- INICI PROCESSAMENT AMB IA ---
+        let similitud = 0;
+        let tensorUsuari, tensorRef, caracteristiquesUsuari, caracteristiquesRef;
         try {
-            // Guardem la imatge que ens envia l'usuari
-            const carpetaUsuari = path.dirname(camiUsuari);
-            if (!fs.existsSync(carpetaUsuari)) {
-                fs.mkdirSync(carpetaUsuari, { recursive: true });
-            }
-            const dadesNetes = imatge.replace(/^data:image\/.*;base64,/, "");
-            const bufferUsuari = Buffer.from(dadesNetes, 'base64');
-            fs.writeFileSync(camiUsuari, bufferUsuari);
-
-            // --- INICI PROCESSAMENT AMB IA ---
-
             // 1. Convertim les imatges a JPEG (sharp les normalitza, evita errors amb HEIC/WebP de iPhone)
             const bufferUsuariJpeg = await sharp(bufferUsuari).jpeg().toBuffer();
             const bufferRefJpeg = await sharp(bufferRef).jpeg().toBuffer();
 
             // 2. Convertim les imatges a "Tensors" (matrius de números 3D que entén l'IA)
-            const tensorUsuari = tf.node.decodeImage(bufferUsuariJpeg, 3); // 3 significa RGB
-            const tensorRef = tf.node.decodeImage(bufferRefJpeg, 3);
+            tensorUsuari = tf.node.decodeImage(bufferUsuariJpeg, 3); // 3 significa RGB
+            tensorRef = tf.node.decodeImage(bufferRefJpeg, 3);
 
-            // Extraiem els "embeddings" o punts clau. 
+            // Extraiem els "embeddings" o punts clau.
             // El 'true' indica que no volem saber quin objecte és, sinó el seu codi estructural
-            const caracteristiquesUsuari = modelMobileNet.infer(tensorUsuari, true);
-            const caracteristiquesRef = modelMobileNet.infer(tensorRef, true);
+            caracteristiquesUsuari = modelMobileNet.infer(tensorUsuari, true);
+            caracteristiquesRef = modelMobileNet.infer(tensorRef, true);
 
             // 3. Calculem la similitud
             const similitudDecimal = calcularSimilitudCosinus(caracteristiquesUsuari, caracteristiquesRef);
             // Si l'angle és completament oposat, podria donar negatiu, ens assegurem que el mínim sigui 0
-            const similitud = Math.max(0, similitudDecimal) * 100;
+            similitud = Math.max(0, similitudDecimal) * 100;
+        } catch (errorIA) {
+            // Aquest catch NOMÉS captura errors reals de TensorFlow/sharp
+            console.error("[IA] Error durant el processament d'imatges amb TensorFlow:", errorIA);
+            return res.status(500).json({ missatge: "Error en el processament d'imatges amb TensorFlow." });
+        } finally {
+            // 4. IMPORTANT: Buidar la memòria RAM sempre, tant si hi ha error com si no
+            if (tensorUsuari) tensorUsuari.dispose();
+            if (tensorRef) tensorRef.dispose();
+            if (caracteristiquesUsuari) caracteristiquesUsuari.dispose();
+            if (caracteristiquesRef) caracteristiquesRef.dispose();
+        }
+        // --- FI PROCESSAMENT AMB IA ---
 
-            // 4. IMPORTANT: Buidar la memòria RAM.
-            tensorUsuari.dispose();
-            tensorRef.dispose();
-            caracteristiquesUsuari.dispose();
-            caracteristiquesRef.dispose();
+        console.log(`[Càmera IA] IdLloc: ${idLloc} | Similitud: ${similitud.toFixed(2)}%`);
 
-            // --- FI PROCESSAMENT AMB IA ---
-
-            console.log(`[Càmera IA] IdLloc: ${idLloc} | Similitud: ${similitud.toFixed(2)}%`);
-
+        // --- LÒGICA DE JOC I BASE DE DADES ---
+        try {
             if (similitud >= 50) {
                 // Trobem el jugador dins la sessió
                 let jugador = null;
@@ -245,7 +252,7 @@ router.post('/', async function (req, res) {
                     notifyGameOver(codi_sala, sessio, perfilId, nomGuanyador);
                 }
 
-                res.json({
+                return res.json({
                     exit: true,
                     completat_tot: haAcabatLaLlista,
                     rango: medalla,
@@ -258,16 +265,16 @@ router.post('/', async function (req, res) {
                 });
 
             } else {
-                res.json({
+                return res.json({
                     exit: false,
                     coincidencia: similitud.toFixed(2) + "%",
                     missatge: "No coincideix prou. Revisa l'angle i torna-ho a provar."
                 });
             }
-
-        } catch (error) {
-            console.error("Error al processar amb IA:", error);
-            res.status(500).json({ missatge: "Error en el processament d'imatges amb TensorFlow." });
+        } catch (errorJoc) {
+            // Aquest catch captura errors de Base de Dades, Socket, etc.
+            console.error("[Joc] Error en guardar la partida o notificar jugadors:", errorJoc);
+            return res.status(500).json({ missatge: "Error en guardar el progrés de la partida." });
         }
     } catch (err) {
         console.error("Error buscant el lloc:", err);

@@ -19,7 +19,7 @@ app.use(cors());
 
 app.use('/foto_mapa', express.static(path.join(__dirname, 'public/foto_mapa')));
 app.use('/fotos_actuals', express.static(path.join(__dirname, 'public/fotos_actuals')));
-
+// missatge de prova
 async function startServer() {
     try {
         await connectDB();
