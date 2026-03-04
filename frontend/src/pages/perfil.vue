@@ -297,7 +297,6 @@ function imatgeCromo(src) {
   return API_URL + src;
 }
 
-
 // INICI
 onMounted(async () => {
   const saved = localStorage.getItem('usuari');
@@ -324,11 +323,8 @@ onMounted(async () => {
     router.push('/login');
   }
 });
-
-
 </script>
-
- <style scoped>
+<style scoped>
 
 .aspect-square { aspect-ratio: 1 / 1; }
 
