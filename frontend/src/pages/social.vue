@@ -137,6 +137,14 @@
              <button @click="reportarLloc(post)" class="bg-red-500/10 text-red-500 p-2 rounded-xl hover:bg-red-500 hover:text-white transition-all">
                🚨
              </button>
+             <button 
+    @click="reportarPostSencer(post)" 
+    class="bg-gray-100 text-gray-600 p-2 rounded-xl hover:bg-black hover:text-white transition-all shadow-sm"
+    title="Reportar post sencer"
+  >
+    🚫
+  </button>
+  
            </div>
 
 
@@ -184,15 +192,26 @@
 <div v-if="mostrantComentaris === post._id" class="bg-gray-50/50 p-6 border-t border-gray-100">
   <div v-if="post.comentaris && post.comentaris.length > 0">
    <div v-for="com in post.comentaris" :key="com.id_comentari || com._id" class="flex gap-3 mb-4 last:mb-0">
-     <div class="w-8 h-8 rounded-xl bg-white flex items-center justify-center border overflow-hidden shrink-0">
-       <img v-if="com.avatar_usuari" :src="com.avatar_usuari" class="w-full h-full object-cover">
-       <span v-else class="font-black text-[#5d3962] text-[10px]">{{ com.nom_usuari?.charAt(0) }}</span>
-     </div>
-     <div class="bg-white px-4 py-2 rounded-2xl border border-gray-100 flex-1 shadow-sm">
-       <p class="text-[10px] font-black text-[#5d3962] mb-0.5">{{ com.nom_usuari }}</p>
-       <p class="text-xs text-gray-600 font-medium">{{ com.text }}</p>
-     </div>
-   </div>
+  <div class="w-8 h-8 rounded-xl bg-white flex items-center justify-center border overflow-hidden shrink-0">
+    <img v-if="com.avatar_usuari" :src="com.avatar_usuari" class="w-full h-full object-cover">
+    <span v-else class="font-black text-[#5d3962] text-[10px]">{{ com.nom_usuari?.charAt(0) }}</span>
+  </div>
+  
+  <div class="bg-white px-4 py-2 rounded-2xl border border-gray-100 flex-1 shadow-sm relative group">
+    <div class="flex justify-between items-center w-full"> 
+      <p class="text-[10px] font-black text-[#5d3962] mb-0.5 truncate">{{ com.nom_usuari }}</p>
+      
+    <button 
+  @click="reportarComentari(post._id, com)" 
+  class="transition-opacity text-[10px] hover:scale-125 p-1 shrink-0 ml-2"
+  title="Reportar comentari"
+>
+  🚩
+</button>
+    </div>
+    <p class="text-xs text-gray-600 font-medium">{{ com.text }}</p>
+</div>
+</div>
  </div>
 
 
@@ -565,6 +584,7 @@ async function enviarComentari(postId) {
 }
 
 
+
 async function eliminarPost(postId) {
  if (!confirm('Eliminar post?')) return;
  try {
@@ -616,13 +636,74 @@ function eliminarTag(idx) {
 
 
 function reportarLloc(post) {
- alert(`Reportat: ${post.nom_usuari || 'post'}`);
+  alert(`Reportat: ${post.nom_usuari || 'post'}`);
 }
-
 
 function reportPost(post) {
- alert(`Publicació reportada: ${post._id}`);
+  alert(`Publicació reportada: ${post._id}`);
 }
+
+async function reportarComentari(postId, comentari) {
+  if (!usuari.value) {
+    obrirModal('Inicia sessió per poder reportar contingut.');
+    return;
+  }
+  
+  const confirmar = confirm(`Vols marcar el comentari de "${comentari.nom_usuari}" com a inapropiat?`);
+  
+  if (confirmar) {
+    try {
+      const res = await fetch(`${API_URL}/api/social/posts/${postId}/comentari/${comentari.id_comentari}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          id_usuari_reporter: usuari.value._id,
+          motiu: "Contingut inapropiat" 
+        })
+      });
+
+      if (res.ok) {
+        alert("Gràcies. El nostre equip de moderació revisarà aquest comentari.");
+      } else {
+        alert("No s'ha pogut enviar el report.");
+      }
+    } catch (err) {
+      console.error("Error enviant report:", err);
+    }
+  }
+}
+
+// Añade esta función al final del <script setup>
+async function reportarPostSencer(post) {
+  if (!usuari.value) {
+    obrirModal('Inicia sessió per poder reportar contingut.');
+    return;
+  }
+  
+  const confirmar = confirm(`Vols reportar la publicació de "${post.nom_usuari}" per contingut inapropiat?`);
+  
+  if (confirmar) {
+    try {
+      const res = await fetch(`${API_URL}/api/social/posts/${post._id}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          id_usuari_reporter: usuari.value._id,
+          motiu: "Reportat des del feed" 
+        })
+      });
+
+      if (res.ok) {
+        alert("Gràcies. El post ha estat enviat a revisió.");
+      } else {
+        alert("No s'ha pogut enviar el report.");
+      }
+    } catch (err) {
+      console.error("Error enviant report del post:", err);
+    }
+  }
+}
+
 </script>
 
 

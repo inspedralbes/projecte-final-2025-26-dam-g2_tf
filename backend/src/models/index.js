@@ -125,9 +125,21 @@ const PostSchema = new mongoose.Schema({
     nom_usuari: { type: String },
     avatar_usuari: { type: String },
     text: { type: String },
-    timestamp: { type: Date, default: Date.now }
-  }]
+    reportat: { type: Boolean, default: false },
+    reportat_per: { type: String }, // Recomanat per saber qui ha enviat l'alerta 🚩
+    timestamp: { type: Date, default: Date.now },
+  // AFEGEIX AIXÒ PER ALS COMENTARIS REPORTATS
+    reportat: { type: Boolean, default: false }
+  }],
+  // AFEGEIX AIXÒ PER ALS POSTS REPORTATS
+  reportat: { type: Boolean, default: false },
+  data_report: { type: Date },
+  reportat_per: { type: String }
 });
+
+
+
+
 module.exports = {
   Usuari: mongoose.model('Usuari', UsuariSchema, 'Usuari'),
   Perfil: mongoose.model('Perfil', PerfilSchema, 'Perfil'),
