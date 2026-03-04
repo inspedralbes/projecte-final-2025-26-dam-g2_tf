@@ -217,14 +217,16 @@ router.get('/admin/posts', async (req, res) => {
         res.status(500).json({ message: "Error al carregar posts" });
     }
 });
-// Eliminar un comentari específic d'un post
-router.delete('/admin/posts/:postId/comentari/:comentariId', async (req, res) => {
+// Esta ruta permite borrar comentarios (tanto para el feed normal como para el panel de admin)
+router.delete('/posts/:postId/comentari/:comentariId', async (req, res) => {
     try {
         const { postId, comentariId } = req.params;
-        await Post.findByIdAndUpdate(postId, {
+        const result = await Post.findByIdAndUpdate(postId, {
             $pull: { comentaris: { id_comentari: comentariId } }
         });
-        res.json({ success: true, message: "Comentari eliminat" });
+        
+        if (!result) return res.status(404).json({ message: "Post no trobat" });
+        res.json({ success: true, message: "Comentari eliminat correctament" });
     } catch (error) {
         res.status(500).json({ message: "Error al eliminar el comentari" });
     }
@@ -292,6 +294,27 @@ router.post('/posts/:postId/report', async (req, res) => { // Canviat de 'report
         res.json({ success: true, message: "Post reportat correctament" });
     } catch (error) {
         res.status(500).json({ message: "Error al processar el report" });
+    }
+});
+
+// Ruta per marcar un COMENTARI com a revisat/segur (treure el flag de reportat)
+router.put('/admin/posts/:postId/comentaris/:comentariId/revisat', async (req, res) => {
+    try {
+        const { postId, comentariId } = req.params;
+        
+        // Busquem el post i dins de l'array de comentaris, posem reportat a false
+        const post = await Post.findOneAndUpdate(
+            { _id: postId, "comentaris.id_comentari": comentariId },
+            { $set: { "comentaris.$.reportat": false } },
+            { new: true }
+        );
+
+        if (!post) return res.status(404).json({ message: "No s'ha trobat el comentari" });
+        
+        res.json({ success: true, message: "Comentari marcat com a segur" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error al actualitzar el comentari" });
     }
 });
 
