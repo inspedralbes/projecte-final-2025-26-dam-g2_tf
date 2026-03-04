@@ -26,9 +26,6 @@
       </button>
     </div>
 
-    <button v-on:click="anarACamera" class="boto-continuar">
-      HE ARRIBAT!
-    </button>
 
     <!-- ===== MODAL PUNT ===== -->
     <Transition name="fade">
@@ -204,17 +201,6 @@ export default {
     tancarModal() {
       this.modalVisible = false;
       this.puntSeleccionat = null;
-    },
-
-    // Quan premen el botó general "HE ARRIBAT"
-    anarACamera() {
-      this.$router.push({
-        name: 'camara',
-        params: {
-          codi_sala: this.$route.params.id, // L'ID de la sessió/sala que ja tens a la URL del mapa
-          id: this.idLloc // L'ID del monument (que en el teu cas sembla que és la mateixa variable)
-        }
-      });
     },
 
     // Quan premen "FER LA FOTO" dins del modal d'un punt concret
