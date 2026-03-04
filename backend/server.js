@@ -25,6 +25,10 @@ async function startServer() {
         await connectDB();
         console.log("MongoDB Connectat correctament");
 
+        // Iniciar tasques programades (Cron jobs)
+        const { iniciarCronJobs } = require('./src/utils/cron');
+        iniciarCronJobs();
+
         // Rutes
         app.use('/api/cercador', require('./src/routes/cercador'));
         app.use('/api/usuari', require('./src/routes/usuari'));
