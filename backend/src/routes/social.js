@@ -180,5 +180,120 @@ router.post('/posts/:postId/comentari', async (req, res) => {
    }
 });
 
+// --- MODERACIÓ PER A ADMINISTRADORS ---
+
+// Obtenir totes les ressenyes (per a la vista de moderació)
+router.get('/admin/ressenyes', async (req, res) => {
+    try {
+        // Fem un .populate per veure el nom de l'usuari i el lloc si cal
+        const ressenyes = await Ressenya.find()
+            .populate('id_usuari', 'nom_usuari')
+            .populate('id_lloc', 'nom')
+            .sort({ data: -1 });
+        res.json(ressenyes);
+    } catch (error) {
+        res.status(500).json({ message: "Error al carregar ressenyes" });
+    }
+});
+
+// Eliminar una ressenya
+router.delete('/admin/ressenyes/:id', async (req, res) => {
+    try {
+        await Ressenya.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: "Ressenya eliminada correctament" });
+    } catch (error) {
+        res.status(500).json({ message: "Error al eliminar la ressenya" });
+    }
+});
+
+// Obtenir tots els posts (per moderar posts sencers)
+router.get('/admin/posts', async (req, res) => {
+    try {
+        // MODIFICACIÓ: Ordenem primer per 'reportat' (perquè els avisos surtin a dalt)
+        // i després per data (timestamp)
+        const posts = await Post.find().sort({ reportat: -1, timestamp: -1 });
+        res.json(posts);
+    } catch (error) {
+        res.status(500).json({ message: "Error al carregar posts" });
+    }
+});
+// Eliminar un comentari específic d'un post
+router.delete('/admin/posts/:postId/comentari/:comentariId', async (req, res) => {
+    try {
+        const { postId, comentariId } = req.params;
+        await Post.findByIdAndUpdate(postId, {
+            $pull: { comentaris: { id_comentari: comentariId } }
+        });
+        res.json({ success: true, message: "Comentari eliminat" });
+    } catch (error) {
+        res.status(500).json({ message: "Error al eliminar el comentari" });
+    }
+});
+
+// >>> AFEGEIX AQUESTA RUTA AQUÍ (PER AL BOTÓ VERD "OK/REVISAT") <<<
+router.put('/admin/posts/:postId/revisat', async (req, res) => {
+    try {
+        const { postId } = req.params;
+        // Treiem la marca de reportat i les dades del report
+        await Post.findByIdAndUpdate(postId, { 
+            $set: { reportat: false },
+            $unset: { data_report: "", reportat_per: "" } 
+        });
+        res.json({ success: true, message: "Post marcat com a segur" });
+    } catch (error) {
+        res.status(500).json({ message: "Error al actualitzar el post" });
+    }
+});
+
+
+// --- NOVA RUTA: Reportar un comentari ---
+router.post('/posts/:postId/comentari/:comentariId/report', async (req, res) => {
+    try {
+        const { postId, comentariId } = req.params;
+        const { id_usuari_reporter, motiu } = req.body;
+
+        // Busquem el post i marquem el comentari com a reportat
+        // Nota: Això dependrà de si el teu esquema de Post permet guardar l'estat 'reportat' dins de l'array de comentaris.
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ message: "Post no trobat" });
+
+        const comentari = post.comentaris.find(c => c.id_comentari === comentariId);
+        if (!comentari) return res.status(404).json({ message: "Comentari no trobat" });
+
+        // Afegim una propietat 'reportat' al comentari si no existeix
+        comentari.reportat = true;
+        comentari.reportat_per = id_usuari_reporter;
+        comentari.data_report = new Date();
+        
+        post.markModified('comentaris');
+        await post.save();
+
+        res.json({ success: true, message: "Comentari reportat correctament" });
+    } catch (error) {
+        console.error("Error al reportar:", error);
+        res.status(500).json({ message: "Error al processar el report" });
+    }
+});
+
+router.post('/posts/:postId/report', async (req, res) => { // Canviat de 'report_post' a 'report'
+    try {
+        const { postId } = req.params;
+        const { id_usuari_reporter } = req.body;
+
+        const post = await Post.findByIdAndUpdate(postId, {
+            $set: { 
+                reportat: true,
+                data_report: new Date(),
+                reportat_per: id_usuari_reporter
+            }
+        }, { new: true });
+
+        if (!post) return res.status(404).json({ message: "Post no trobat" });
+        res.json({ success: true, message: "Post reportat correctament" });
+    } catch (error) {
+        res.status(500).json({ message: "Error al processar el report" });
+    }
+});
+
 module.exports = router;
 
