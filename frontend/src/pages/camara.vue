@@ -83,15 +83,20 @@ onMounted(async () => {
   }
 
   // Connectem el socket i escoltem l'event 'game-over'
-  // Quan un altre jugador acabi tots els punts, el servidor emetrà aquest event
-  // i tots els jugadors (incloent els que no han acabat) aniran al leaderboard
+  // El sessioId (codi_sala al route) és l'_id de SessioJoc
+  // Emetem 'join-game-room' perquè el backend ens uneixi a la room correcta
   const codi_sala = route.params.codi_sala;
   if (codi_sala) {
     socketJoc = io(API_URL);
+    // Quan el socket es connecta, demanem unir-nos a la room de la partida
+    socketJoc.on('connect', function () {
+      socketJoc.emit('join-game-room', codi_sala);
+      console.log('[Càmera] Socket connectat, unit a la room:', codi_sala);
+    });
     socketJoc.on('game-over', function (dades) {
       const meuId = usuari.value?._id?.toString();
       // Si soc el guanyador, ignoro l'event: el modal de "Partida Finalitzada!" ja em redirigirà
-      if (meuId && meuId === dades.guanyadorId) return;
+      if (meuId && dades.guanyadorId && meuId === dades.guanyadorId.toString()) return;
       // Mostrar notificació als altres jugadors en comptes de redirigir automàticament
       sessioIdGuanyador.value = dades.sessioId || codi_sala;
       nomGuanyador.value = dades.nomGuanyador || 'Un jugador';
