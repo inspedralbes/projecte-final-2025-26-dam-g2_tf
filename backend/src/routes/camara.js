@@ -219,27 +219,33 @@ router.post('/', async function (req, res) {
                 let perfil = null; // Declarat fora perquè sigui accessible a notifyGameOver
 
                 if (haAcabatLaLlista) {
+                    // Comptem els que ja havien acabat ABANS de marcar el jugador actual
+                    // per saber si és el primer (guanyador real)
+                    let completatsAbans = 0;
+                    for (let i = 0; i < sessio.jugadors.length; i++) {
+                        if (sessio.jugadors[i].completat) completatsAbans++;
+                    }
+                    const esElGuanyador = completatsAbans === 0;
+                    medalla = completatsAbans === 0 ? "Or" : completatsAbans === 1 ? "Plata" : "Bronze";
+
                     jugador.completat = true;
                     sessio.estat = 'finalitzada';
 
-                    // Calculem rànquing (quants han acabat ja)
-                    let guanyadors = 0;
-                    for (let i = 0; i < sessio.jugadors.length; i++) {
-                        if (sessio.jugadors[i].completat) guanyadors++;
-                    }
-                    medalla = guanyadors === 1 ? "Or" : guanyadors === 2 ? "Plata" : "Bronze";
-
-                    // GUARDAR CROMO AL PERFIL DE L'USUARI
+                    // GUARDAR CROMO AL PERFIL: NOMÉS el guanyador (primer en acabar)
+                    // i NOMÉS si la ruta té un cromo definit
                     perfil = await Perfil.findById(perfilId);
-                    if (perfil) {
+                    if (perfil && esElGuanyador && lloc.cromo_imatge) {
+                        console.log(`[Cromo] Guardant cromo "${lloc.cromo_imatge}" al guanyador ${perfil.nom_usuari}`);
                         perfil.inventari_cromos.push({
                             id_lloc: sessio.id_lloc_desti,
                             nom_lloc: lloc.nom,
-                            rango: medalla,
+                            imatge_cromo: lloc.cromo_imatge,
                             imatge_usuari: "/fotos_partides_usuaris/" + nomFitxer,
                             data_obtencio: new Date()
                         });
                         await perfil.save();
+                    } else if (perfil && !esElGuanyador) {
+                        console.log(`[Cromo] El jugador ${perfil.nom_usuari} ha acabat en posició ${completatsAbans + 1}, NO rep cromo.`);
                     }
                 }
 

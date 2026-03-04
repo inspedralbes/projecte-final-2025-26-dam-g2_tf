@@ -102,7 +102,7 @@
 
         <div class="aspect-[4/5] overflow-hidden bg-black/40">
           <img 
-            :src="imatgeCromo(cromo.imatge_usuari)" 
+            :src="imatgeCromo(cromo.imatge_cromo || cromo.imatge_usuari)" 
             class="w-full h-full object-cover sepia-[0.3] hover:sepia-0 transition-all duration-500"
           >
         </div>
