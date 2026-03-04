@@ -216,6 +216,7 @@ router.post('/', async function (req, res) {
 
                 console.log(`[Càmera] Total punts partida: ${totalPuntsPartida} | Completats: ${jugador.punts_completats.length} | Acabat: ${haAcabatLaLlista}`);
                 let medalla = null;
+                let perfil = null; // Declarat fora perquè sigui accessible a notifyGameOver
 
                 if (haAcabatLaLlista) {
                     jugador.completat = true;
@@ -229,7 +230,7 @@ router.post('/', async function (req, res) {
                     medalla = guanyadors === 1 ? "Or" : guanyadors === 2 ? "Plata" : "Bronze";
 
                     // GUARDAR CROMO AL PERFIL DE L'USUARI
-                    const perfil = await Perfil.findById(perfilId);
+                    perfil = await Perfil.findById(perfilId);
                     if (perfil) {
                         perfil.inventari_cromos.push({
                             id_lloc: sessio.id_lloc_desti,
