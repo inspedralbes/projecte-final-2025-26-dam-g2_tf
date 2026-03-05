@@ -47,6 +47,7 @@
           <div class="grid grid-cols-1 gap-2">
             <input v-model="form.imatge_referencia" placeholder="URL Foto Principal (Realitat)" class="w-full border-2 border-gray-50 p-3 rounded-2xl bg-gray-50 text-xs shadow-sm">
             <input v-model="form.foto_mapa" placeholder="URL Foto Mapa (Dibuix esquemàtic)" class="w-full border-2 border-gray-50 p-3 rounded-2xl bg-gray-50 text-xs shadow-sm">
+            <input v-model="form.cromo_imatge" placeholder="URL Cromo (ex: /Cromos/SagradaFamilia_historica.jpg)" class="w-full border-2 border-gray-50 p-3 rounded-2xl bg-gray-50 text-xs shadow-sm">
           </div>
 
           <div id="mapaInput" class="h-64 rounded-3xl border-4 border-gray-50 overflow-hidden shadow-inner relative z-10"></div>

@@ -76,7 +76,8 @@ const resetForm = () => ({
   nom: '', barri: '', dificultat: 'Baixa', descripcio: '', explicacio_historica: '',
   imatge_referencia: '', foto_mapa: '', tags: [], punts_missio: [],
   control_horari: { hora_tancament: '20:00', actiu: false },
-  lat: 41.3879, lng: 2.1699
+  lat: 41.3879, lng: 2.1699,
+  cromo_imatge: ''
 });
 
 const form = ref(resetForm());
@@ -105,7 +106,8 @@ const prepararEdicion = (item) => {
     ...item, 
     lat: item.ubicacio?.coordinates[1] || 41.3879, 
     lng: item.ubicacio?.coordinates[0] || 2.1699,
-    control_horari: item.control_horari || { hora_tancament: '20:00', actiu: false }
+    control_horari: item.control_horari || { hora_tancament: '20:00', actiu: false },
+    cromo_imatge: item.cromo_imatge || ''
   };
   mostrarForm.value = true;
 };
