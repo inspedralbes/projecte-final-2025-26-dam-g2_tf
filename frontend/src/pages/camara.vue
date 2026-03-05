@@ -280,7 +280,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
           style="background: linear-gradient(160deg, #2a1030 0%, #402749 60%, #1a0820 100%); border: 2px solid #d9a6c2; max-width: 340px; width: 100%;"
         >
           <div class="w-full flex flex-col items-center pt-6 pb-3 px-6">
-            <span class="text-3xl mb-1">{{ !modalDades.exit ? '❌' : modalDades.completat_tot ? (modalDades.cromo_nou ? '🏆' : '🏁') : '📍' }}</span>
+            <span class="text-3xl mb-1">{{ !modalDades.exit ? '' : modalDades.completat_tot ? (modalDades.cromo_nou ? '' : '🏁') : '' }}</span>
             <h2 class="text-white font-bold text-lg text-center leading-tight">
               {{ !modalDades.exit ? 'Imatge errònia!' : modalDades.completat_tot ? (modalDades.cromo_nou ? 'Cromo adquirit!' : 'Partida Finalitzada!') : 'Punt trobat!' }}
             </h2>
