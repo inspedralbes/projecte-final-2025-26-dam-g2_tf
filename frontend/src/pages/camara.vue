@@ -280,9 +280,9 @@ async function enviarDadesAlBackend(imatgeEnText) {
           style="background: linear-gradient(160deg, #2a1030 0%, #402749 60%, #1a0820 100%); border: 2px solid #d9a6c2; max-width: 340px; width: 100%;"
         >
           <div class="w-full flex flex-col items-center pt-6 pb-3 px-6">
-            <span class="text-3xl mb-1">{{ !modalDades.exit ? '' : modalDades.completat_tot ? '' : (modalDades.cromo_nou ? '' : '') }}</span>
+            <span class="text-3xl mb-1">{{ !modalDades.exit ? '❌' : modalDades.completat_tot ? (modalDades.cromo_nou ? '🏆' : '🏁') : '📍' }}</span>
             <h2 class="text-white font-bold text-lg text-center leading-tight">
-              {{ !modalDades.exit ? 'Imatge errònia!' : modalDades.completat_tot ? 'Partida Finalitzada!' : (modalDades.cromo_nou ? 'Cromo adquirit!' : 'Ja tenies aquest cromo') }}
+              {{ !modalDades.exit ? 'Imatge errònia!' : modalDades.completat_tot ? (modalDades.cromo_nou ? 'Cromo adquirit!' : 'Partida Finalitzada!') : 'Punt trobat!' }}
             </h2>
             <p class="text-pink-300 text-sm mt-1 text-center">
               {{ !modalDades.exit ? 'Torna a provar, la foto no s\'assembla prou' : modalDades.nom_lloc }}
@@ -320,7 +320,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
             class="w-full py-4 font-bold text-sm transition-opacity hover:opacity-80 active:scale-95"
             style="background-color: #d9a6c2; color: #2a1030;"
           >
-            {{ !modalDades.exit ? ' TORNAR A INTENTAR' : modalDades.completat_tot ? 'VEURE RESULTATS FINALS' : (modalDades.cromo_nou ? ' GENIAL!' : ' D\'ACORD') }}
+            {{ !modalDades.exit ? ' TORNAR A INTENTAR' : modalDades.completat_tot ? 'VEURE RESULTATS FINALS' : ' GENIAL!' }}
           </button>
         </div>
       </div>

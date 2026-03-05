@@ -220,8 +220,10 @@ router.post('/', async function (req, res) {
                 let medalla = null;
                 let perfil = null; // Declarat fora perquè sigui accessible a notifyGameOver
 
+                let cromo_nou = false;
+
                 if (haAcabatLaLlista) {
-                    // Comptem els que ja havien acabat ABANS de marcar el jugador actual
+                    // Comptem els que ja havien acabat ABANS de marcar lugador actual
                     // per saber si és el primer (guanyador real)
                     let completatsAbans = 0;
                     for (let i = 0; i < sessio.jugadors.length; i++) {
@@ -256,6 +258,7 @@ router.post('/', async function (req, res) {
                                     data_obtencio: new Date()
                                 });
                                 await perfil.save();
+                                cromo_nou = true;
                                 console.log(`[Càmera] Cromo guardat al perfil del guanyador: "${lloc.nom}" amb imatge: ${lloc.cromo_imatge}`);
                             } else {
                                 console.log(`[Càmera] El guanyador ja té el cromo de "${lloc.nom}". No es duplica.`);
@@ -280,6 +283,7 @@ router.post('/', async function (req, res) {
                     exit: true,
                     completat_tot: haAcabatLaLlista,
                     rango: medalla,
+                    cromo_nou: cromo_nou,
                     coincidencia: similitud.toFixed(2) + "%",
                     nom_lloc: lloc.nom,
                     imatge_punt: imatgePuntMissio || imatgeReferencia,  // imatge del punt per mostrar al modal
