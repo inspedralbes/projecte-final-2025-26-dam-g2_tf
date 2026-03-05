@@ -31,7 +31,7 @@
 
             <!-- Títol i subtítol -->
             <h2 class="text-2xl font-black uppercase tracking-tight relative">
-              {{ esRegistre ? '¡Benvingut!' : 'Hola, explorador! 👋' }}
+              {{ esRegistre ? '¡Benvingut!' : 'Hola, explorador! ' }}
             </h2>
             <p class="text-[#f5cbdd] text-sm mt-2 font-medium opacity-90 relative">
               {{ missatgePersonalitzat || (esRegistre
@@ -124,7 +124,7 @@
               <!-- Missatge d'error -->
               <Transition name="error-fade">
                 <div v-if="error" class="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-2xl text-xs font-bold">
-                  <span>⚠️</span>
+                  <span></span>
                   <span>{{ error }}</span>
                 </div>
               </Transition>
@@ -139,7 +139,7 @@
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                 </svg>
-                <span>{{ carregant ? 'Un moment...' : (esRegistre ? '🚀 Crear compte' : '✨ Explorar ara') }}</span>
+                <span>{{ carregant ? 'Un moment...' : (esRegistre ? ' Crear compte' : 'Explorar ara') }}</span>
               </button>
             </form>
 

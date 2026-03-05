@@ -58,9 +58,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import BotonPerfil from '../components/BotonPerfil.vue';
-// removed: elmeulogin import
 
-// removed: mostrarModal, usuariLoguejat refs
 
 const llistaLlocs = ref([]);
 const activeIndex = ref(0);
@@ -85,8 +83,6 @@ onMounted(async () => {
     llistaLlocs.value = []; 
   }
 });
-
-// removed: actualitzarUsuari function
 
 
 const handleScroll = () => {

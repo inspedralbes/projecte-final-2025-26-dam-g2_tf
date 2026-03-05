@@ -61,7 +61,7 @@
     <!-- Modal que mostra confirmació a l'usuari -->
     <div v-if="mostrarModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
       <div class="bg-white p-8 rounded-[30px] w-10/12 max-w-sm text-center shadow-2xl">
-        <div class="text-4xl mb-4">🎉</div>
+        <div class="text-4xl mb-4"></div>
         <h3 class="text-xl font-black text-gray-800 mb-2">{{ mensajeModal }}</h3>
         <p class="text-gray-500 mb-6">{{ submensajeModal }}</p>
         <button 
@@ -90,7 +90,6 @@ const mostrarModal = ref(false)
 const mensajeModal = ref('')
 const submensajeModal = ref('')
 
-// Funció per simular la creació d'una sala
 // Funció per crear una sala (anar a la sala d'espera amb mode crear)
 function crearSala() {
   router.push({ name: 'sala-espera', params: { id: 'crear' }, query: { idLloc: route.params.id } })
@@ -107,7 +106,7 @@ function jugarSolo() {
   irAlJuego()
 }
 
-// Funció que es crida en prémer "Som-hi" al modal (ja no s'usa el modal per unir-se a sala)
+// Funció que es crida en prémer "Som-hi" al modal 
 function confirmarInicio() {
   mostrarModal.value = false
   irAlJuego()
@@ -135,8 +134,8 @@ async function irAlJuego() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        idLloc: route.params.id, // L'ID del monument (Sagrada Família)
-        perfilId: perfilId      // L'ID del PerfilSchema
+        idLloc: route.params.id, 
+        perfilId: perfilId      
       })
     });
 

@@ -77,14 +77,11 @@ function iniciarPartida() {
 }
 
 onMounted(() => {
-  // Connectar al backend (ajustar URL segons entorn Docker/Local)
-  // El backend està exposat al port 8088 segons docker-compose.dev.yml
   socket.value = io(API_URL);
 
   socket.value.on('connect', function() {
     const param = route.params.id; 
     const idLlocRuta = route.query.idLloc;
-    // Obtenim el perfilId de l'usuari autenticat
     const userStr = localStorage.getItem('usuari');
     const userObj = userStr ? JSON.parse(userStr) : {};
     const perfilId = userObj._id || null;
@@ -105,8 +102,6 @@ onMounted(() => {
   socket.value.on('room-created', (code) => {
     roomCode.value = code;
     loading.value = false;
-    // Opcional: actualitzar URL sense recarregar perquè es vegi el codi
-    // router.replace({ name: 'sala-espera', params: { id: code } });
   });
 
   socket.value.on('room-joined', (code) => {

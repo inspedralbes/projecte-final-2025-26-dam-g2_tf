@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router'; // [CORREGIT] Importació única i neta
+import { useRoute, useRouter } from 'vue-router'; 
 import { useAuth } from '../composables/useAuth';
 import { io } from 'socket.io-client';
 
@@ -83,7 +83,6 @@ onMounted(async () => {
   }
 
   // Connectem el socket i escoltem l'event 'game-over'
-  // El sessioId (codi_sala al route) és l'_id de SessioJoc
   // Emetem 'join-game-room' perquè el backend ens uneixi a la room correcta
   const codi_sala = route.params.codi_sala;
   if (codi_sala) {
@@ -161,8 +160,8 @@ async function executarTotElProces() {
 async function enviarDadesAlBackend(imatgeEnText) {
   const idLloc = route.params.id;
   const perfilId = usuari.value?._id;
-  const codi_sala = route.params.codi_sala;  // L'_id de la SessioJoc
-  const idPunt = route.query.idPunt || null; // El _id del punt_missio concret
+  const codi_sala = route.params.codi_sala;  
+  const idPunt = route.query.idPunt || null; 
 
   console.log("DADES QUE ESTEM A PUNT D'ENVIAR:", { idLloc, perfilId, codi_sala, idPunt });
 
@@ -201,10 +200,10 @@ async function enviarDadesAlBackend(imatgeEnText) {
       };
       mostrarModal.value = true;
     } else {
-      alert('❌ ' + (dades.missatge || 'Error en validar'));
+      alert(' ' + (dades.missatge || 'Error en validar'));
     }
   } catch (error) {
-    console.error("ERROR REAL:", error); // Això et dirà "paquet is not defined" si no ho canvies
+    console.error("ERROR REAL:", error); 
     alert('Error de connexió amb el servidor.');
   } finally {
     carregant.value = false;
@@ -262,7 +261,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
         class="px-8 py-4 rounded-xl font-bold border-2 transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
         style="background-color: #402749; color: #d9a6c2; border-color: #d9a6c2;"
       >
-        {{ carregant ? '⏳ COMPROVANT...' : 'FER FOTO I VALIDAR' }}
+        {{ carregant ? ' COMPROVANT...' : 'FER FOTO I VALIDAR' }}
       </button>
     </div>
 
@@ -278,7 +277,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
           style="background: linear-gradient(160deg, #2a1030 0%, #402749 60%, #1a0820 100%); border: 2px solid #d9a6c2; max-width: 340px; width: 100%;"
         >
           <div class="w-full flex flex-col items-center pt-6 pb-3 px-6">
-            <span class="text-3xl mb-1">{{ !modalDades.exit ? '❌' : modalDades.completat_tot ? '🏆' : (modalDades.cromo_nou ? '⭐' : '✅') }}</span>
+            <span class="text-3xl mb-1">{{ !modalDades.exit ? '' : modalDades.completat_tot ? '' : (modalDades.cromo_nou ? '' : '') }}</span>
             <h2 class="text-white font-bold text-lg text-center leading-tight">
               {{ !modalDades.exit ? 'Imatge errònia!' : modalDades.completat_tot ? 'Partida Finalitzada!' : (modalDades.cromo_nou ? 'Cromo adquirit!' : 'Ja tenies aquest cromo') }}
             </h2>
@@ -318,7 +317,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
             class="w-full py-4 font-bold text-sm transition-opacity hover:opacity-80 active:scale-95"
             style="background-color: #d9a6c2; color: #2a1030;"
           >
-            {{ !modalDades.exit ? '🔄 TORNAR A INTENTAR' : modalDades.completat_tot ? 'VEURE RESULTATS FINALS' : (modalDades.cromo_nou ? '🎉 GENIAL!' : '👍 D\'ACORD') }}
+            {{ !modalDades.exit ? ' TORNAR A INTENTAR' : modalDades.completat_tot ? 'VEURE RESULTATS FINALS' : (modalDades.cromo_nou ? ' GENIAL!' : ' D\'ACORD') }}
           </button>
         </div>
       </div>
@@ -335,7 +334,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
           class="relative flex flex-col items-center rounded-2xl overflow-hidden shadow-2xl mx-6 text-center"
           style="background: linear-gradient(160deg, #2a1030 0%, #402749 60%, #1a0820 100%); border: 2px solid #d9a6c2; max-width: 340px; width: 100%; padding: 2rem 1.5rem;"
         >
-          <span class="text-5xl mb-3">🏆</span>
+          <span class="text-5xl mb-3"></span>
           <h2 class="text-white font-black text-xl mb-1">La partida ha acabat!</h2>
           <p class="text-pink-300 text-base font-bold mb-1">
             <span class="text-white">{{ nomGuanyador }}</span> ha completat totes les fotos!
@@ -347,7 +346,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
             class="w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest transition-all active:scale-95 hover:opacity-90"
             style="background-color: #d9a6c2; color: #2a1030;"
           >
-            🏅 VEURE RESULTATS FINALS
+             VEURE RESULTATS FINALS
           </button>
         </div>
       </div>

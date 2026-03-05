@@ -6,7 +6,6 @@
       <button @click="$router.back()" class="text-[#f5cbdd] hover:text-white flex items-center font-bold text-sm transition-colors group">
         <span class="mr-2 transform group-hover:-translate-x-1 transition-transform">←</span> TORNAR
       </button>
-      <h1 class="text-lg font-bold tracking-widest text-[#f5cbdd] uppercase">PERFIL D'EXPLORADOR</h1>
       <div class="w-8"></div>
     </header>
 
@@ -69,7 +68,6 @@
         <h3 class="text-[#f5cbdd] font-black italic uppercase text-lg px-2">Assoliments</h3>
         <div class="bg-[#2d1b33] p-6 rounded-3xl border border-white/5 flex gap-4 overflow-x-auto scrollbar-hide">
            <div v-for="n in 3" :key="n" class="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-2xl opacity-30 grayscale">
-             🔒
            </div>
         </div>
       </section>
@@ -86,12 +84,12 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { useAuth } from '../composables/useAuth'; // Importem el teu auth
+import { useAuth } from '../composables/useAuth'; 
 
 const route = useRoute();
 const { usuari: usuariLoguejat } = useAuth();
 const user = ref(null);
-const estatAmistat = ref('cap'); // 'cap', 'pendent', 'amics'
+const estatAmistat = ref('cap'); 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
 onMounted(async () => {
@@ -118,14 +116,13 @@ function comprovarEstatAmistat() {
 
   // 1. Comprobar si ya son amigos
   const sonAmics = user.value.amics?.some(amic => {
-    // Si el backend hizo .populate, 'amic' es un objeto, si no, es un string
     const idAmic = (amic && typeof amic === 'object') ? String(amic._id || amic.id) : String(amic);
     return idAmic === miId;
   });
 
   if (sonAmics) {
     estatAmistat.value = 'amics';
-    return; // Si ya somos amigos, terminamos aquí
+    return; 
   } 
   
   // 2. Comprobar si hay solicitud enviada por MÍ a este perfil
@@ -145,7 +142,6 @@ async function gestionarAmistat() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        // Cambiamos los nombres para que coincidan con el backend
         de_perfil_id: usuariLoguejat.value._id, 
         de_nom: usuariLoguejat.value.nom_usuari,
         per_a_perfil_id: user.value._id
@@ -164,8 +160,7 @@ async function gestionarAmistat() {
     alert("Error de connexió amb el servidor");
   }
 }
-// En perfilVisita.vue
-watch(() => route.params.id, async (newId) => { // 1. Añadimos async
+watch(() => route.params.id, async (newId) => { 
   if (newId) {
     // 2. Ponemos await para que no compruebe la amistad hasta tener los datos
     await carregarDadesPerfil(newId); 

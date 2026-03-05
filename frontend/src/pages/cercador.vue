@@ -116,13 +116,13 @@ const mostrarFiltros = ref(false);
 const filtreDificultat = ref('');
 const filtreBarri = ref('');
 
-// Login Logic removed: handled in BotonPerfil
+
 
 // Al iniciar la página
 onMounted(() => {
   carregarDades();
   
-  // removed: user localStorage check (handled in BotonPerfil)
+ 
 });
 
 // Función para cargar los lugares desde el servidor

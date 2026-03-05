@@ -206,7 +206,7 @@
   class="transition-opacity text-[10px] hover:scale-125 p-1 shrink-0 ml-2"
   title="Reportar comentari"
 >
-  🚩
+  
 </button>
     </div>
     <p class="text-xs text-gray-600 font-medium">{{ com.text }}</p>
@@ -252,7 +252,7 @@
 
        <div class="bg-white rounded-[40px] p-6 shadow-sm border border-white">
          <h3 class="text-[#402749] text-xl font-black italic mb-6 uppercase tracking-tight flex items-center gap-2">
-           <span>🏆</span> TOP EXPLORADORS
+           <span></span> TOP EXPLORADORS
          </h3>
          <div class="space-y-3">
            <div v-for="(user, index) in rankingGlobal" :key="user._id"
@@ -324,7 +324,7 @@ const fileInput = ref(null);
 const posts = ref([]);
 const mostrantComentaris = ref(null);
 const nouComentariText = ref('');
-const comentarisInputs = ref({});    // Objeto para guardar lo que escribes en cada post
+const comentarisInputs = ref({});    
 
 
 // Afegeix aquestes refs al principi amb les altres
@@ -363,7 +363,7 @@ async function publicarPost() {
       nom_usuari: usuari.value.nom_usuari,
       avatar_usuari: usuari.value.avatar || usuari.value.avatar_usuari || '',
       text: nouPostText.value,
-      imatges_post: nouPostImatges.value, // Enviamos el array
+      imatges_post: nouPostImatges.value, 
       tags: nouPostTags.value,
       ubicacio: nouPostUbicacio.value,
       likes: [],
@@ -377,9 +377,8 @@ async function publicarPost() {
     });
 
     if (res.ok) {
-      // Limpiamos todo
       nouPostText.value = '';
-      nouPostImatges.value = []; // Limpiamos el array
+      nouPostImatges.value = []; 
       nouPostTags.value = [];
       nouPostUbicacio.value = '';
       mostrantUbicacioInput.value = false;
@@ -418,7 +417,7 @@ watch(filtreActiu, () => {
 onMounted(() => {
  if (usuari.value) {
    carregarPosts();
-   carregarRanking(); // Carreguem el rànquing en iniciar
+   carregarRanking(); 
  }
 });
 
@@ -447,7 +446,6 @@ watch(usuari, (nouUsuari) => {
 });
 
 
-// 5. CORREGIT: El teu carregarRanking ara és una funció "async" declarada correctament
 async function carregarRanking() {
  carregantRanking.value = true;
  try {
@@ -464,18 +462,14 @@ async function carregarRanking() {
 
 
 function filtrarPerTag(cat) {
-  // 1. Cambiamos el filtro activo
-  // Si clicamos en el que ya está puesto, lo quitamos (volvemos a 'Tots')
   if (filtreActiu.value === cat) {
     filtreActiu.value = 'Tots';
   } else {
     filtreActiu.value = cat;
   }
 
-  // 2. Aseguramos que estamos en la pestaña 'feed' (por si clicas desde el ranking)
   pestanyaActiva.value = 'feed';
 
-  // 3. Hacemos un scroll suave hacia arriba para ver los resultados filtrados
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
@@ -532,15 +526,12 @@ async function ferLike(postId) {
 }
 
 function toggleComentaris(postId) {
- // Si clicamos en el mismo post, se cierra. Si es otro, se abre el nuevo.
  if (mostrantComentaris.value === postId) {
    mostrantComentaris.value = null;
  } else {
    mostrantComentaris.value = postId;
  }
 }
-
-
 
 
 async function enviarComentari(postId) {
@@ -600,12 +591,9 @@ function triggerFileInput() {
  fileInput.value?.click();
 }
 
-
-// 2. Actualiza la función de subida para manejar múltiples archivos
 function handleFileUpload(event) {
   const files = Array.from(event.target.files);
   
-  // Validamos el límite total de 3
   if (nouPostImatges.value.length + files.length > 3) {
     alert("Només pots pujar un màxim de 3 fotos.");
     return;
@@ -673,7 +661,6 @@ async function reportarComentari(postId, comentari) {
   }
 }
 
-// Añade esta función al final del <script setup>
 async function reportarPostSencer(post) {
   if (!usuari.value) {
     obrirModal('Inicia sessió per poder reportar contingut.');

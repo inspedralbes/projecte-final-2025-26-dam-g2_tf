@@ -13,7 +13,7 @@ import Peticions from '../pages/peticions.vue'
 import DetallLloc from '../pages/detallLloc.vue'
 import IniciJoc from '../pages/iniciJoc.vue'
 import SalaEspera from '../pages/SalaEspera.vue'
-import elmeulogin from '../components/elmeulogin.vue'; // Revisa que la ruta sigui correcta
+import elmeulogin from '../components/elmeulogin.vue'; 
 import LeaderboardFinal from '../pages/LeaderboardFinal.vue'
 import camara from '../pages/camara.vue'
 
@@ -22,7 +22,7 @@ import AdminDashboard from '../pages/admin/AdminDashboard.vue'
 import AdminLlocs from '../pages/admin/AdminLlocs.vue'
 import AdminPeticions from '../pages/admin/AdminPeticions.vue'
 import MapEditor from '../pages/admin/MapEditor.vue'
-import AdminModeracio from '../pages/admin/AdminModeracio.vue' // <--- Afegeix l'import
+import AdminModeracio from '../pages/admin/AdminModeracio.vue' 
 
 const routes = [
   {
@@ -67,9 +67,9 @@ const routes = [
     component: MapEditor,
     meta: { requiereAdmin: true }
   },
-  // -------------------------
+ 
   {
-    path: '/joc/:codi_sala/camera/:id', // Ha de tenir els dos punts (:) per a la ID
+    path: '/joc/:codi_sala/camera/:id', 
     name: 'camara',
     component: camara
   },
@@ -121,7 +121,7 @@ const routes = [
     path: '/lloc/:id',
     name: 'detall-lloc',
     component: DetallLloc,
-    props: true, // Això permet passar l'id directament com a prop
+    props: true, 
     meta: { requiereAuth: true } // Protegit: cal iniciar sessió
   },
 
@@ -132,8 +132,8 @@ const routes = [
   },
 
   { 
-    path: '/leaderboard/:sala', // Canviem :id per :sala per coherència
-    name: 'Leaderboard',        // Nom exactament igual al del router.push
+    path: '/leaderboard/:sala', 
+    name: 'Leaderboard',        
     component: LeaderboardFinal,
     props: true 
 },
@@ -144,9 +144,8 @@ const router = createRouter({
   routes,
 })
 
-// GUÀRDIA DE NAVEGACIÓ
+// GUÀRDIA DE NAVEGACIÓ PER ADMIN O NO
 router.beforeEach((to, from, next) => {
-  // 1. Llegim la sessió d'admin
   const sessioRaw = localStorage.getItem('admin_session');
   let sessio = null;
 
@@ -157,14 +156,12 @@ router.beforeEach((to, from, next) => {
   } catch (e) {
     console.warn("Sessió no vàlida, continuant com a convidat");
   }
-
   // 2. Definim si la ruta requereix admin o auth normal
   const requereixAdmin = to.matched.some(record => record.meta.requiereAdmin);
   const requereixAuth = to.matched.some(record => record.meta.requiereAuth);
 
-  // 3. LÒGICA DE NAVEGACIÓ
+  
   if (requereixAdmin) {
-    // Ruta d'admin: comprovem sessió d'admin
     if (sessio && sessio.rol === 'admin') {
       next();
     } else {
@@ -172,7 +169,6 @@ router.beforeEach((to, from, next) => {
     }
 
   } else if (requereixAuth) {
-    // Ruta protegida per a usuaris normals: comprovem sessió d'usuari
     const usuariRaw = localStorage.getItem('usuari');
     let usuariSessio = null;
     try {
@@ -180,7 +176,6 @@ router.beforeEach((to, from, next) => {
     } catch (e) { /* ignore */ }
 
     if (usuariSessio) {
-      // Usuari autenticat: deixem passar
       next();
     } else {
       // Usuari NO autenticat: bloquejem la navegació i obrim el modal
@@ -190,14 +185,9 @@ router.beforeEach((to, from, next) => {
         'peticions': 'Vols proposar un nou lloc? Genial! Només cal que iniciis sessió primer.',
       };
       const missatge = missatgesPerRuta[to.name] || 'Has d\'iniciar sessió per accedir a aquesta secció.';
-
-      // Guardem la ruta a la qual l'usuari volia anar
       const rutaDesitjada = { name: to.name, params: to.params, query: to.query };
-
-      // Ens quedem a la pàgina actual (no canviem de ruta)
       next(false);
 
-      // Obrim el modal en el proper tick per assegurar que el router ha acabat
       setTimeout(() => {
         const { obrirModal } = useLoginModal();
         obrirModal(missatge, rutaDesitjada);
@@ -205,7 +195,6 @@ router.beforeEach((to, from, next) => {
     }
 
   } else {
-    // Ruta normal sense protecció: passa sempre
     next();
   }
 });

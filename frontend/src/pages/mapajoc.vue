@@ -37,7 +37,7 @@
         <div class="modal-contingut">
           <button class="modal-tancar" @click="tancarModal">✕</button>
 
-          <h2 class="modal-titol">📍 {{ puntSeleccionat?.nom_punt }}</h2>
+          <h2 class="modal-titol"> {{ puntSeleccionat?.nom_punt }}</h2>
 
           <!-- Foto que ha d'imitar -->
           <div class="modal-foto-wrapper">
@@ -53,7 +53,7 @@
           </div>
 
           <p v-if="puntSeleccionat?.pista" class="modal-pista">
-            💡 {{ puntSeleccionat.pista }}
+             {{ puntSeleccionat.pista }}
           </p>
 
           <button class="boto-camera" @click="anarACameraDesPunt">
@@ -63,7 +63,7 @@
       </div>
     </Transition>
 
-    <!-- ===== MODAL GAME OVER (un altre jugador ha guanyat) ===== -->
+    <!--MODAL GAME OVER (un altre jugador ha guanyat) -->
     <Transition name="fade">
       <div
         v-if="mostrarGameOver"
@@ -71,7 +71,7 @@
         style="z-index: 200;"
       >
         <div class="modal-contingut" style="text-align:center; gap: 18px;">
-          <span style="font-size: 3.5rem;">🏆</span>
+          <span style="font-size: 3.5rem;"></span>
           <h2 class="modal-titol">La partida ha acabat!</h2>
           <p style="color: #d9a6c2; font-size: 0.95rem; margin: 0;">
             <strong style="color: white;">{{ nomGuanyador }}</strong>
@@ -81,7 +81,7 @@
             Vés al leaderboard per veure els resultats finals.
           </p>
           <button class="boto-camera" @click="anirAlLeaderboard">
-            🏅 VEURE RESULTATS FINALS
+             VEURE RESULTATS FINALS
           </button>
         </div>
       </div>
@@ -96,8 +96,8 @@ import { io } from 'socket.io-client';
 export default {
   data() {
     return {
-      idLloc: this.$route.params.id, /// id codi sessió
-      llocRealId: null, // ide lloc real(sagrada famila...)
+      idLloc: this.$route.params.id, 
+      llocRealId: null, 
       urlFinal: '',
       puntsMissio: [],
       modalVisible: false,
@@ -209,8 +209,8 @@ export default {
       this.$router.push({
         name: 'camara',
         params: {
-          codi_sala: this.$route.params.id, // L'ID de la sessió (de la URL)
-          id: this.llocRealId              // L'ID real del monument (Sagrada Família)
+          codi_sala: this.$route.params.id, 
+          id: this.llocRealId           
         },
         query: {
           imatge: this.puntSeleccionat?.imatge_referencia || '',
@@ -240,7 +240,6 @@ export default {
   font-weight: bold;
 }
 
-/* Contenidor amb position:relative per als marcadors absoluts */
 .contenidor-imatge {
   position: relative;
   background-color: white;
@@ -257,7 +256,7 @@ export default {
   border-radius: 8px;
 }
 
-/* Marcadors clicables sobre el mapa */
+
 .marcador {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -304,7 +303,6 @@ export default {
   cursor: pointer;
 }
 
-/* ===== MODAL ===== */
 .modal-fons {
   position: fixed;
   inset: 0;
@@ -403,7 +401,6 @@ export default {
 
 .boto-camera:hover { opacity: 0.85; }
 
-/* Transició modal */
 .fade-enter-active, .fade-leave-active {
   transition: opacity 0.25s ease, transform 0.25s ease;
 }

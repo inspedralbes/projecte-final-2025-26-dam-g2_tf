@@ -1,7 +1,7 @@
 <template>
   <div class="editor-fons">
     <div class="editor-header">
-      <h1>🗺️ Editor de Punts del Mapa</h1>
+      <h1>Editor de Punts del Mapa</h1>
       <p v-if="nomLloc" class="editor-lloc">{{ nomLloc }}</p>
     </div>
 
@@ -45,7 +45,7 @@
 
     <!-- Formulari nou punt -->
     <div v-if="puntNou" class="formulari-nou-punt">
-      <h3>📍 Nou punt: ({{ puntNou.posicio_x.toFixed(1) }}%, {{ puntNou.posicio_y.toFixed(1) }}%)</h3>
+      <h3>Nou punt: ({{ puntNou.posicio_x.toFixed(1) }}%, {{ puntNou.posicio_y.toFixed(1) }}%)</h3>
 
       <div class="camp">
         <label>Nom del punt</label>
@@ -59,7 +59,7 @@
 
       <!-- Selector d'imatge de referència -->
       <div class="camp">
-        <label>🖼️ Imatge de referència</label>
+        <label>Imatge de referència</label>
         <select v-model="puntNou.imatge_referencia">
           <option value="">-- Sense imatge --</option>
           <option
@@ -80,7 +80,7 @@
       </div>
 
       <div class="botons-formulari">
-        <button class="btn-desar" @click="confirmarPunt">✅ Desar punt</button>
+        <button class="btn-desar" @click="confirmarPunt">Desar punt</button>
         <button class="btn-cancel" @click="cancellarPunt">✕ Cancel·lar</button>
       </div>
     </div>
@@ -94,7 +94,7 @@
           <strong>{{ punt.nom_punt || 'Sense nom' }}</strong>
           <span v-if="punt.pista">{{ punt.pista }}</span>
           <small>X: {{ punt.posicio_x.toFixed(1) }}% / Y: {{ punt.posicio_y.toFixed(1) }}%</small>
-          <span v-if="punt.imatge_referencia" class="punt-foto-badge">🖼️ {{ nomFoto(punt.imatge_referencia) }}</span>
+          <span v-if="punt.imatge_referencia" class="punt-foto-badge"> {{ nomFoto(punt.imatge_referencia) }}</span>
         </div>
         <!-- Miniatura de la imatge assignada -->
         <img
@@ -109,7 +109,7 @@
 
     <div class="peu">
       <button class="btn-desar-tot" @click="desarTot" :disabled="desant">
-        {{ desant ? '⏳ Desant...' : '💾 DESAR TOTS ELS PUNTS' }}
+        {{ desant ? ' Desant...' : 'DESAR TOTS ELS PUNTS' }}
       </button>
       <p v-if="missatgeDesar" class="missatge-desar">{{ missatgeDesar }}</p>
     </div>
@@ -262,7 +262,7 @@ export default {
 
 .carregant { padding: 40px; text-align: center; }
 
-/* Marcadors */
+
 .marcador {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -306,7 +306,6 @@ export default {
 
 .marcador:hover .marcador-eliminar { display: flex; }
 
-/* Formulari nou punt */
 .formulari-nou-punt {
   max-width: 800px;
   margin: 16px auto 0;
@@ -331,7 +330,7 @@ export default {
 .camp input::placeholder { color: rgba(255,255,255,0.3); }
 .camp select option { background: #2a1030; color: white; }
 
-/* Previsualització imatge */
+
 .preview-imatge {
   margin: 4px 0 12px;
   border-radius: 10px;
@@ -379,7 +378,7 @@ export default {
 .btn-desar { background: #d9a6c2; color: #2a1030; }
 .btn-cancel { background: rgba(255,255,255,0.1); color: white; border: 1px solid #bc85ab; }
 
-/* Llista */
+
 .llista-punts {
   max-width: 800px;
   margin: 16px auto 0;
@@ -420,7 +419,6 @@ export default {
 .punt-info small { color: rgba(255,255,255,0.4); font-size: 11px; }
 .punt-foto-badge { color: #ffd700 !important; font-size: 11px !important; }
 
-/* Miniatura a la llista de punts */
 .miniatura-punt {
   width: 52px;
   height: 52px;
@@ -440,7 +438,7 @@ export default {
 }
 .btn-eliminar:hover { opacity: 1; }
 
-/* Peu */
+
 .peu {
   max-width: 800px;
   margin: 20px auto 40px;

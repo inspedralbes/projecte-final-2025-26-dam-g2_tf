@@ -1,13 +1,8 @@
-// useLoginModal.js — Composable per gestionar l'estat global del modal de login
-// Aquest estat és global (singleton) i es comparteix entre tots els components
 import { ref } from 'vue';
 
-// L'estat es defineix FORA de la funció per ser reactiu a tota l'app
 const obert = ref(false);
 const missatgePersonalitzat = ref('');
 
-// Ruta a la qual l'usuari volia anar abans de ser bloquejat (opcional)
-// Si s'omple, el modal redirigirà l'usuari allà després del login
 const rutaIntencio = ref(null);
 
 export function useLoginModal() {
@@ -22,9 +17,7 @@ export function useLoginModal() {
     obert.value = true;
   }
 
-  /**
-   * Tanca el modal de login i neteja l'estat
-   */
+  
   function tancarModal() {
     obert.value = false;
     missatgePersonalitzat.value = '';

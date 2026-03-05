@@ -6,7 +6,6 @@
 
     <NavBar v-if="mostrarNavBar" />
 
-    <!-- Modal de login global: accessible des de qualsevol pàgina -->
     <LoginModal />
   </div>
 </template>
@@ -19,10 +18,8 @@ import LoginModal from './components/LoginModal.vue';
 
 const route = useRoute();
 
-// Fem servir una variable computada per evitar errors si la ruta encara no s'ha carregat
 const mostrarNavBar = computed(() => {
   if (!route.path) return false;
-  // Ocultem la nav a l'admin i a les pàgines de joc (mapa de partida, càmera, sala d'espera, leaderboard)
   const rutesOcultes = ['/admin', '/mapa/', '/joc/', '/sala-espera/', '/leaderboard/'];
   return !rutesOcultes.some(r => route.path.startsWith(r));
 });

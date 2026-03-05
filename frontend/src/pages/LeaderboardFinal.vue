@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-[#402749] text-white p-4 flex flex-col items-center">
     
     <h2 class="text-2xl font-black italic uppercase mb-8 text-[#f5cbdd]">
-      🏆 Resultats Finals
+      Resultats Finals
     </h2>
 
     <div class="w-full max-w-md space-y-3 mb-8">

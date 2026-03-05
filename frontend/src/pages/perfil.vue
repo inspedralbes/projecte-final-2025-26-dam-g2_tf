@@ -127,7 +127,7 @@
 
   <div v-if="!user?.inventari_cromos?.length" class="py-20 text-center space-y-4">
     <div class="w-16 h-20 border-2 border-[#bc85ab]/20 mx-auto rounded-sm flex items-center justify-center opacity-30">
-      <span class="text-2xl">📖</span>
+      <span class="text-2xl"></span>
     </div>
     <p class="text-gray-600 text-[10px] font-bold uppercase tracking-widest">El teu diari està buit</p>
   </div>
@@ -188,7 +188,6 @@ const tempBio = ref('');
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
-// --- LÒGICA DE NIVELLS (Junior) ---
 const puntsPerAlSeguentNivell = computed(() => {
   return (user.value?.punts || 0) % 100;
 });
@@ -264,15 +263,13 @@ async function acceptarAmic(solicitud) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        // AQUESTES CLAUS HAN DE COINCIDIR AMB EL BACKEND:
         el_meu_perfil_id: user.value._id,
-        id_nou_amic_perfil: solicitud.id_perfil // O solicitud.id_usuari segons com el guardis
+        id_nou_amic_perfil: solicitud.id_perfil 
       })
     });
 
     if (res.ok) {
       const actualitzat = await res.json();
-      // 'actualitzat.user' conté el teu perfil amb la llista d'amics nova
       user.value = actualitzat.user;
       localStorage.setItem('usuari', JSON.stringify(user.value));
       alert("Ara sou amics!");
@@ -287,7 +284,7 @@ async function acceptarAmic(solicitud) {
 
 // 4. TANCAR SESSIÓ — Usa el composable per netejar l'estat global
 function tancarSessio() {
-  logout(); // Neteja l'estat reactiu global + localStorage
+  logout(); 
   window.location.href = '/'; 
 }
 // Retorna la URL completa de la imatge del cromo (afegeix API_URL si és una ruta relativa)
@@ -324,12 +321,11 @@ onMounted(async () => {
   }
 });
 </script>
+
+
 <style scoped>
 
 .aspect-square { aspect-ratio: 1 / 1; }
-
-
-/* Animació d'entrada suau */
 
 .animate-fade-in {
 
@@ -347,8 +343,6 @@ to { opacity: 1; transform: translateY(0); }
 }
 
 
-/* Efecte de textura de paper per als slots */
-
 .album-slot {
 
 perspective: 1000px;
@@ -360,14 +354,11 @@ perspective: 1000px;
 
 filter: contrast(1.1) brightness(0.9) sepia(0.2);
 
-/* Sembla una impressió física */
 
 box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
 
 }
 
-
-/* Efecte visual de "pàgina" */
 
 main {
 

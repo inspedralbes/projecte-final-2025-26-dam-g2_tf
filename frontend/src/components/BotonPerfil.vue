@@ -42,6 +42,6 @@ const { usuari } = useAuth();
 const { obrirModal } = useLoginModal();
 
 function obrirLoginModal() {
-  obrirModal('Hola de nou! 👋 Inicia sessió per continuar la teva aventura per Barcelona.');
+  obrirModal('Hola de nou! Inicia sessió per continuar la teva aventura per Barcelona.');
 }
 </script>
