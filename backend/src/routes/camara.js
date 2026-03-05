@@ -216,8 +216,18 @@ router.post('/', async function (req, res) {
 
                 console.log(`[Càmera] Total punts partida: ${totalPuntsPartida} | Completats: ${jugador.punts_completats.length} | Acabat: ${haAcabatLaLlista}`);
                 let medalla = null;
+                let perfil = null; // Declarat fora perquè sigui accessible a notifyGameOver
 
                 if (haAcabatLaLlista) {
+                    // Comptem els que ja havien acabat ABANS de marcar el jugador actual
+                    // per saber si és el primer (guanyador real)
+                    let completatsAbans = 0;
+                    for (let i = 0; i < sessio.jugadors.length; i++) {
+                        if (sessio.jugadors[i].completat) completatsAbans++;
+                    }
+                    const esElGuanyador = completatsAbans === 0;
+                    medalla = completatsAbans === 0 ? "Or" : completatsAbans === 1 ? "Plata" : "Bronze";
+
                     jugador.completat = true;
                     sessio.estat = 'finalitzada';
 
@@ -251,9 +261,11 @@ router.post('/', async function (req, res) {
                 await sessio.save();
 
                 // Si algú ha completat tots els punts, notifiquem tota la sala
-                // perquè tots els jugadors (inclosos els que no han acabat) vagin al leaderboard
+                // El guanyador rep l'event però l'ignora (el modal ja el redirigeix)
+                // La resta de jugadors veuran una notificació amb el nom del guanyador
                 if (haAcabatLaLlista) {
-                    notifyGameOver(codi_sala, sessio);
+                    const nomGuanyador = perfil ? perfil.nom_usuari : 'Un jugador';
+                    notifyGameOver(codi_sala, sessio, perfilId, nomGuanyador);
                 }
 
                 return res.json({

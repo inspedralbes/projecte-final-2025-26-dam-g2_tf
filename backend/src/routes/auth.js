@@ -12,11 +12,11 @@ async function ferRegistre(peticio, resposta) {
             return resposta.status(400).json({ success: false, message: "Aquest correu ja està registrat" });
         }
 
-        const nouUsuari = new Usuari({ 
-            correu: correu, 
-            contrasenya: contrasenya, 
+        const nouUsuari = new Usuari({
+            correu: correu,
+            contrasenya: contrasenya,
             edat_verificada: false,
-            rol: 'user' 
+            rol: 'user'
         });
 
         const usuariGuardat = await nouUsuari.save();
@@ -25,20 +25,27 @@ async function ferRegistre(peticio, resposta) {
             usuari_id: usuariGuardat._id,
             nom_usuari: nom_usuari,
             biografia: "Hola! Sóc nou aquí.",
-            punts: 0,
-            nivell: "Explorador Novell"
+            punts: 1,
+            nivell: "Explorador Novell",
+            inventari_cromos: [
+                {
+                    nom_lloc: "Benvingut a l'aventura!",
+                    data_obtencio: new Date(),
+                    imatge_usuari: "/CromoInicial.jpg"
+                }
+            ]
         });
-        
+
         await nouPerfil.save();
 
-        resposta.status(201).json({ 
-            success: true, 
-            usuari: { 
-                ...nouPerfil._doc, 
-                rol: usuariGuardat.rol 
-            } 
+        resposta.status(201).json({
+            success: true,
+            usuari: {
+                ...nouPerfil._doc,
+                rol: usuariGuardat.rol
+            }
         });
-        
+
     } catch (error) {
         resposta.status(500).json({ success: false, message: "Error al registrar: " + error.message });
     }
@@ -60,15 +67,15 @@ async function ferLogin(peticio, resposta) {
         }
 
         const perfilUsuari = await Perfil.findOne({ usuari_id: compte._id });
-        
+
         const usuariSessio = {
             ...perfilUsuari._doc,
-            rol: compte.rol 
+            rol: compte.rol
         };
 
-        resposta.json({ 
-            success: true, 
-            usuari: usuariSessio 
+        resposta.json({
+            success: true,
+            usuari: usuariSessio
         });
 
     } catch (error) {

@@ -35,6 +35,11 @@ const modalDades = ref({
   completat_tot: false 
 });
 
+// Notificació de guanyador (per als jugadors que no han acabat)
+const mostrarNotificacioGuanyador = ref(false);
+const nomGuanyador = ref('');
+const sessioIdGuanyador = ref('');
+
 onMounted(async () => {
   // 1. Carreguem la imatge de referència del punt clicat des del backend
   if (idLloc && idPuntParam) {
@@ -78,16 +83,31 @@ onMounted(async () => {
   }
 
   // Connectem el socket i escoltem l'event 'game-over'
-  // Quan un altre jugador acabi tots els punts, el servidor emetrà aquest event
-  // i tots els jugadors (incloent els que no han acabat) aniran al leaderboard
+  // El sessioId (codi_sala al route) és l'_id de SessioJoc
+  // Emetem 'join-game-room' perquè el backend ens uneixi a la room correcta
   const codi_sala = route.params.codi_sala;
   if (codi_sala) {
     socketJoc = io(API_URL);
+    // Quan el socket es connecta, demanem unir-nos a la room de la partida
+    socketJoc.on('connect', function () {
+      socketJoc.emit('join-game-room', codi_sala);
+      console.log('[Càmera] Socket connectat, unit a la room:', codi_sala);
+    });
     socketJoc.on('game-over', function (dades) {
-      router.push({ name: 'Leaderboard', params: { sala: dades.sessioId || codi_sala } });
+      const meuId = usuari.value?._id?.toString();
+      // Si soc el guanyador, ignoro l'event: el modal de "Partida Finalitzada!" ja em redirigirà
+      if (meuId && dades.guanyadorId && meuId === dades.guanyadorId.toString()) return;
+      // Mostrar notificació als altres jugadors en comptes de redirigir automàticament
+      sessioIdGuanyador.value = dades.sessioId || codi_sala;
+      nomGuanyador.value = dades.nomGuanyador || 'Un jugador';
+      mostrarNotificacioGuanyador.value = true;
     });
   }
 });
+
+function anirAlLeaderboard() {
+  router.push({ name: 'Leaderboard', params: { sala: sessioIdGuanyador.value } });
+}
 
 onUnmounted(() => {
   if (stream) {
@@ -170,8 +190,9 @@ async function enviarDadesAlBackend(imatgeEnText) {
     const resposta = await fetch(`${API_URL}/api/validar-foto`, paquet);
     const dades = await resposta.json();
 
-    if (resposta.ok) { // He tret el 'dades.exit' perquè si ok és true, ja podem processar
+    if (resposta.ok) {
       modalDades.value = {
+        exit: dades.exit !== false,   // false quan similitud < 50%
         nom_lloc: dades.nom_lloc,
         imatge_historica: dades.imatge_historica,
         coincidencia: dades.coincidencia,
@@ -257,14 +278,16 @@ async function enviarDadesAlBackend(imatgeEnText) {
           style="background: linear-gradient(160deg, #2a1030 0%, #402749 60%, #1a0820 100%); border: 2px solid #d9a6c2; max-width: 340px; width: 100%;"
         >
           <div class="w-full flex flex-col items-center pt-6 pb-3 px-6">
-            <span class="text-3xl mb-1">{{ modalDades.completat_tot ? '🏆' : (modalDades.cromo_nou ? '⭐' : '✅') }}</span>
+            <span class="text-3xl mb-1">{{ !modalDades.exit ? '❌' : modalDades.completat_tot ? '🏆' : (modalDades.cromo_nou ? '⭐' : '✅') }}</span>
             <h2 class="text-white font-bold text-lg text-center leading-tight">
-              {{ modalDades.completat_tot ? 'Partida Finalitzada!' : (modalDades.cromo_nou ? 'Cromo adquirit!' : 'Ja tenies aquest cromo') }}
+              {{ !modalDades.exit ? 'Imatge errònia!' : modalDades.completat_tot ? 'Partida Finalitzada!' : (modalDades.cromo_nou ? 'Cromo adquirit!' : 'Ja tenies aquest cromo') }}
             </h2>
-            <p class="text-pink-300 text-sm mt-1 text-center">{{ modalDades.nom_lloc }}</p>
+            <p class="text-pink-300 text-sm mt-1 text-center">
+              {{ !modalDades.exit ? 'Torna a provar, la foto no s\'assembla prou' : modalDades.nom_lloc }}
+            </p>
           </div>
 
-          <div class="w-full px-6 pb-3">
+          <div v-if="modalDades.exit" class="w-full px-6 pb-3">
             <div
               class="w-full rounded-xl overflow-hidden shadow-lg"
               style="border: 2px solid #d9a6c2; aspect-ratio: 4/3;"
@@ -295,7 +318,36 @@ async function enviarDadesAlBackend(imatgeEnText) {
             class="w-full py-4 font-bold text-sm transition-opacity hover:opacity-80 active:scale-95"
             style="background-color: #d9a6c2; color: #2a1030;"
           >
-            {{ modalDades.completat_tot ? 'VEURE RESULTATS FINALS' : (modalDades.cromo_nou ? '🎉 GENIAL!' : '👍 D\'ACORD') }}
+            {{ !modalDades.exit ? '🔄 TORNAR A INTENTAR' : modalDades.completat_tot ? 'VEURE RESULTATS FINALS' : (modalDades.cromo_nou ? '🎉 GENIAL!' : '👍 D\'ACORD') }}
+          </button>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- Notificació: un altre jugador ha guanyat -->
+    <Transition name="fade">
+      <div
+        v-if="mostrarNotificacioGuanyador"
+        class="absolute inset-0 z-50 flex items-center justify-center"
+        style="background: rgba(0,0,0,0.88); backdrop-filter: blur(8px);"
+      >
+        <div
+          class="relative flex flex-col items-center rounded-2xl overflow-hidden shadow-2xl mx-6 text-center"
+          style="background: linear-gradient(160deg, #2a1030 0%, #402749 60%, #1a0820 100%); border: 2px solid #d9a6c2; max-width: 340px; width: 100%; padding: 2rem 1.5rem;"
+        >
+          <span class="text-5xl mb-3">🏆</span>
+          <h2 class="text-white font-black text-xl mb-1">La partida ha acabat!</h2>
+          <p class="text-pink-300 text-base font-bold mb-1">
+            <span class="text-white">{{ nomGuanyador }}</span> ha completat totes les fotos!
+          </p>
+          <p class="text-white/50 text-xs mb-6">Vés al leaderboard per veure els resultats finals.</p>
+
+          <button
+            @click="anirAlLeaderboard"
+            class="w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest transition-all active:scale-95 hover:opacity-90"
+            style="background-color: #d9a6c2; color: #2a1030;"
+          >
+            🏅 VEURE RESULTATS FINALS
           </button>
         </div>
       </div>

@@ -25,6 +25,14 @@
           <h2 class="text-xl font-bold text-[#402749] mb-4">Peticions</h2>
           <p class="text-gray-600 text-sm">Revisa les propostes de la comunitat.</p>
         </div>
+
+        <div 
+  @click="$router.push('/admin/moderacio')" 
+  class="bg-white p-8 rounded-xl shadow border-l-8 border-red-500 hover:shadow-lg transition-all cursor-pointer"
+>
+  <h2 class="text-xl font-bold text-[#402749] mb-4">Moderació de Comunitat</h2>
+  <p class="text-gray-600 text-sm">Gestiona i elimina ressenyes o comentaris inapropiats.</p>
+</div>
       </section>
     </main>
 

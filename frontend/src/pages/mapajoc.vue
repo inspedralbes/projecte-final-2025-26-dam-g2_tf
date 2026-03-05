@@ -26,9 +26,6 @@
       </button>
     </div>
 
-    <button v-on:click="anarACamera" class="boto-continuar">
-      HE ARRIBAT!
-    </button>
 
     <!-- ===== MODAL PUNT ===== -->
     <Transition name="fade">
@@ -65,10 +62,37 @@
         </div>
       </div>
     </Transition>
+
+    <!-- ===== MODAL GAME OVER (un altre jugador ha guanyat) ===== -->
+    <Transition name="fade">
+      <div
+        v-if="mostrarGameOver"
+        class="modal-fons"
+        style="z-index: 200;"
+      >
+        <div class="modal-contingut" style="text-align:center; gap: 18px;">
+          <span style="font-size: 3.5rem;">🏆</span>
+          <h2 class="modal-titol">La partida ha acabat!</h2>
+          <p style="color: #d9a6c2; font-size: 0.95rem; margin: 0;">
+            <strong style="color: white;">{{ nomGuanyador }}</strong>
+            ha completat totes les fotos!
+          </p>
+          <p style="color: rgba(255,255,255,0.45); font-size: 0.75rem; margin: 0;">
+            Vés al leaderboard per veure els resultats finals.
+          </p>
+          <button class="boto-camera" @click="anirAlLeaderboard">
+            🏅 VEURE RESULTATS FINALS
+          </button>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
+
 <script>
+import { io } from 'socket.io-client';
+
 export default {
   data() {
     return {
@@ -79,41 +103,76 @@ export default {
       modalVisible: false,
       puntSeleccionat: null,
       fotoActual: null,
-      baseApi: import.meta.env.VITE_API_URL || 'http://localhost:8088'
+      baseApi: import.meta.env.VITE_API_URL || 'http://localhost:8088',
+      // Game-over
+      mostrarGameOver: false,
+      nomGuanyador: '',
+      sessioIdGameOver: '',
+      _socket: null
     };
   },
 
   async mounted() {
     try {
       // 1. Primer busquem la SESSIÓ per saber quin monument estem jugant
-    const respSessio = await fetch(this.baseApi + '/api/sessionsJoc/' + this.idLloc);
-    if (!respSessio.ok) throw new Error("No s'ha trobat la sessió de joc");
-    const sessio = await respSessio.json();
+      const respSessio = await fetch(this.baseApi + '/api/sessionsJoc/' + this.idLloc);
+      if (!respSessio.ok) throw new Error("No s'ha trobat la sessió de joc");
+      const sessio = await respSessio.json();
 
-    // 2. Ara que sabem que el monument és sessio.idLloc, el carreguem
-    const idRealMonument = sessio.id_lloc_desti; 
-    const resposta = await fetch(this.baseApi + '/api/mapa/punts/' + idRealMonument);
+      // 2. Ara que sabem que el monument és sessio.idLloc, el carreguem
+      const idRealMonument = sessio.id_lloc_desti;
+      const resposta = await fetch(this.baseApi + '/api/mapa/punts/' + idRealMonument);
 
-    if (!resposta.ok) throw new Error("No s'ha pogut carregar el lloc");
-    const lloc = await resposta.json();
+      if (!resposta.ok) throw new Error("No s'ha pogut carregar el lloc");
+      const lloc = await resposta.json();
 
-    // 3. Guardem l'ID real del monument per a la càmera
-    this.llocRealId = lloc._id;
+      // 3. Guardem l'ID real del monument per a la càmera
+      this.llocRealId = lloc._id;
 
-    // 4. Configurem la imatge i els punts com abans
-    const nomImatge = lloc.foto_mapa
-      ? lloc.foto_mapa
-      : 'mapa_' + lloc.nom.toLowerCase().replace(/\s+/g, '') + '.jpg';
+      // 4. Configurem la imatge i els punts com abans
+      const nomImatge = lloc.foto_mapa
+        ? lloc.foto_mapa
+        : 'mapa_' + lloc.nom.toLowerCase().replace(/\s+/g, '') + '.jpg';
 
-    this.urlFinal = this.baseApi + '/foto_mapa/' + nomImatge;
-    this.puntsMissio = lloc.punts_missio || [];
+      this.urlFinal = this.baseApi + '/foto_mapa/' + nomImatge;
+      this.puntsMissio = lloc.punts_missio || [];
 
-  } catch (error) {
-    console.error('Error carregant el mapa:', error);
-  }
-},
+    } catch (error) {
+      console.error('Error carregant el mapa:', error);
+    }
+
+    // 5. Connectem al socket i ens unim a la room de la partida
+    const sessioId = this.idLloc; // route.params.id és el sessioId
+    if (sessioId) {
+      this._socket = io(this.baseApi);
+      this._socket.on('connect', () => {
+        this._socket.emit('join-game-room', sessioId);
+        console.log('[Mapa] Socket connectat, unit a la room:', sessioId);
+      });
+      this._socket.on('game-over', (dades) => {
+        console.log('[Mapa] game-over rebut:', dades);
+        this.sessioIdGameOver = dades.sessioId || sessioId;
+        this.nomGuanyador = dades.nomGuanyador || 'Un jugador';
+        this.mostrarGameOver = true;
+      });
+    }
+  },
+
+  beforeUnmount() {
+    if (this._socket) {
+      this._socket.disconnect();
+      this._socket = null;
+    }
+  },
 
   methods: {
+    anirAlLeaderboard() {
+      this.$router.push({
+        name: 'Leaderboard',
+        params: { sala: this.sessioIdGameOver }
+      });
+    },
+
     async obrirModal(punt) {
       this.puntSeleccionat = punt;
       this.fotoActual = null;
@@ -144,35 +203,25 @@ export default {
       this.puntSeleccionat = null;
     },
 
-    // Quan premen el botó general "HE ARRIBAT"
-    anarACamera() {
+    // Quan premen "FER LA FOTO" dins del modal d'un punt concret
+    anarACameraDesPunt() {
+      this.modalVisible = false;
       this.$router.push({
         name: 'camara',
         params: {
-          codi_sala: this.$route.params.id, // L'ID de la sessió/sala que ja tens a la URL del mapa
-          id: this.idLloc // L'ID del monument (que en el teu cas sembla que és la mateixa variable)
+          codi_sala: this.$route.params.id, // L'ID de la sessió (de la URL)
+          id: this.llocRealId              // L'ID real del monument (Sagrada Família)
+        },
+        query: {
+          imatge: this.puntSeleccionat?.imatge_referencia || '',
+          idPunt: this.puntSeleccionat?._id || ''
         }
       });
-    },
-
-    // Quan premen "FER LA FOTO" dins del modal d'un punt concret
-    anarACameraDesPunt() {
-    this.modalVisible = false;
-    this.$router.push({
-      name: 'camara',
-      params: {
-        codi_sala: this.$route.params.id, // L'ID de la sessió (de la URL)
-        id: this.llocRealId              // L'ID real del monument (Sagrada Família)
-      },
-      query: {
-        imatge: this.puntSeleccionat?.imatge_referencia || '',
-        idPunt: this.puntSeleccionat?._id || ''
-      }
-    });
+    }
   }
-}
 };
 </script>
+
 
 <style scoped>
 .pantalla-mapa {

@@ -29,7 +29,8 @@ const PerfilSchema = new mongoose.Schema({
     id_lloc: { type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' },
     nom_lloc: { type: String, default: '' },
     data_obtencio: { type: Date, default: Date.now },
-    imatge_usuari: String
+    imatge_usuari: String,
+    imatge_cromo: { type: String, default: '' }  // ruta del cromo col·leccionable de la ruta
   }]
 });
 
@@ -57,7 +58,8 @@ const LlocSchema = new mongoose.Schema({
   control_horari: { hora_tancament: String, actiu: Boolean },
   millors_temps: [{ usuari: String, temps_segons: Number }],
   fotos_historiques: [String],
-  fotos_actuals: [String]
+  fotos_actuals: [String],
+  cromo_imatge: { type: String, default: '' }  // ex: '/Cromos/SagradaFamilia_historica.jpg'
 });
 
 // 4. SessioJoc (sessions)
@@ -112,9 +114,9 @@ const PostSchema = new mongoose.Schema({
   avatar_usuari: String,
   text: String,
   // MODIFICACIÓ AQUÍ: Canviem imatge_post per imatges_post com a array
-  imatges_post: [String], 
+  imatges_post: [String],
   // Opcional: pots mantenir imatge_post (singular) per compatibilitat amb posts antics
-  imatge_post: String, 
+  imatge_post: String,
   tags: [String],
   ubicacio: String,
   timestamp: { type: Date, default: Date.now },
@@ -125,9 +127,21 @@ const PostSchema = new mongoose.Schema({
     nom_usuari: { type: String },
     avatar_usuari: { type: String },
     text: { type: String },
-    timestamp: { type: Date, default: Date.now }
-  }]
+    reportat: { type: Boolean, default: false },
+    reportat_per: { type: String }, // Recomanat per saber qui ha enviat l'alerta 🚩
+    timestamp: { type: Date, default: Date.now },
+  // AFEGEIX AIXÒ PER ALS COMENTARIS REPORTATS
+    reportat: { type: Boolean, default: false }
+  }],
+  // AFEGEIX AIXÒ PER ALS POSTS REPORTATS
+  reportat: { type: Boolean, default: false },
+  data_report: { type: Date },
+  reportat_per: { type: String }
 });
+
+
+
+
 module.exports = {
   Usuari: mongoose.model('Usuari', UsuariSchema, 'Usuari'),
   Perfil: mongoose.model('Perfil', PerfilSchema, 'Perfil'),

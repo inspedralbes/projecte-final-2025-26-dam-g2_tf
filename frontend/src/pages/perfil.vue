@@ -81,7 +81,7 @@
   <div class="text-center border-b border-[#bc85ab]/20 pb-4">
     <h3 class="text-[#f5cbdd] text-xs font-black tracking-[0.3em] uppercase">Diari d'Exploració</h3>
     <p class="text-[10px] text-gray-500 mt-1">
-      {{ (user?.inventari_cromos?.length || 0) + (cromosExemple?.length || 0) }} de 50 llocs descoberts
+      {{ user?.inventari_cromos?.length || 0 }} de 50 llocs descoberts
     </p>
   </div>
 
@@ -89,7 +89,7 @@
     <div class="absolute inset-y-0 left-1/2 w-px bg-gradient-to-b from-transparent via-[#bc85ab]/10 to-transparent"></div>
 
     <div 
-      v-for="(cromo, index) in [...(user?.inventari_cromos || []), ...(cromosExemple || [])]" 
+      v-for="(cromo, index) in (user?.inventari_cromos || [])" 
       :key="index" 
       class="album-slot group"
     >
@@ -102,7 +102,7 @@
 
         <div class="aspect-[4/5] overflow-hidden bg-black/40">
           <img 
-            :src="imatgeCromo(cromo.imatge_usuari)" 
+            :src="imatgeCromo(cromo.imatge_cromo || cromo.imatge_usuari)" 
             class="w-full h-full object-cover sepia-[0.3] hover:sepia-0 transition-all duration-500"
           >
         </div>
@@ -118,14 +118,14 @@
       </div>
     </div>
 
-    <div v-for="i in (((user?.inventari_cromos?.length || 0) + (cromosExemple?.length || 0)) % 2 === 0 ? 0 : 1)" :key="'empty-'+i" class="opacity-20">
+    <div v-for="i in ((user?.inventari_cromos?.length || 0) % 2 === 0 ? 0 : 1)" :key="'empty-'+i" class="opacity-20">
       <div class="aspect-[4/5] border-2 border-dashed border-[#bc85ab]/30 rounded-sm flex items-center justify-center">
         <span class="text-[10px] text-[#bc85ab] font-black">?</span>
       </div>
     </div>
   </div>
 
-  <div v-if="(!user?.inventari_cromos?.length) && (!cromosExemple || cromosExemple.length === 0)" class="py-20 text-center space-y-4">
+  <div v-if="!user?.inventari_cromos?.length" class="py-20 text-center space-y-4">
     <div class="w-16 h-20 border-2 border-[#bc85ab]/20 mx-auto rounded-sm flex items-center justify-center opacity-30">
       <span class="text-2xl">📖</span>
     </div>
@@ -297,21 +297,6 @@ function imatgeCromo(src) {
   return API_URL + src;
 }
 
-// Dades de prova per visualitzar l'àlbum estil llibre
-const cromosExemple = [
-  {
-    nom_lloc: "Arc de Triomf",
-    imatge_usuari: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=500",
-    data_obtencio: new Date(),
-    isDemo: true
-  },
-  {
-    nom_lloc: "Barris de Gràcia",
-    imatge_usuari: "https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?w=500",
-    data_obtencio: new Date(),
-    isDemo: true
-  }
-];
 // INICI
 onMounted(async () => {
   const saved = localStorage.getItem('usuari');
@@ -338,11 +323,8 @@ onMounted(async () => {
     router.push('/login');
   }
 });
-
-
 </script>
-
- <style scoped>
+<style scoped>
 
 .aspect-square { aspect-ratio: 1 / 1; }
 

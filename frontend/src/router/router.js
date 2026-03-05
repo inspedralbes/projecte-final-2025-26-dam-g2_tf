@@ -22,6 +22,7 @@ import AdminDashboard from '../pages/admin/AdminDashboard.vue'
 import AdminLlocs from '../pages/admin/AdminLlocs.vue'
 import AdminPeticions from '../pages/admin/AdminPeticions.vue'
 import MapEditor from '../pages/admin/MapEditor.vue'
+import AdminModeracio from '../pages/admin/AdminModeracio.vue' // <--- Afegeix l'import
 
 const routes = [
   {
@@ -53,6 +54,12 @@ const routes = [
     name: 'admin-peticions',
     component: AdminPeticions,
     meta: { requiereAdmin: true }
+  },
+  {
+    path: '/admin/moderacio',
+    name: 'admin-moderacio',
+    component: AdminModeracio,
+    meta: { requiereAdmin: true } // Així hereta la protecció del teu guarda (beforeEach)
   },
   {
     path: '/admin/mapa-editor/:id',

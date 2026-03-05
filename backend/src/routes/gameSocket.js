@@ -1,20 +1,25 @@
 const { Server } = require('socket.io');
 const { SessioJoc, Lloc } = require('../models');
 
-// Mapa: sessioId (string) → roomCode (string)
-// Permet que camara.js pugui emetre 'game-over' a tota la sala quan un jugador acaba
-const sessioARoomCode = {};
-
 let ioInstance = null;
 
 /**
  * Emet l'event 'game-over' a tots els jugadors de la sala associada a la sessió.
- * @param {string} sessioId - L'_id de la SessioJoc
- * @param {object} sessio   - El document Mongoose de la SessioJoc (ja guardat)
+ * @param {string} sessioId      - L'_id de la SessioJoc
+ * @param {object} sessio        - El document Mongoose de la SessioJoc (ja guardat)
+ * @param {string} guanyadorId   - El perfilId del jugador que ha acabat (string)
+ * @param {string} nomGuanyador  - El nom d'usuari del guanyador
  */
-function notifyGameOver(sessioId, sessio) {
-    const roomCode = sessioARoomCode[sessioId.toString()];
-    if (!roomCode || !ioInstance) return;
+function notifyGameOver(sessioId, sessio, guanyadorId, nomGuanyador) {
+    if (!ioInstance) return;
+
+    // Usem sessio.codi_sala (guardat a la BD) en lloc d'un mapa en memòria
+    // Això fa que funcioni fins i tot si el servidor s'ha reiniciat
+    const roomCode = sessio.codi_sala;
+    if (!roomCode) {
+        console.warn('[Socket] notifyGameOver: sessio.codi_sala és buit, no es pot notificar.');
+        return;
+    }
 
     // Preparem la llista de jugadors ordenada:
     // 1r: més fotos completades; en empat: millor precisió
@@ -25,8 +30,11 @@ function notifyGameOver(sessioId, sessio) {
         return (b.exactitud_media || 0) - (a.exactitud_media || 0);
     });
 
+    console.log(`[Socket] Emetent game-over a la sala: ${roomCode}`);
     ioInstance.to(roomCode).emit('game-over', {
         sessioId: sessioId.toString(),
+        guanyadorId: guanyadorId ? guanyadorId.toString() : null,
+        nomGuanyador: nomGuanyador || 'Un jugador',
         jugadors: jugadorsOrdenats
     });
 }
@@ -116,10 +124,7 @@ function configureSocket(server) {
                 });
                 await novaSessio.save();
 
-                // 5. Registrem la relació sessioId → roomCode per poder fer notifyGameOver
-                sessioARoomCode[novaSessio._id.toString()] = roomCode;
-
-                console.log('Sessió de grup creada:', novaSessio._id);
+                console.log('Sessió de grup creada:', novaSessio._id, '| roomCode:', roomCode);
 
                 // 6. Enviem el sessioId a tots els jugadors
                 io.to(roomCode).emit('game-started', { sessioId: novaSessio._id });
@@ -128,6 +133,23 @@ function configureSocket(server) {
                 console.error('Error al crear sessió en start-game:', err);
                 // Fallback: enviem l'idLloc perquè puguin jugar en mode individual
                 io.to(roomCode).emit('game-started', { sessioId: null, idLloc: room.idLloc });
+            }
+        });
+
+        // Event especial: la pàgina de càmera s'uneix a la room del joc actiu
+        // El frontend envia el sessioId (_id de SessioJoc) i el backend busca el roomCode a la BD
+        socket.on('join-game-room', async function (sessioId) {
+            if (!sessioId) return;
+            try {
+                const sessio = await SessioJoc.findById(sessioId).select('codi_sala');
+                if (sessio && sessio.codi_sala) {
+                    socket.join(sessio.codi_sala);
+                    console.log(`[Socket] Socket ${socket.id} s'ha unit a la room ${sessio.codi_sala} via join-game-room`);
+                } else {
+                    console.warn(`[Socket] join-game-room: sessió ${sessioId} no trobada o sense codi_sala`);
+                }
+            } catch (err) {
+                console.error('[Socket] Error en join-game-room:', err);
             }
         });
 
@@ -155,3 +177,4 @@ function configureSocket(server) {
 }
 
 module.exports = { configureSocket, notifyGameOver };
+
