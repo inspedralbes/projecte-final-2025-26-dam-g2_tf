@@ -13,4 +13,15 @@ router.get('/', async (req, res) => {
     }
 });
 
+router.get('/aleatori', async (req, res) => {
+    try {
+        const count = await Lloc.countDocuments();
+        const random = Math.floor(Math.random() * count);
+        const llocAleatori = await Lloc.findOne().skip(random);
+        res.json(llocAleatori);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;

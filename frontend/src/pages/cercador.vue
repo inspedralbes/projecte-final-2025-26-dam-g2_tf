@@ -1,14 +1,32 @@
 <template>
   <div class="min-h-screen bg-white p-6 pb-24">
-    <!-- Header / Nav -->
     <div class="flex items-center justify-between mb-8">
-      <h1 class="text-3xl font-bold text-gray-900">Cercador</h1>
-
-      <!-- Botón Perfil / Login -->
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Cercador</h1>
+        <button @click="seleccionarDestiSorpresa" 
+                :disabled="animantSorpresa"
+                class="mt-1 flex items-center gap-1.5 text-[#804f7f] font-bold text-xs uppercase tracking-wider hover:text-[#5d3962] transition-colors disabled:opacity-50">
+          <span>{{ animantSorpresa ? 'Triant...' : '✨ Destí Sorpresa' }}</span>
+        </button>
+      </div>
       <BotonPerfil @login="actualitzarUsuari" />
     </div>
 
-    <!-- Buscador + Filtro -->
+    <div v-if="animantSorpresa" 
+         class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm transition-opacity">
+      <div class="bg-white p-5 rounded-3xl shadow-2xl w-full max-w-xs overflow-hidden animate-in zoom-in duration-300">
+        <p class="text-center font-bold text-[#804f7f] mb-4 text-sm uppercase tracking-widest">Cercant aventura...</p>
+        
+        <div class="h-40 bg-gray-100 rounded-2xl border-2 border-[#bc85ab] overflow-hidden flex items-center justify-center">
+          <div :style="estilSlot" class="flex flex-col transition-all duration-[2500ms] ease-in-out">
+            <div v-for="(img, index) in fotosAnimacio" :key="index" class="h-40 w-full flex-shrink-0">
+              <img :src="img" class="h-full w-full object-cover" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="flex items-center gap-2 mb-6">
 
       <!-- Botón Filtros -->
@@ -116,7 +134,10 @@ const mostrarFiltros = ref(false);
 const filtreDificultat = ref('');
 const filtreBarri = ref('');
 
-
+// 2. AFEGEIX LES NOVES VARIABLES PER L'ANIMACIÓ AQUÍ [cite: 66, 74]
+const animantSorpresa = ref(false);
+const fotosAnimacio = ref([]);
+const estilSlot = ref({ transform: 'translateY(0px)' });
 
 // Al iniciar la página
 onMounted(() => {
@@ -143,6 +164,44 @@ async function carregarDades() {
 
   } catch (error) {
     console.error("Error:", error);
+  }
+}
+
+async function seleccionarDestiSorpresa() {
+  if (animantSorpresa.value) return;
+
+  try {
+    const resposta = await fetch(`${API_URL}/api/cercador/aleatori`);
+    const llocEscollit = await resposta.json();
+    
+    const imatgesAleatories = [...totsElsLlocs.value]
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 10) // Fem l'animació una mica més llarga
+      .map(l => l.imatge);
+    
+    fotosAnimacio.value = [...imatgesAleatories, llocEscollit.imatge_referencia];
+
+    estilSlot.value = { transform: 'translateY(0px)', transition: 'none' };
+    animantSorpresa.value = true;
+
+    setTimeout(() => {
+      const alturaImatge = 160; // ARA ÉS 160px perquè h-40 = 160px
+      const desplacamentTotal = (fotosAnimacio.value.length - 1) * alturaImatge;
+      
+      estilSlot.value = { 
+        transform: `translateY(-${desplacamentTotal}px)`,
+        transition: 'transform 2.5s cubic-bezier(0.15, 0, 0.15, 1)' 
+      };
+    }, 50);
+
+    setTimeout(() => {
+      anarALloc(llocEscollit._id);
+      // No posem animantSorpresa a false aquí, es tancarà en marxar de la pàgina
+    }, 3200);
+
+  } catch (error) {
+    console.error("Error:", error);
+    animantSorpresa.value = false;
   }
 }
 
