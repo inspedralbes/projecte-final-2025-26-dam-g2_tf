@@ -228,17 +228,23 @@ router.post('/', async function (req, res) {
                     }
                     medalla = guanyadors === 1 ? "Or" : guanyadors === 2 ? "Plata" : "Bronze";
 
-                    // GUARDAR CROMO AL PERFIL DE L'USUARI
+                    // GUARDAR CROMO AL PERFIL DE L'USUARI (SOLO SI NO LO TIENE YA)
                     const perfil = await Perfil.findById(perfilId);
                     if (perfil) {
-                        perfil.inventari_cromos.push({
-                            id_lloc: sessio.id_lloc_desti,
-                            nom_lloc: lloc.nom,
-                            rango: medalla,
-                            imatge_usuari: "/fotos_partides_usuaris/" + nomFitxer,
-                            data_obtencio: new Date()
-                        });
-                        await perfil.save();
+                        const jaTeCromo = perfil.inventari_cromos.some(c => c.id_lloc && c.id_lloc.toString() === sessio.id_lloc_desti.toString());
+
+                        if (!jaTeCromo) {
+                            perfil.inventari_cromos.push({
+                                id_lloc: sessio.id_lloc_desti,
+                                nom_lloc: lloc.nom,
+                                rango: medalla,
+                                imatge_usuari: "/fotos_partides_usuaris/" + nomFitxer,
+                                data_obtencio: new Date()
+                            });
+                            await perfil.save();
+                        } else {
+                            console.log(`[Càmera] L'usuari ja té el cromo de "${lloc.nom}". No es duplica.`);
+                        }
                     }
                 }
 
