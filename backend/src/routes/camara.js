@@ -64,8 +64,9 @@ router.post('/', async function (req, res) {
         if (!sessio) return res.status(404).json({ missatge: "Sessió no trobada." });
         if (!lloc) return res.status(404).json({ missatge: "Lloc no trobat." });
 
-        // Busquem la imatge de referència: primer mirem si el punt concret en té, si no usem la del lloc
+        // Busquem la imatge de referència per a la IA: primer mirem si el punt concret en té, si no usem la del lloc
         let imatgeReferencia = lloc.imatge_referencia;
+        let imatgePuntMissio = null; // Imatge específica del punt per mostrar a l'usuari
         let puntTrobat = false;
         if (idPunt) {
             for (let i = 0; i < lloc.punts_missio.length; i++) {
@@ -73,7 +74,8 @@ router.post('/', async function (req, res) {
                 if (p._id.toString() === idPunt.toString()) {
                     puntTrobat = true;
                     if (p.imatge_referencia) {
-                        imatgeReferencia = p.imatge_referencia;
+                        imatgePuntMissio = p.imatge_referencia; // Guardem la del punt concret
+                        imatgeReferencia = p.imatge_referencia; // Per a la IA
                         console.log(`[Càmera] Punt trobat: "${p.nom_punt}" | imatge: ${imatgeReferencia}`);
                     } else {
                         console.log(`[Càmera] Punt "${p.nom_punt}" NO té imatge_referencia pròpia → usant la del lloc`);
@@ -238,23 +240,29 @@ router.post('/', async function (req, res) {
                     }
                     medalla = guanyadors === 1 ? "Or" : guanyadors === 2 ? "Plata" : "Bronze";
 
-                    // GUARDAR CROMO AL PERFIL DE L'USUARI (SOLO SI NO LO TIENE YA)
-                    const perfil = await Perfil.findById(perfilId);
-                    if (perfil) {
-                        const jaTeCromo = perfil.inventari_cromos.some(c => c.id_lloc && c.id_lloc.toString() === sessio.id_lloc_desti.toString());
+                    // GUARDAR CROMO AL PERFIL — NOMÉS AL GUANYADOR (primer en completar)
+                    if (esElGuanyador) {
+                        perfil = await Perfil.findById(perfilId);
+                        if (perfil) {
+                            const jaTeCromo = perfil.inventari_cromos.some(c => c.id_lloc && c.id_lloc.toString() === sessio.id_lloc_desti.toString());
 
-                        if (!jaTeCromo) {
-                            perfil.inventari_cromos.push({
-                                id_lloc: sessio.id_lloc_desti,
-                                nom_lloc: lloc.nom,
-                                rango: medalla,
-                                imatge_usuari: "/fotos_partides_usuaris/" + nomFitxer,
-                                data_obtencio: new Date()
-                            });
-                            await perfil.save();
-                        } else {
-                            console.log(`[Càmera] L'usuari ja té el cromo de "${lloc.nom}". No es duplica.`);
+                            if (!jaTeCromo) {
+                                perfil.inventari_cromos.push({
+                                    id_lloc: sessio.id_lloc_desti,
+                                    nom_lloc: lloc.nom,
+                                    rango: medalla,
+                                    imatge_usuari: "/fotos_partides_usuaris/" + nomFitxer,
+                                    imatge_cromo: lloc.cromo_imatge || '',
+                                    data_obtencio: new Date()
+                                });
+                                await perfil.save();
+                                console.log(`[Càmera] Cromo guardat al perfil del guanyador: "${lloc.nom}" amb imatge: ${lloc.cromo_imatge}`);
+                            } else {
+                                console.log(`[Càmera] El guanyador ja té el cromo de "${lloc.nom}". No es duplica.`);
+                            }
                         }
+                    } else {
+                        console.log(`[Càmera] Jugador no és el guanyador → no es guarda cap cromo al perfil.`);
                     }
                 }
 
@@ -274,6 +282,7 @@ router.post('/', async function (req, res) {
                     rango: medalla,
                     coincidencia: similitud.toFixed(2) + "%",
                     nom_lloc: lloc.nom,
+                    imatge_punt: imatgePuntMissio || imatgeReferencia,  // imatge del punt per mostrar al modal
                     imatge_historica: imatgeReferencia,
                     sessioId: codi_sala,
                     missatge: haAcabatLaLlista ? "Partida finalitzada!" : "Punt trobat! Torna al mapa pel següent.",
