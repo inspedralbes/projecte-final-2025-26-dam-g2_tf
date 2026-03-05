@@ -64,8 +64,9 @@ router.post('/', async function (req, res) {
         if (!sessio) return res.status(404).json({ missatge: "Sessió no trobada." });
         if (!lloc) return res.status(404).json({ missatge: "Lloc no trobat." });
 
-        // Busquem la imatge de referència: primer mirem si el punt concret en té, si no usem la del lloc
+        // Busquem la imatge de referència per a la IA: primer mirem si el punt concret en té, si no usem la del lloc
         let imatgeReferencia = lloc.imatge_referencia;
+        let imatgePuntMissio = null; // Imatge específica del punt per mostrar a l'usuari
         let puntTrobat = false;
         if (idPunt) {
             for (let i = 0; i < lloc.punts_missio.length; i++) {
@@ -73,7 +74,8 @@ router.post('/', async function (req, res) {
                 if (p._id.toString() === idPunt.toString()) {
                     puntTrobat = true;
                     if (p.imatge_referencia) {
-                        imatgeReferencia = p.imatge_referencia;
+                        imatgePuntMissio = p.imatge_referencia; // Guardem la del punt concret
+                        imatgeReferencia = p.imatge_referencia; // Per a la IA
                         console.log(`[Càmera] Punt trobat: "${p.nom_punt}" | imatge: ${imatgeReferencia}`);
                     } else {
                         console.log(`[Càmera] Punt "${p.nom_punt}" NO té imatge_referencia pròpia → usant la del lloc`);
@@ -280,6 +282,7 @@ router.post('/', async function (req, res) {
                     rango: medalla,
                     coincidencia: similitud.toFixed(2) + "%",
                     nom_lloc: lloc.nom,
+                    imatge_punt: imatgePuntMissio || imatgeReferencia,  // imatge del punt per mostrar al modal
                     imatge_historica: imatgeReferencia,
                     sessioId: codi_sala,
                     missatge: haAcabatLaLlista ? "Partida finalitzada!" : "Punt trobat! Torna al mapa pel següent.",

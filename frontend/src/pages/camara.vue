@@ -191,12 +191,15 @@ async function enviarDadesAlBackend(imatgeEnText) {
 
     if (resposta.ok) {
       modalDades.value = {
-        exit: dades.exit !== false,   // false quan similitud < 50%
+        exit: dades.exit !== false,
         nom_lloc: dades.nom_lloc,
+        imatge_punt: dades.imatge_punt || dades.imatge_historica || '',  // imatge del punt de missió
         imatge_historica: dades.imatge_historica,
+        url_foto: dades.url_foto || '',
         coincidencia: dades.coincidencia,
         cromo_nou: dades.cromo_nou,
-        completat_tot: dades.completat_tot || false
+        completat_tot: dades.completat_tot || false,
+        sessioId: dades.sessioId || route.params.codi_sala
       };
       mostrarModal.value = true;
     } else {
@@ -292,10 +295,10 @@ async function enviarDadesAlBackend(imatgeEnText) {
               style="border: 2px solid #d9a6c2; aspect-ratio: 4/3;"
             >
               <img
-                v-if="modalDades.imatge_historica"
-                :src="modalDades.imatge_historica.startsWith('http') ? modalDades.imatge_historica : `${API_URL}${modalDades.imatge_historica}`"
+                v-if="modalDades.imatge_punt"
+                :src="modalDades.imatge_punt.startsWith('http') ? modalDades.imatge_punt : `${API_URL}${modalDades.imatge_punt}`"
                 class="w-full h-full object-cover"
-                alt="Foto histórica"
+                alt="Foto del punt"
               />
               <div v-else class="w-full h-full flex items-center justify-center bg-black/40">
                 <span class="text-white/50 text-sm">Sense imatge</span>
