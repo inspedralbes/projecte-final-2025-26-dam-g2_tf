@@ -57,7 +57,7 @@
           </p>
 
           <button class="boto-camera" @click="anarACameraDesPunt">
-            📷 FER LA FOTO
+            FER LA FOTO
           </button>
         </div>
       </div>
