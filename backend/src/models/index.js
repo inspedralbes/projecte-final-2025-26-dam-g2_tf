@@ -130,7 +130,7 @@ const PostSchema = new mongoose.Schema({
     reportat: { type: Boolean, default: false },
     reportat_per: { type: String }, // Recomanat per saber qui ha enviat l'alerta 🚩
     timestamp: { type: Date, default: Date.now },
-  // AFEGEIX AIXÒ PER ALS COMENTARIS REPORTATS
+    // AFEGEIX AIXÒ PER ALS COMENTARIS REPORTATS
     reportat: { type: Boolean, default: false }
   }],
   // AFEGEIX AIXÒ PER ALS POSTS REPORTATS
@@ -141,6 +141,14 @@ const PostSchema = new mongoose.Schema({
 
 
 
+// 8. Personatge (personatges del joc)
+const PersonatgeSchema = new mongoose.Schema({
+  nom: { type: String, required: true },
+  descripcio: { type: String, default: '' },
+  imatge: { type: String, default: '' },
+  data_creacio: { type: Date, default: Date.now }
+});
+
 
 module.exports = {
   Usuari: mongoose.model('Usuari', UsuariSchema, 'Usuari'),
@@ -149,6 +157,7 @@ module.exports = {
   SessioJoc: mongoose.model('SessioJoc', SessioJocSchema, 'SessioJoc'),
   PeticioRuta: mongoose.model('PeticioRuta', PeticioRutaSchema, 'PeticioRuta'),
   Ressenya: mongoose.model('Ressenya', RessenyaSchema, 'Ressenya'),
-  Post: mongoose.model('Post', PostSchema, 'Post')
+  Post: mongoose.model('Post', PostSchema, 'Post'),
+  Personatge: mongoose.model('Personatge', PersonatgeSchema, 'Personatge')
 };
 

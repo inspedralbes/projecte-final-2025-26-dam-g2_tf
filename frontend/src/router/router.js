@@ -13,7 +13,7 @@ import Peticions from '../pages/peticions.vue'
 import DetallLloc from '../pages/detallLloc.vue'
 import IniciJoc from '../pages/iniciJoc.vue'
 import SalaEspera from '../pages/SalaEspera.vue'
-import elmeulogin from '../components/elmeulogin.vue'; 
+import elmeulogin from '../components/elmeulogin.vue';
 import LeaderboardFinal from '../pages/LeaderboardFinal.vue'
 import camara from '../pages/camara.vue'
 
@@ -22,7 +22,8 @@ import AdminDashboard from '../pages/admin/AdminDashboard.vue'
 import AdminLlocs from '../pages/admin/AdminLlocs.vue'
 import AdminPeticions from '../pages/admin/AdminPeticions.vue'
 import MapEditor from '../pages/admin/MapEditor.vue'
-import AdminModeracio from '../pages/admin/AdminModeracio.vue' 
+import AdminModeracio from '../pages/admin/AdminModeracio.vue'
+import AdminPersonatges from '../pages/admin/AdminPersonatges.vue'
 
 const routes = [
   {
@@ -67,9 +68,15 @@ const routes = [
     component: MapEditor,
     meta: { requiereAdmin: true }
   },
- 
   {
-    path: '/joc/:codi_sala/camera/:id', 
+    path: '/admin/personatges',
+    name: 'admin-personatges',
+    component: AdminPersonatges,
+    meta: { requiereAdmin: true }
+  },
+
+  {
+    path: '/joc/:codi_sala/camera/:id',
     name: 'camara',
     component: camara
   },
@@ -121,7 +128,7 @@ const routes = [
     path: '/lloc/:id',
     name: 'detall-lloc',
     component: DetallLloc,
-    props: true, 
+    props: true,
     meta: { requiereAuth: true } // Protegit: cal iniciar sessió
   },
 
@@ -131,12 +138,12 @@ const routes = [
     component: SalaEspera
   },
 
-  { 
-    path: '/leaderboard/:sala', 
-    name: 'Leaderboard',        
+  {
+    path: '/leaderboard/:sala',
+    name: 'Leaderboard',
     component: LeaderboardFinal,
-    props: true 
-},
+    props: true
+  },
 ]
 
 const router = createRouter({
@@ -160,7 +167,7 @@ router.beforeEach((to, from, next) => {
   const requereixAdmin = to.matched.some(record => record.meta.requiereAdmin);
   const requereixAuth = to.matched.some(record => record.meta.requiereAuth);
 
-  
+
   if (requereixAdmin) {
     if (sessio && sessio.rol === 'admin') {
       next();

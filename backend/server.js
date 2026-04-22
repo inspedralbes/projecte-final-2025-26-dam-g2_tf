@@ -19,6 +19,7 @@ app.use(cors());
 
 app.use('/foto_mapa', express.static(path.join(__dirname, 'public/foto_mapa')));
 app.use('/fotos_actuals', express.static(path.join(__dirname, 'public/fotos_actuals')));
+app.use('/personatges', express.static(path.join(__dirname, 'public/personatges')));
 // missatge de prova
 async function startServer() {
     try {
@@ -40,6 +41,7 @@ async function startServer() {
         app.use('/api/validar-foto', require('./src/routes/camara'));
         app.use('/api/fotos-actuals', require('./src/routes/fotos'));
         app.use('/api/sessionsJoc', require('./src/routes/sessionsJoc'));
+        app.use('/api/personatges', require('./src/routes/personatges'));
 
         // Configurar Socket.io
         const http = require('http');
