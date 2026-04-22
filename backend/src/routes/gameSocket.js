@@ -79,7 +79,11 @@ function configureSocket(server) {
             }
         });
 
-        socket.on('start-game', async function (roomCode) {
+        socket.on('start-game', async function (dades) {
+            const roomCode = typeof dades === 'string' ? dades : dades.roomCode;
+            const mode = dades.mode || 'Individual';
+            const groupsConfig = dades.groups || [];
+
             const room = sales[roomCode];
             if (!room || room.creatorId !== socket.id) return;
 
@@ -100,14 +104,33 @@ function configureSocket(server) {
                 // 3. Construïm l'array de jugadors
                 const jugadorsDB = [];
                 for (let i = 0; i < room.players.length; i++) {
-                    if (room.players[i].perfilId) {
+                    const p = room.players[i];
+                    if (p.perfilId) {
+                        let groupId = i + 1; // Default: each is their own group
+                        let isCapita = true;
+
+                        if (mode === 'Grup' || mode === 'Grups') {
+                            // Find which group this player is in
+                            const targetGroup = groupsConfig.find(g => g.members.includes(p.perfilId));
+                            if (targetGroup) {
+                                groupId = targetGroup.grup_id;
+                                isCapita = (targetGroup.capita_id === p.perfilId);
+                            } else {
+                                // Fallback just in case
+                                groupId = 1;
+                                isCapita = false;
+                            }
+                        }
+
                         jugadorsDB.push({
-                            id_usuari: room.players[i].perfilId,
+                            id_usuari: p.perfilId,
                             puntsPartida: 0,
                             completat: false,
                             punts_completats: [],
                             exactitud_media: 0,
-                            temps: "0"
+                            temps: "0",
+                            grup_id: groupId,
+                            capita: isCapita
                         });
                     }
                 }
@@ -115,7 +138,7 @@ function configureSocket(server) {
                 // 4. Creem la sessió a la BD
                 const novaSessio = new SessioJoc({
                     codi_sala: roomCode,
-                    tipus_partida: jugadorsDB.length > 1 ? 'grup' : 'individual',
+                    tipus_partida: mode.toLowerCase(),
                     estat: 'jugant',
                     id_lloc_desti: room.idLloc,
                     id_puntos_de_la_partida: puntsIds,
@@ -124,10 +147,10 @@ function configureSocket(server) {
                 });
                 await novaSessio.save();
 
-                console.log('Sessió de grup creada:', novaSessio._id, '| roomCode:', roomCode);
+                console.log('Sessió de joc creada:', novaSessio._id, '| roomCode:', roomCode, '| Mode:', mode);
 
                 // 6. Enviem el sessioId a tots els jugadors
-                io.to(roomCode).emit('game-started', { sessioId: novaSessio._id });
+                io.to(roomCode).emit('game-started', { sessioId: novaSessio._id, mode: mode });
 
             } catch (err) {
                 console.error('Error al crear sessió en start-game:', err);

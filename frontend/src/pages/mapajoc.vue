@@ -1,29 +1,45 @@
 <template>
   <div class="pantalla-mapa">
-    <h1 class="titol">Mapa de la Ruta</h1>
+    
+    <div v-if="!isCapita" class="w-full flex flex-col items-center justify-center min-h-[80vh] text-center px-4">
+      <h1 class="text-4xl font-bold text-white mb-8" style="color: #d9a6c2;">Sigue al Capitán</h1>
+      <div class="w-24 h-24 rounded-full flex items-center justify-center text-white text-5xl font-bold mb-4 shadow-lg" style="background-color: #bc85ab; width: 100px; height: 100px; border-radius: 50%;">
+        {{ nomCapita.charAt(0).toUpperCase() }}
+      </div>
+      <p class="text-xl text-indigo-200 mt-4" style="color: #e8c4d9; font-size: 1.25rem;">
+        El capità <strong>{{ nomCapita }}</strong> està controlant la partida al seu dispositiu.
+      </p>
+      <p class="mt-6 text-sm text-indigo-300" style="color: rgba(255,255,255,0.6);">
+        Pots guardar el mòbil i acompanyar-lo mentre busqueu els punts!
+      </p>
+    </div>
 
-    <!-- Contenidor del mapa amb marcadors superposats -->
-    <div class="contenidor-imatge" ref="contenidorRef">
-      <img
-        v-if="urlFinal !== ''"
-        :src="urlFinal"
-        alt="Mapa del lloc"
-        class="imatge-mapa"
-        ref="imatgeRef"
-      />
-      <p v-else>Carregant el mapa...</p>
+    <div v-else style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+      <h1 class="titol">Mapa de la Ruta</h1>
 
-      <!-- Marcadors clicables -->
-      <button
-        v-for="(punt, index) in puntsMissio"
-        :key="index"
-        class="marcador"
-        :style="{ left: punt.posicio_x + '%', top: punt.posicio_y + '%' }"
-        @click="obrirModal(punt)"
-        :title="punt.nom_punt"
-      >
-        <span class="marcador-numero">{{ index + 1 }}</span>
-      </button>
+      <!-- Contenidor del mapa amb marcadors superposats -->
+      <div class="contenidor-imatge" ref="contenidorRef">
+        <img
+          v-if="urlFinal !== ''"
+          :src="urlFinal"
+          alt="Mapa del lloc"
+          class="imatge-mapa"
+          ref="imatgeRef"
+        />
+        <p v-else>Carregant el mapa...</p>
+
+        <!-- Marcadors clicables -->
+        <button
+          v-for="(punt, index) in puntsMissio"
+          :key="index"
+          class="marcador"
+          :style="{ left: punt.posicio_x + '%', top: punt.posicio_y + '%' }"
+          @click="obrirModal(punt)"
+          :title="punt.nom_punt"
+        >
+          <span class="marcador-numero">{{ index + 1 }}</span>
+        </button>
+      </div>
     </div>
 
 
@@ -108,7 +124,10 @@ export default {
       mostrarGameOver: false,
       nomGuanyador: '',
       sessioIdGameOver: '',
-      _socket: null
+      _socket: null,
+      
+      isCapita: true,
+      nomCapita: ''
     };
   },
 
@@ -136,6 +155,26 @@ export default {
 
       this.urlFinal = this.baseApi + '/foto_mapa/' + nomImatge;
       this.puntsMissio = lloc.punts_missio || [];
+
+      // AFEGIM AIXÒ PER COMPROVAR SI ÉS CAPITÀ
+      const userStr = localStorage.getItem('usuari');
+      const user = userStr ? JSON.parse(userStr) : {};
+      const perfilId = user._id || null;
+
+      if (sessio && sessio.jugadors && perfilId) {
+          const myPlayer = sessio.jugadors.find(j => 
+              j.id_usuari === perfilId || (j.id_usuari && j.id_usuari._id === perfilId)
+          );
+          if (myPlayer) {
+              this.isCapita = myPlayer.capita !== false; // if undefined, true for backwards compat
+              if (!this.isCapita) {
+                  const capitaInfo = sessio.jugadors.find(j => j.grup_id === myPlayer.grup_id && j.capita === true);
+                  if (capitaInfo && capitaInfo.id_usuari) {
+                      this.nomCapita = capitaInfo.id_usuari.nom_usuari || capitaInfo.id_usuari;
+                  }
+              }
+          }
+      }
 
     } catch (error) {
       console.error('Error carregant el mapa:', error);
