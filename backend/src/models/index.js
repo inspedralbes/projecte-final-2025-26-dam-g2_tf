@@ -51,7 +51,8 @@ const LlocSchema = new mongoose.Schema({
     posicio_x: Number, // Valor de 0 a 100
     posicio_y: Number, // Valor de 0 a 100
     pista: String,
-    imatge_referencia: String
+    imatge_referencia: String,
+    personatge_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Personatge', default: null }
   }],
   barri: String,
   tags: [String],

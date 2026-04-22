@@ -83,6 +83,32 @@
         <button class="btn-desar" @click="confirmarPunt">Desar punt</button>
         <button class="btn-cancel" @click="cancellarPunt">✕ Cancel·lar</button>
       </div>
+
+      <!-- Selector de personatge -->
+      <div class="camp mt-4 pt-4 border-t border-white/10">
+        <label>Associar a un personatge</label>
+        <select v-model="puntNou.personatge_id">
+          <option :value="null">-- Cap personatge --</option>
+          <option
+            v-for="p in personatgesDisponibles"
+            :key="p._id"
+            :value="p._id"
+          >{{ p.nom }}</option>
+        </select>
+      </div>
+
+      <!-- Previsualització del personatge seleccionat -->
+      <div v-if="puntNou.personatge_id" class="preview-personatge">
+        <img
+          v-if="personatgeSeleccionat(puntNou.personatge_id).imatge"
+          :src="baseApi + personatgeSeleccionat(puntNou.personatge_id).imatge"
+          alt="Personatge"
+        />
+        <div class="personatge-info">
+          <strong>{{ personatgeSeleccionat(puntNou.personatge_id).nom }}</strong>
+          <p>{{ personatgeSeleccionat(puntNou.personatge_id).descripcio }}</p>
+        </div>
+      </div>
     </div>
 
     <!-- Llista de punts guardats -->
@@ -96,13 +122,18 @@
           <small>X: {{ punt.posicio_x.toFixed(1) }}% / Y: {{ punt.posicio_y.toFixed(1) }}%</small>
           <span v-if="punt.imatge_referencia" class="punt-foto-badge"> {{ nomFoto(punt.imatge_referencia) }}</span>
         </div>
-        <!-- Miniatura de la imatge assignada -->
         <img
           v-if="punt.imatge_referencia"
           :src="baseApi + punt.imatge_referencia"
           class="miniatura-punt"
           alt="Imatge del punt"
         />
+        
+        <!-- Badge personatge -->
+        <div v-if="punt.personatge_id" class="badge-personatge" :title="personatgeSeleccionat(punt.personatge_id).nom">
+          👤 {{ personatgeSeleccionat(punt.personatge_id).nom }}
+        </div>
+
         <button class="btn-eliminar" @click="eliminarPunt(index)">🗑️</button>
       </div>
     </div>
@@ -128,7 +159,8 @@ export default {
       puntNou: null,
       desant: false,
       missatgeDesar: '',
-      fotosDisponibles: []
+      fotosDisponibles: [],
+      personatgesDisponibles: []
     };
   },
 
@@ -143,10 +175,17 @@ export default {
         ? lloc.foto_mapa
         : 'mapa_' + lloc.nom.toLowerCase().replace(/\s+/g, '') + '.jpg';
       this.urlMapa = this.baseApi + '/foto_mapa/' + nomImatge;
-      this.puntsMissio = (lloc.punts_missio || []).map(p => ({ ...p }));
+      this.puntsMissio = (lloc.punts_missio || []).map(p => {
+        // Assegurar que personatge_id és l'ID per al select, no l'objecte poblat
+        const pId = (p.personatge_id && typeof p.personatge_id === 'object') 
+          ? p.personatge_id._id 
+          : p.personatge_id;
+        return { ...p, personatge_id: pId || null };
+      });
 
       // Carreguem totes les fotos de totes les subcarpetes
       await this.carregarFotos();
+      await this.carregarPersonatges();
     } catch (err) {
       console.error('Error carregant el lloc:', err);
     }
@@ -169,6 +208,22 @@ export default {
       return path ? path.split('/').pop() : '';
     },
 
+    async carregarPersonatges() {
+      try {
+        const resposta = await fetch(this.baseApi + '/api/personatges');
+        if (!resposta.ok) return;
+        this.personatgesDisponibles = await resposta.json();
+      } catch (err) {
+        console.error('Error carregant personatges:', err);
+      }
+    },
+
+    personatgeSeleccionat(id) {
+      const targetId = (id && typeof id === 'object') ? id._id : id;
+      const trobat = this.personatgesDisponibles.find(p => p._id === targetId);
+      return trobat || { nom: '', descripcio: '', imatge: '' };
+    },
+
     afegirPunt(event) {
       if (this.puntNou) return;
       const img = this.$refs.imatgeRef;
@@ -180,7 +235,8 @@ export default {
         posicio_y: parseFloat(y.toFixed(2)),
         nom_punt: '',
         pista: '',
-        imatge_referencia: ''
+        imatge_referencia: '',
+        personatge_id: null
       };
     },
 
@@ -363,6 +419,60 @@ export default {
   text-align: center;
   padding: 8px;
 }
+
+.preview-personatge {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(217, 166, 194, 0.1);
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(217, 166, 194, 0.3);
+}
+
+.preview-personatge img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #d9a6c2;
+}
+
+.personatge-info {
+  flex: 1;
+}
+
+.personatge-info strong {
+  display: block;
+  font-size: 14px;
+  color: #ffd700;
+}
+
+.personatge-info p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #d9a6c2;
+  line-height: 1.2;
+}
+
+.badge-personatge {
+  font-size: 11px;
+  background: #bc85ab;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-right: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.mt-4 { margin-top: 16px; }
+.pt-4 { padding-top: 16px; }
+.border-t { border-top-width: 1px; }
+.border-white\/10 { border-color: rgba(255, 255, 255, 0.1); }
 
 .botons-formulari { display: flex; gap: 10px; margin-top: 12px; }
 

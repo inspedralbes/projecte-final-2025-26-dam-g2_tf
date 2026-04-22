@@ -116,7 +116,7 @@
                 <div class="flex gap-3 mb-2">
                   <button
                     type="button"
-                    @click="puntPendentEsPersonatge = false; puntPendent.personatge_id = '';"
+                    @click="puntPendentEsPersonatge = false; puntPendent.personatge_id = null;"
                     :class="puntPendentEsPersonatge ? 'bg-gray-100 text-gray-500' : 'bg-purple-600 text-white'"
                     class="flex-1 py-1.5 rounded-lg text-xs font-bold transition-all"
                   >No</button>
@@ -262,10 +262,22 @@ const emit = defineEmits(['save', 'eliminar']);
 
 // Clonar los datos iniciales para que el formulario sea independiente
 const form = ref(JSON.parse(JSON.stringify(props.datosIniciales)));
+if (form.value.punts_missio) {
+  form.value.punts_missio = form.value.punts_missio.map(p => ({
+    ...p,
+    personatge_id: (p.personatge_id && typeof p.personatge_id === 'object') ? p.personatge_id._id : p.personatge_id
+  }));
+}
 
 // Actualizar el formulario si los props cambian (al cambiar de lloc)
 watch(() => props.datosIniciales, (val) => {
   form.value = JSON.parse(JSON.stringify(val));
+  if (form.value.punts_missio) {
+    form.value.punts_missio = form.value.punts_missio.map(p => ({
+      ...p,
+      personatge_id: (p.personatge_id && typeof p.personatge_id === 'object') ? p.personatge_id._id : p.personatge_id
+    }));
+  }
   if (map && marker) {
     marker.setLatLng([form.value.lat, form.value.lng]);
     map.setView([form.value.lat, form.value.lng], 15);
@@ -327,7 +339,8 @@ function confirmarPunt() {
 // Retorna el personatge de la llista a partir del seu _id
 function personatgeSeleccionat(id) {
   var trobat = personatgesDisponibles.value.find(function(p) {
-    return p._id === id;
+    const targetId = (id && typeof id === 'object') ? id._id : id;
+    return p._id === targetId;
   });
   return trobat || { nom: '', descripcio: '', imatge: '' };
 }

@@ -6,7 +6,7 @@ const { Lloc } = require('../models/index');
 router.get('/punts', async (req, res) => {
     try {
 
-        const llocs = await Lloc.find({});
+        const llocs = await Lloc.find({}).populate('punts_missio.personatge_id');
         res.json(llocs);
     } catch (error) {
         console.error("Error al carregar punts:", error);
@@ -17,7 +17,7 @@ router.get('/punts', async (req, res) => {
 // 2. Obtenir un sol lloc per ID
 router.get('/punts/:id', async (req, res) => {
     try {
-        const lloc = await Lloc.findById(req.params.id);
+        const lloc = await Lloc.findById(req.params.id).populate('punts_missio.personatge_id');
 
         if (!lloc) {
             return res.status(404).json({ error: "Lloc no trobat" });
@@ -45,13 +45,16 @@ router.post('/punts', async (req, res) => {
 // 4. ACTUALITZAR un lloc existent
 router.put('/punts/:id', async (req, res) => {
     try {
-        // Usem $set per assegurar que Mongoose desa correctament els subdocuments
-        // i generi _id per a cada punt_missio nou
+        // Netejar camps immutables que podrien bloquejar l'actualització
+        const dadesActualitzacio = { ...req.body };
+        delete dadesActualitzacio._id;
+        delete dadesActualitzacio.__v;
+
         const llocActualitzat = await Lloc.findByIdAndUpdate(
             req.params.id,
-            { $set: req.body },
+            { $set: dadesActualitzacio },
             { new: true, runValidators: true }
-        );
+        ).populate('punts_missio.personatge_id');
 
         if (!llocActualitzat) {
             return res.status(404).json({ error: "Lloc no trobat" });
@@ -61,7 +64,10 @@ router.put('/punts/:id', async (req, res) => {
         res.json(llocActualitzat);
     } catch (error) {
         console.error("Error al actualitzar:", error);
-        res.status(400).json({ error: "Error al modificar les dades" });
+        res.status(400).json({
+            error: "Error al modificar les dades",
+            detalls: error.message
+        });
     }
 });
 
