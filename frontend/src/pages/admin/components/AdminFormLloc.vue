@@ -72,7 +72,7 @@
             <p class="text-xs text-gray-400 mb-2 font-bold uppercase">📍 Fes clic a la imatge per afegir un punt</p>
             <div
               class="relative border-4 border-purple-100 rounded-2xl overflow-hidden cursor-crosshair"
-              style="max-width: 100%;"
+              style="max-width: 380px;"
             >
               <img
                 :src="baseApi + '/foto_mapa/' + form.foto_mapa"
@@ -93,14 +93,14 @@
               </div>
             </div>
 
-            <!-- Mini formulari quan es clica -->
             <div v-if="puntPendent" class="mt-3 p-4 border-2 border-purple-100 rounded-2xl bg-purple-50/40">
               <p class="text-xs font-black text-purple-400 uppercase mb-2">Nou punt ({{ puntPendent.posicio_x.toFixed(1) }}%, {{ puntPendent.posicio_y.toFixed(1) }}%)</p>
               <input v-model="puntPendent.nom_punt" placeholder="Nom del punt (ex: Façana principal)" class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm mb-2 outline-none" />
               <input v-model="puntPendent.pista" placeholder="Pista per a l'usuari..." class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm mb-2 italic outline-none" />
+
               <!-- Selector d'imatge -->
-              <div class="mb-2">
-                <label class="text-[10px] font-bold text-purple-400 uppercase mb-1 block">🖼️ Imatge del punt</label>
+              <div class="mb-3">
+                <label class="text-[10px] font-bold text-purple-400 uppercase mb-1 block">Imatge del punt</label>
                 <select v-model="puntPendent.imatge_referencia" class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm outline-none bg-white">
                   <option value="">-- Sense imatge --</option>
                   <option v-for="foto in fotosDisponibles" :key="foto.path" :value="foto.path">{{ foto.carpeta }} / {{ foto.nom }}</option>
@@ -109,9 +109,53 @@
                   <img :src="baseApi + puntPendent.imatge_referencia" class="w-full max-h-32 object-cover" alt="Previsualització" />
                 </div>
               </div>
+
+              <!-- Associar a un personatge -->
+              <div class="mb-3 p-3 border-2 border-purple-100 rounded-xl bg-white">
+                <label class="text-[10px] font-bold text-purple-400 uppercase mb-2 block">Associat a un personatge?</label>
+                <div class="flex gap-3 mb-2">
+                  <button
+                    type="button"
+                    @click="puntPendentEsPersonatge = false; puntPendent.personatge_id = '';"
+                    :class="puntPendentEsPersonatge ? 'bg-gray-100 text-gray-500' : 'bg-purple-600 text-white'"
+                    class="flex-1 py-1.5 rounded-lg text-xs font-bold transition-all"
+                  >No</button>
+                  <button
+                    type="button"
+                    @click="puntPendentEsPersonatge = true"
+                    :class="puntPendentEsPersonatge ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-500'"
+                    class="flex-1 py-1.5 rounded-lg text-xs font-bold transition-all"
+                  >Si</button>
+                </div>
+
+                <div v-if="puntPendentEsPersonatge">
+                  <select v-model="puntPendent.personatge_id" class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm outline-none bg-gray-50">
+                    <option :value="null">-- Selecciona un personatge --</option>
+                    <option
+                      v-for="p in personatgesDisponibles"
+                      :key="p._id"
+                      :value="p._id"
+                    >{{ p.nom }}</option>
+                  </select>
+
+                  <!-- Previsualitzacio del personatge seleccionat -->
+                  <div v-if="puntPendent.personatge_id" class="mt-2 flex items-center gap-3 p-2 bg-purple-50 rounded-xl border border-purple-100">
+                    <img
+                      v-if="personatgeSeleccionat(puntPendent.personatge_id).imatge"
+                      :src="baseApi + personatgeSeleccionat(puntPendent.personatge_id).imatge"
+                      class="w-12 h-12 object-cover rounded-lg border border-purple-200 flex-shrink-0"
+                    />
+                    <div>
+                      <p class="text-xs font-black text-purple-700">{{ personatgeSeleccionat(puntPendent.personatge_id).nom }}</p>
+                      <p class="text-[10px] text-gray-500 leading-tight">{{ personatgeSeleccionat(puntPendent.personatge_id).descripcio }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div class="flex gap-2">
-                <button type="button" @click="confirmarPunt" class="flex-1 bg-purple-600 text-white py-2 rounded-xl text-sm font-bold hover:bg-purple-700">✅ Afegir punt</button>
-                <button type="button" @click="puntPendent = null" class="flex-1 bg-gray-100 text-gray-500 py-2 rounded-xl text-sm font-bold">✕ Cancel·lar</button>
+                <button type="button" @click="confirmarPunt" class="flex-1 bg-purple-600 text-white py-2 rounded-xl text-sm font-bold hover:bg-purple-700">Afegir punt</button>
+                <button type="button" @click="puntPendent = null; puntPendentEsPersonatge = false;" class="flex-1 bg-gray-100 text-gray-500 py-2 rounded-xl text-sm font-bold">Cancel·lar</button>
               </div>
             </div>
           </div>
@@ -140,6 +184,23 @@
                 </div>
               </div>
               <p class="text-[10px] text-gray-400">X: {{ punt.posicio_x?.toFixed(1) }}% / Y: {{ punt.posicio_y?.toFixed(1) }}%</p>
+
+              <!-- Personatge associat -->
+              <div class="mt-2 pt-2 border-t border-gray-50">
+                <label class="text-[9px] font-bold text-purple-400 uppercase mb-1 block">Personatge associat</label>
+                <select v-model="punt.personatge_id" class="w-full border border-gray-200 p-1.5 rounded-lg text-xs outline-none bg-gray-50">
+                  <option :value="null">-- Cap personatge --</option>
+                  <option v-for="p in personatgesDisponibles" :key="p._id" :value="p._id">{{ p.nom }}</option>
+                </select>
+                <div v-if="punt.personatge_id && personatgeSeleccionat(punt.personatge_id).nom" class="mt-1.5 flex items-center gap-2 p-1.5 bg-purple-50 rounded-lg">
+                  <img
+                    v-if="personatgeSeleccionat(punt.personatge_id).imatge"
+                    :src="baseApi + personatgeSeleccionat(punt.personatge_id).imatge"
+                    class="w-8 h-8 object-cover rounded-md border border-purple-200 flex-shrink-0"
+                  />
+                  <span class="text-[10px] font-black text-purple-600">{{ personatgeSeleccionat(punt.personatge_id).nom }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -189,6 +250,8 @@ const baseApi = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 const imatgeMapaRef = ref(null);
 const puntPendent = ref(null);
 const fotosDisponibles = ref([]);
+const personatgesDisponibles = ref([]);
+const puntPendentEsPersonatge = ref(false);
 
 const props = defineProps({
   datosIniciales: Object,
@@ -238,24 +301,35 @@ const eliminarTag = (index) => form.value.tags.splice(index, 1);
 const eliminarPunt = (index) => form.value.punts_missio.splice(index, 1);
 
 function clicAlMapa(event) {
-  if (puntPendent.value) return; // ja n'hi ha un pendent
-  const img = imatgeMapaRef.value;
-  const rect = img.getBoundingClientRect();
-  const x = ((event.clientX - rect.left) / rect.width) * 100;
-  const y = ((event.clientY - rect.top) / rect.height) * 100;
+  if (puntPendent.value) return;
+  var img = imatgeMapaRef.value;
+  var rect = img.getBoundingClientRect();
+  var x = ((event.clientX - rect.left) / rect.width) * 100;
+  var y = ((event.clientY - rect.top) / rect.height) * 100;
   puntPendent.value = {
     posicio_x: parseFloat(x.toFixed(2)),
     posicio_y: parseFloat(y.toFixed(2)),
     nom_punt: '',
     pista: '',
-    imatge_referencia: ''
+    imatge_referencia: '',
+    personatge_id: null
   };
+  puntPendentEsPersonatge.value = false;
 }
 
 function confirmarPunt() {
   if (!puntPendent.value) return;
   form.value.punts_missio.push({ ...puntPendent.value });
   puntPendent.value = null;
+  puntPendentEsPersonatge.value = false;
+}
+
+// Retorna el personatge de la llista a partir del seu _id
+function personatgeSeleccionat(id) {
+  var trobat = personatgesDisponibles.value.find(function(p) {
+    return p._id === id;
+  });
+  return trobat || { nom: '', descripcio: '', imatge: '' };
 }
 
 function procesarCoordenadas() {
@@ -276,17 +350,28 @@ function enviarFormulario() {
 
 async function carregarFotos() {
   try {
-    const resposta = await fetch(baseApi + '/api/fotos-actuals/totes');
+    var resposta = await fetch(baseApi + '/api/fotos-actuals/totes');
     if (!resposta.ok) return;
-    const dades = await resposta.json();
+    var dades = await resposta.json();
     fotosDisponibles.value = dades.fotos || [];
   } catch (err) {
     console.error('Error carregant fotos:', err);
   }
 }
 
+async function carregarPersonatges() {
+  try {
+    var resposta = await fetch(baseApi + '/api/personatges');
+    if (!resposta.ok) return;
+    personatgesDisponibles.value = await resposta.json();
+  } catch (err) {
+    console.error('Error carregant personatges:', err);
+  }
+}
+
 onMounted(function() {
   initMapa();
   carregarFotos();
+  carregarPersonatges();
 });
 </script>
