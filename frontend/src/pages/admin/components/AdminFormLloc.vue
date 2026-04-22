@@ -206,7 +206,15 @@
         </div>
 
         <div class="lg:col-span-2 flex gap-4 pt-6 border-t border-gray-100">
-          <button type="submit" class="flex-1 bg-purple-600 text-white py-4 rounded-2xl font-bold uppercase shadow-lg hover:bg-purple-700 transition-all">
+          <button 
+            type="submit" 
+            :class="[
+              'flex-1 py-4 rounded-2xl font-bold uppercase shadow-lg transition-all',
+              hayCambios 
+                ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                : 'bg-purple-100 text-purple-300 cursor-default'
+            ]"
+          >
             {{ editandoId ? 'Actualitzar Lloc' : 'Guardar Nou Lloc' }}
           </button>
           <button v-if="editandoId" @click="$emit('eliminar', editandoId)" type="button" class="bg-red-50 text-red-500 px-8 rounded-2xl font-bold hover:bg-red-500 hover:text-white transition-all">
@@ -231,7 +239,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue';
+import { ref, onMounted, nextTick, watch, computed } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -262,27 +270,37 @@ const emit = defineEmits(['save', 'eliminar']);
 
 // Clonar los datos iniciales para que el formulario sea independiente
 const form = ref(JSON.parse(JSON.stringify(props.datosIniciales)));
-if (form.value.punts_missio) {
-  form.value.punts_missio = form.value.punts_missio.map(p => ({
-    ...p,
-    personatge_id: (p.personatge_id && typeof p.personatge_id === 'object') ? p.personatge_id._id : p.personatge_id
-  }));
-}
+const formOriginal = ref(""); // Ho guardarem com a string per comparar fàcilment
 
-// Actualizar el formulario si los props cambian (al cambiar de lloc)
-watch(() => props.datosIniciales, (val) => {
-  form.value = JSON.parse(JSON.stringify(val));
-  if (form.value.punts_missio) {
-    form.value.punts_missio = form.value.punts_missio.map(p => ({
+const prepararFormulari = (dades) => {
+  const clon = JSON.parse(JSON.stringify(dades));
+  if (clon.punts_missio) {
+    clon.punts_missio = clon.punts_missio.map(p => ({
       ...p,
       personatge_id: (p.personatge_id && typeof p.personatge_id === 'object') ? p.personatge_id._id : p.personatge_id
     }));
   }
+  return clon;
+};
+
+// Inicialització
+form.value = prepararFormulari(props.datosIniciales);
+formOriginal.value = JSON.stringify(form.value);
+
+// Actualitzar el formulario si los props cambian (al cambiar de lloc)
+watch(() => props.datosIniciales, (val) => {
+  form.value = prepararFormulari(val);
+  formOriginal.value = JSON.stringify(form.value);
+  
   if (map && marker) {
     marker.setLatLng([form.value.lat, form.value.lng]);
     map.setView([form.value.lat, form.value.lng], 15);
   }
 }, { deep: true });
+
+const hayCambios = computed(() => {
+  return JSON.stringify(form.value) !== formOriginal.value;
+});
 
 const mostrarPopupUbi = ref(false);
 const inputCoordenadas = ref(`${form.value.lat}, ${form.value.lng}`);
