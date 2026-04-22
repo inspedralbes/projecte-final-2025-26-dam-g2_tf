@@ -78,8 +78,11 @@ const SessioJocSchema = new mongoose.Schema({
     temps: { type: String, default: "0" },
 
     punts_completats: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' }], // IDs dels punts
-    exactitud_media: { type: Number, default: 0 } // Para el leaderboard 
-
+    exactitud_media: { type: Number, default: 0 }, // Para el leaderboard 
+    
+    // Nous camps per grups
+    grup_id: { type: Number, default: null },
+    capita: { type: Boolean, default: false }
   }],
   temps_inici: { type: Date, default: Date.now },
   id_lloc_desti: { type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' },
