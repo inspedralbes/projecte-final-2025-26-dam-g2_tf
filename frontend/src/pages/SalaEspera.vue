@@ -37,6 +37,17 @@
         </div>
 
         <div v-if="isCreator && showModeSelection" class="mt-8 bg-white border-2 border-indigo-100 rounded-xl p-4 text-left">
+            <h3 class="text-xl font-bold text-indigo-900 mb-4">Selecciona la Durada</h3>
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <button v-for="opt in durationOptions" :key="opt.value" 
+                    @click="selectedDuration = opt.value"
+                    class="p-3 rounded-xl border-2 transition-all text-sm font-bold"
+                    :class="selectedDuration === opt.value ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-100 text-gray-500 hover:border-indigo-200'">
+                    {{ opt.label }}<br>
+                    <span class="text-[10px] font-normal">{{ opt.desc }}</span>
+                </button>
+            </div>
+
             <h3 class="text-xl font-bold text-indigo-900 mb-4">Selecciona el Mode de Joc</h3>
             <div class="space-y-3 mb-6">
                 <label class="flex items-center space-x-3 p-3 rounded-lg border hover:bg-indigo-50 cursor-pointer" :class="{'border-indigo-500 bg-indigo-50': selectedMode === 'Individual', 'border-gray-200': selectedMode !== 'Individual'}">
@@ -106,6 +117,13 @@ const nomUsuari = user.nom_usuari || 'Invitado';
 
 const showModeSelection = ref(false);
 const selectedMode = ref('Individual');
+const selectedDuration = ref(60);
+
+const durationOptions = [
+    { label: '45 min', value: 45, desc: 'Difícil' },
+    { label: '1 hora', value: 60, desc: 'Normal' },
+    { label: '90 min', value: 90, desc: 'Fàcil' }
+];
 
 function generarGrups() {
     let list = [...players.value];
@@ -174,7 +192,8 @@ function confirmarModeIComencar() {
         const dades = {
             roomCode: roomCode.value,
             mode: selectedMode.value,
-            groups: groups
+            groups: groups,
+            duracio: selectedDuration.value
         };
         socket.value.emit('start-game', dades);
     }
@@ -194,7 +213,8 @@ onMounted(() => {
         const dadesPerEnviar = {
             nomUsuari: nomUsuari,
             idLloc: idLlocRuta,
-            perfilId: perfilId
+            perfilId: perfilId,
+            duracio: selectedDuration.value
         };
         socket.value.emit('create-room', dadesPerEnviar);
         isCreator.value = true;
