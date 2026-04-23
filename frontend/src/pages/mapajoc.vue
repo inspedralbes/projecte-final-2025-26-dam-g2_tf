@@ -354,6 +354,10 @@ export default {
     },
 
     iniciarTemporitzador(tempsLimit) {
+        if (this.intervalTimer) {
+            clearInterval(this.intervalTimer);
+        }
+
         const limit = new Date(tempsLimit).getTime();
         
         const actualizar = () => {
