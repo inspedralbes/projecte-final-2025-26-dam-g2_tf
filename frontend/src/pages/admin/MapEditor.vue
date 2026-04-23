@@ -53,8 +53,8 @@
       </div>
 
       <div class="camp">
-        <label>Pista per a l'usuari</label>
-        <input v-model="puntNou.pista" type="text" placeholder="Ex: Busca la torre central..." />
+        <label>💡 Pista per a l'usuari (Aquesta pista té un cost d'1 pista per a l'usuari)</label>
+        <textarea v-model="puntNou.pista" placeholder="Ex: Busca la torre central o descobreix el detall amagat..." rows="2"></textarea>
       </div>
 
       <!-- Selector d'imatge de referència -->
@@ -118,7 +118,7 @@
         <span class="punt-num">{{ index + 1 }}</span>
         <div class="punt-info">
           <strong>{{ punt.nom_punt || 'Sense nom' }}</strong>
-          <span v-if="punt.pista">{{ punt.pista }}</span>
+          <span v-if="punt.pista" class="punt-pista-badge">💡 {{ punt.pista }}</span>
           <small>X: {{ punt.posicio_x.toFixed(1) }}% / Y: {{ punt.posicio_y.toFixed(1) }}%</small>
           <span v-if="punt.imatge_referencia" class="punt-foto-badge"> {{ nomFoto(punt.imatge_referencia) }}</span>
         </div>
@@ -527,7 +527,8 @@ export default {
 .punt-info strong { color: #fff; }
 .punt-info span { color: #d9a6c2; font-size: 12px; }
 .punt-info small { color: rgba(255,255,255,0.4); font-size: 11px; }
-.punt-foto-badge { color: #ffd700 !important; font-size: 11px !important; }
+.punt-pista-badge { color: #ffd700 !important; font-size: 11px !important; font-style: italic; margin-top: 2px; }
+.punt-foto-badge { color: #bc85ab !important; font-size: 11px !important; }
 
 .miniatura-punt {
   width: 52px;

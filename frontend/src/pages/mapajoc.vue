@@ -74,9 +74,21 @@
             </div>
           </div>
 
-          <p v-if="puntSeleccionat?.pista" class="modal-pista">
-             {{ puntSeleccionat.pista }}
-          </p>
+          <div v-if="pistesRevelades.has(puntSeleccionat?._id)" class="modal-pista blink-hint">
+             💡 {{ puntSeleccionat.pista }}
+          </div>
+
+          <div v-else-if="puntSeleccionat?.pista" class="w-full flex flex-col items-center gap-3">
+             <button 
+               @click="demanarPista" 
+               :disabled="pistes_gastades >= 3 || demanantPista"
+               class="boto-demanar-pista"
+               :class="{'opacity-50 grayscale': pistes_gastades >= 3}"
+             >
+               {{ demanantPista ? 'DEMANANT...' : `DEMANAR PISTA (${pistes_gastades}/3)` }}
+             </button>
+             <p v-if="pistes_gastades >= 3" class="text-[10px] text-red-400 font-bold uppercase">Has esgotat les 3 pistes!</p>
+          </div>
 
           <button class="boto-camera" @click="anarACameraDesPunt">
             FER LA FOTO
@@ -152,7 +164,12 @@ export default {
       // Temporitzador
       tempsRestant: null,
       intervalTimer: null,
-      isTimeout: false
+      isTimeout: false,
+
+      // Pistes
+      pistes_gastades: 0,
+      pistesRevelades: new Set(),
+      demanantPista: false
     };
   },
 
@@ -191,7 +208,12 @@ export default {
               j.id_usuari === perfilId || (j.id_usuari && j.id_usuari._id === perfilId)
           );
           if (myPlayer) {
-              this.isCapita = myPlayer.capita !== false; // if undefined, true for backwards compat
+              this.isCapita = myPlayer.capita !== false; 
+              this.pistes_gastades = myPlayer.pistes_gastades || 0;
+              // Inicialitzem les pistes ja revelades
+              if (myPlayer.pistes_revelades) {
+                  myPlayer.pistes_revelades.forEach(id => this.pistesRevelades.add(id.toString()));
+              }
               if (!this.isCapita) {
                   const capitaInfo = sessio.jugadors.find(j => j.grup_id === myPlayer.grup_id && j.capita === true);
                   if (capitaInfo && capitaInfo.id_usuari) {
@@ -322,6 +344,39 @@ export default {
             return `${h}:${mm}:${ss}`;
         }
         return `${mm}:${ss}`;
+    },
+
+    async demanarPista() {
+      if (this.pistes_gastades >= 3 || !this.puntSeleccionat || this.demanantPista) return;
+      
+      const confirmacio = confirm("Vols gastar una de les teves 3 pistes per aquest punt?");
+      if (!confirmacio) return;
+
+      this.demanantPista = true;
+      try {
+        const userStr = localStorage.getItem('usuari');
+        const user = userStr ? JSON.parse(userStr) : {};
+        const perfilId = user._id || null;
+
+        const resposta = await fetch(`${this.baseApi}/api/sessionsJoc/${this.idLloc}/usar-pista`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ perfilId, idPunt: this.puntSeleccionat._id })
+        });
+
+        const dades = await resposta.json();
+        if (resposta.ok) {
+          this.pistes_gastades = dades.pistes_gastades;
+          this.pistesRevelades.add(this.puntSeleccionat._id.toString());
+        } else {
+          alert(dades.missatge || "Error al demanar la pista");
+        }
+      } catch (err) {
+        console.error("Error demanant pista:", err);
+        alert("Error de connexió amb el servidor");
+      } finally {
+        this.demanantPista = false;
+      }
     }
   }
 };
@@ -521,14 +576,48 @@ export default {
 }
 
 .modal-pista {
-  font-size: 13px;
-  color: #e8c4d9;
+  font-size: 14px;
+  color: #fff;
   text-align: center;
-  background: rgba(255,255,255,0.08);
-  border-radius: 8px;
-  padding: 10px 14px;
+  background: rgba(217, 166, 194, 0.2);
+  border: 1px solid #d9a6c2;
+  border-radius: 12px;
+  padding: 12px 16px;
   margin: 0;
   width: 100%;
+  font-weight: 500;
+  box-shadow: 0 0 15px rgba(217, 166, 194, 0.3);
+}
+
+.blink-hint {
+  animation: blinkHint 1.5s ease;
+}
+
+@keyframes blinkHint {
+  0% { transform: scale(0.95); opacity: 0.5; }
+  50% { transform: scale(1.02); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.boto-demanar-pista {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 2px dashed #d9a6c2;
+  color: #d9a6c2;
+  font-weight: bold;
+  font-size: 13px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.boto-demanar-pista:hover:not(:disabled) {
+  background: rgba(217, 166, 194, 0.1);
+  border-style: solid;
+  transform: translateY(-2px);
 }
 
 .boto-camera {
