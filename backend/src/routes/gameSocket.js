@@ -40,6 +40,18 @@ function notifyGameOver(sessioId, sessio, guanyadorId, nomGuanyador) {
     });
 }
 
+/**
+ * Emet l'event 'punt-aconseguit' quan un jugador fa la foto bé.
+ */
+function notifyPointAchieved(sessio, nomUsuari, nomPunt) {
+    if (!ioInstance || !sessio.codi_sala) return;
+    console.log(`[Socket] Notificant punt aconseguit a sala ${sessio.codi_sala}: ${nomUsuari} -> ${nomPunt}`);
+    ioInstance.to(sessio.codi_sala).emit('punt-aconseguit', {
+        nomUsuari,
+        nomPunt
+    });
+}
+
 function configureSocket(server) {
     const io = new Server(server, {
         cors: {
@@ -279,7 +291,7 @@ function configureSocket(server) {
     });
 }
 
-module.exports = { configureSocket, notifyGameOver };
+module.exports = { configureSocket, notifyGameOver, notifyPointAchieved };
 
 function repartirPersonatgesAleatoriament(players, personatgesDisponibles) {
     const resultat = [];

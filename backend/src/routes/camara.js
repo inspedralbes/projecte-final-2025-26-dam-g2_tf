@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 const { Lloc, Perfil, SessioJoc } = require('../models');
-const { notifyGameOver } = require('./gameSocket');
+const { notifyGameOver, notifyPointAchieved } = require('./gameSocket');
 
 // 1. Importem TensorFlow.js per a Node i el model MobileNet
 const tf = require('@tensorflow/tfjs-node');
@@ -71,11 +71,13 @@ router.post('/', async function (req, res) {
         let imatgeReferencia = lloc.imatge_referencia;
         let imatgePuntMissio = null; // Imatge específica del punt per mostrar a l'usuari
         let puntTrobat = false;
+        let nomPunt = lloc.nom; // Per defecte el nom del lloc
         if (idPunt) {
             for (let i = 0; i < lloc.punts_missio.length; i++) {
                 const p = lloc.punts_missio[i];
                 if (p._id.toString() === idPunt.toString()) {
                     puntTrobat = true;
+                    nomPunt = p.nom_punt; // Guardem el nom del punt concret
                     if (p.imatge_referencia) {
                         imatgePuntMissio = p.imatge_referencia; // Guardem la del punt concret
                         imatgeReferencia = p.imatge_referencia; // Per a la IA
@@ -201,6 +203,11 @@ router.post('/', async function (req, res) {
 
                 if (!jaComplet) {
                     jugador.punts_completats.push(puntAMarcar);
+
+                    // Notifiquem a tota la sala (WebSockets)
+                    const perfilInfo = await Perfil.findById(perfilId).select('nom_usuari');
+                    const nomUsuari = perfilInfo ? perfilInfo.nom_usuari : 'Un jugador';
+                    notifyPointAchieved(sessio, nomUsuari, nomPunt);
 
                     // Calculem el temps total en segons des de l'inici
                     const segons = Math.floor((new Date() - sessio.temps_inici) / 1000);
