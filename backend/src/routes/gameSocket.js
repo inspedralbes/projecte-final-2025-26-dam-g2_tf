@@ -66,6 +66,7 @@ function configureSocket(server) {
             };
             socket.join(roomCode);
             socket.emit('room-created', roomCode);
+            socket.emit('room-info', { idLloc: dades.idLloc });
             io.to(roomCode).emit('update-players', sales[roomCode].players);
         });
 
@@ -75,6 +76,7 @@ function configureSocket(server) {
                 room.players.push({ id: socket.id, nom: dades.nomUsuari, perfilId: dades.perfilId });
                 socket.join(dades.roomCode);
                 socket.emit('room-joined', dades.roomCode);
+                socket.emit('room-info', { idLloc: room.idLloc });
                 io.to(dades.roomCode).emit('update-players', room.players);
             } else {
                 socket.emit('error-room', 'La sala no existeix');

@@ -41,6 +41,7 @@ const LlocSchema = new mongoose.Schema({
     type: { type: String, default: 'Point' },
     coordinates: [Number]
   },
+  adreca_inici: { type: String, default: '' },
   imatge_referencia: String,
   foto_mapa: String,
   descripcio: String,
