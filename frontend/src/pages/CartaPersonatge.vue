@@ -1,49 +1,69 @@
 <template>
-  <div class="min-h-screen bg-indigo-950 flex items-center justify-center p-4 overflow-hidden">
-    <!-- Fons amb gradient animat o subtil -->
-    <div class="absolute inset-0 bg-gradient-to-br from-indigo-900 via-indigo-950 to-purple-900 opacity-50"></div>
+  <div class="min-h-screen bg-[#402749] flex flex-col items-center justify-center p-8 overflow-y-auto overflow-x-hidden">
+    <!-- Fons sense gradients extres -->
     
-    <div v-if="personatge" class="relative z-10 w-full max-w-sm">
-      <!-- Contingut de la carta -->
-      <div class="bg-white/10 backdrop-blur-md border-2 border-indigo-500/30 rounded-3xl p-6 shadow-2xl transform transition-all hover:scale-[1.02]">
-        
-        <div class="text-center mb-6">
-          <h2 class="text-indigo-300 text-sm font-bold uppercase tracking-widest mb-1">El teu personatge</h2>
-          <h1 class="text-3xl font-black text-white drop-shadow-md">{{ personatge.nom }}</h1>
-        </div>
+    <div v-if="personatge" class="relative z-10 w-full max-w-sm flex flex-col items-center justify-center min-h-full py-12">
+      
+      <!-- CONTENIDOR DE LA CARTA (Només la carta) -->
+      <div class="perspective-1000 w-full aspect-[2/3] mb-10 shadow-none">
+        <div 
+          class="card-inner w-full h-full shadow-none" 
+          :class="{ 'is-flipped': isFlipped }"
+          @click="isFlipped = true"
+        >
+          <!-- CARA DAVANT (ContraCarta) -->
+          <div class="card-front w-full h-full flex items-center justify-center overflow-hidden bg-[#402749] shadow-none">
+            <img 
+              :src="contraCartaUrl" 
+              alt="Contra Carta"
+              class="w-full h-full object-cover shadow-none"
+            />
+            <!-- Overlay per incentivar el clic (revertit a l'interior) -->
+            <div v-if="!isFlipped" class="absolute inset-0 flex flex-col items-center justify-center bg-black/10 group cursor-pointer shadow-none">
+               <div class="bg-white/10 backdrop-blur-sm p-4 rounded-full border border-white/20 animate-pulse">
+                  <span class="text-white text-3xl block transform">✨</span>
+               </div>
+               <p class="text-white font-bold mt-4 tracking-widest text-xs uppercase text-center opacity-80">Clica la carta</p>
+            </div>
+          </div>
 
-        <!-- Imatge del personatge -->
-        <div class="relative aspect-[3/4] rounded-2xl overflow-hidden border-4 border-white/20 mb-6 bg-indigo-900/50">
-          <img 
-            v-if="personatge.imatge" 
-            :src="personatge.imatge" 
-            :alt="personatge.nom"
-            class="w-full h-full object-cover"
-          />
-          <div v-else class="w-full h-full flex items-center justify-center text-indigo-300/40">
-            <span class="text-6xl">👤</span>
+          <!-- CARA DARRERE (Personatge) -->
+          <div class="card-back w-full h-full flex items-center justify-center overflow-hidden bg-[#402749] shadow-none">
+            <img 
+              v-if="personatge.imatge" 
+              :src="personatge.imatge" 
+              :alt="personatge.nom"
+              class="w-full h-full object-cover shadow-none"
+            />
+            <div v-else class="w-full h-full flex items-center justify-center bg-[#402749] text-indigo-300 shadow-none">
+              <span class="text-6xl shadow-none">👤</span>
+            </div>
           </div>
         </div>
-
-        <!-- Descripció -->
-        <div class="bg-black/20 rounded-xl p-4 mb-8">
-          <p class="text-indigo-100 text-sm leading-relaxed italic">
-            "{{ personatge.descripcio || 'No hi ha descripció disponible per a aquest personatge.' }}"
-          </p>
-        </div>
-
-        <!-- Botó Continuar -->
-        <button 
-          @click="continuarAlMapa"
-          class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 group"
-        >
-          <span>CONTINUAR AL MAPA</span>
-          <span class="group-hover:translate-x-1 transition-transform">→</span>
-        </button>
       </div>
+
+      <!-- INFORMACIÓ I BOTÓ (Fora de la carta, apareix en girar) -->
+      <transition name="fade-up">
+        <div v-if="isFlipped" class="w-full text-center space-y-10 shadow-none">
+          
+          <div class="px-2 shadow-none">
+            <p class="text-white text-lg leading-relaxed font-medium shadow-none">
+              {{ personatge.descripcio || 'No hi ha descripció disponible per a aquest personatge.' }}
+            </p>
+          </div>
+
+          <button 
+            @click="continuarAlMapa"
+            class="w-full bg-white text-[#402749] font-black py-5 rounded-2xl transition-all active:scale-95 uppercase tracking-widest text-sm shadow-none"
+          >
+            COMENÇAR A JUGAR
+          </button>
+        </div>
+      </transition>
+
     </div>
 
-    <div v-else class="text-white">
+    <div v-else class="text-white font-bold animate-pulse mt-20">
       Carregant el teu personatge...
     </div>
   </div>
@@ -54,20 +74,25 @@ export default {
   data() {
     return {
       sessioId: this.$route.params.sessioId,
-      personatge: null
+      personatge: null,
+      isFlipped: false,
+      baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8088',
+      brandColor: '#402749'
     };
   },
+  computed: {
+    contraCartaUrl() {
+      return `${this.baseUrl}/personatges/ContraCarta.png`;
+    }
+  },
   mounted() {
-    // Intentem recuperar les dades de la carta del localStorage que va guardar SalaEspera
     const dadesGuardades = localStorage.getItem('carta_personatge_actual');
     if (dadesGuardades) {
       try {
         const parsed = JSON.parse(dadesGuardades);
-        // Només l'usem si és de la mateixa sessió
         if (parsed.sessioId === this.sessioId) {
           this.personatge = parsed.personatge;
         } else {
-          // Si no coincideix, potser hauríem de redirigir o mostrar error
           this.$router.push('/');
         }
       } catch (e) {
@@ -75,14 +100,11 @@ export default {
         this.$router.push('/');
       }
     } else {
-      // Si no hi ha dades, redirigim a l'índex per seguretat
       this.$router.push('/');
     }
   },
   methods: {
     continuarAlMapa() {
-      // Netegem el localStorage quan marxem (opcional, potser millor deixar-ho per si recarrega)
-      // localStorage.removeItem('carta_personatge_actual');
       this.$router.push('/mapa/' + this.sessioId);
     }
   }
@@ -90,10 +112,47 @@ export default {
 </script>
 
 <style scoped>
-/* Animació de gradient suau */
-@keyframes pulse-slow {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 0.7; }
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  cursor: pointer;
+  box-shadow: none !important;
+}
+
+.card-inner.is-flipped {
+  transform: rotateY(180deg);
+  cursor: default;
+}
+
+.card-front, .card-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: none !important;
+}
+
+.card-back {
+  transform: rotateY(180deg);
+}
+
+/* Animacions de transició */
+.fade-up-enter-active, .fade-up-leave-active {
+  transition: all 0.6s ease-out;
+}
+.fade-up-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
 }
 
 .min-h-screen {

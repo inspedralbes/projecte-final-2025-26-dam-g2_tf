@@ -1,30 +1,20 @@
 <template>
   <div class="min-h-screen bg-indigo-50 flex items-center justify-center p-4">
     <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-lg text-center">
-      <h1 class="text-3xl font-bold mb-4 text-indigo-900">Sala d'Espera</h1>
+      <h1 class="text-3xl font-bold mb-6 text-indigo-900">
+        <span v-if="!showModeSelection">Sala d'Espera</span>
+        <span v-else>Configuració de la Partida</span>
+        <span v-if="roomCode && !showModeSelection" class="text-indigo-600 block text-4xl mt-2 font-mono font-black tracking-widest">{{ roomCode }}</span>
+      </h1>
       
-      <div v-if="loading" class="text-gray-500">
-        Carregant...
+      <div v-if="loading" class="text-gray-500 py-8">
+        <div class="animate-spin inline-block w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full mb-4"></div>
+        <p>Carregant la sala...</p>
       </div>
 
       <div v-else>
-        <div class="mb-8">
-          <p class="text-gray-600 mb-2">Codi de la Sala:</p>
-          <div class="text-4xl font-mono font-black text-indigo-600 tracking-widest bg-indigo-50 py-3 rounded-xl border border-indigo-100">
-            {{ roomCode }}
-          </div>
-        </div>
 
-        <div v-if="locationCoords || adrecaInici" class="mb-8">
-          <button @click="obrirGoogleMaps" class="w-full bg-blue-50 text-blue-600 font-bold py-3 rounded-xl shadow-sm border border-blue-200 hover:bg-blue-100 transition-colors flex items-center justify-center gap-2">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/>
-            </svg>
-            Veure ubicació d'inici
-          </button>
-        </div>
-
-        <div class="mb-8">
+        <div v-if="!showModeSelection" class="mb-8">
           <h2 class="text-xl font-bold text-gray-800 mb-4">Jugadors Connectats</h2>
           <ul class="space-y-2">
             <li v-for="player in players" :key="player.id" class="flex items-center bg-gray-50 p-3 rounded-lg">
@@ -46,6 +36,15 @@
         </div>
 
         <div v-if="isCreator && showModeSelection" class="mt-8 bg-white border-2 border-indigo-100 rounded-xl p-4 text-left">
+            <div v-if="locationCoords || adrecaInici" class="mb-6">
+                <button @click="obrirGoogleMaps" class="w-full bg-blue-50 text-blue-600 font-bold py-3 rounded-xl shadow-sm border border-blue-200 hover:bg-blue-100 transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/>
+                    </svg>
+                    Veure ubicació d'inici
+                </button>
+            </div>
+            
             <h3 class="text-xl font-bold text-indigo-900 mb-4">Selecciona la Durada</h3>
             <div class="grid grid-cols-3 gap-3 mb-6">
                 <button v-for="opt in durationOptions" :key="opt.value" 
@@ -113,7 +112,7 @@ const socket = ref(null);
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
-const roomCode = ref('');
+const roomCode = ref(route.params.id !== 'crear' ? route.params.id : '');
 const players = ref([]);
 const loading = ref(true);
 const error = ref('');
@@ -301,9 +300,9 @@ onMounted(() => {
 
   socket.value.on('game-started', function(dades) {
     console.log("[SalaEspera] Joc començat redactat:", dades);
-    // Tots els jugadors marxen cap al mapa amb l'ID de la sessió real
+    // Tots els jugadors marxen cap a la carta de personatge abans d'anar al mapa
     if (dades.sessioId) {
-      router.push('/mapa/' + dades.sessioId);
+      router.push('/carta-personatge/' + dades.sessioId);
     } else {
       console.error("[SalaEspera] No s'ha rebut sessioId!", dades);
       if (dades.idLloc) {

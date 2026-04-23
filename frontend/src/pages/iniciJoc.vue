@@ -48,30 +48,7 @@
       </div>
     </div>
 
-    <!-- Botó per saltar la sala i jugar sol -->
-    <div class="mt-auto pt-8 text-center bg-gray-50/50 rounded-3xl p-6 border border-dashed border-gray-200">
-      <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Partida Individual</h3>
-      
-      <div class="flex justify-center gap-3 mb-6">
-        <button 
-          v-for="d in [45, 60, 90]" 
-          :key="d"
-          @click="duracioSeleccionada = d"
-          class="px-4 py-2 rounded-xl text-sm font-bold transition-all"
-          :class="duracioSeleccionada === d ? 'bg-purple-600 text-white shadow-md scale-105' : 'bg-white text-gray-600 border border-gray-200'"
-        >
-          {{ d }} min
-        </button>
-      </div>
-
-      <button 
-        @click="jugarSolo"
-        class="w-full bg-white border-2 border-purple-600 text-purple-600 font-black py-4 rounded-xl shadow-sm active:scale-95 transition-all uppercase tracking-widest text-sm"
-      >
-        COMENÇAR ARA SOL
-      </button>
-      <p class="text-[10px] text-gray-400 mt-2 italic">Caldrà escollir una durada per començar.</p>
-    </div>
+    <!-- Botó per saltar la sala i jugar sol (eliminat per petició de l'usuari, el flux s'unifica a la sala) -->
 
     <!-- Modal que mostra confirmació a l'usuari -->
     <div v-if="mostrarModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
@@ -104,7 +81,6 @@ const codigoSala = ref('')
 const mostrarModal = ref(false)
 const mensajeModal = ref('')
 const submensajeModal = ref('')
-const duracioSeleccionada = ref(null) // Nou: Per a partides individuals
 
 // Funció per crear una sala (anar a la sala d'espera amb mode crear)
 function crearSala() {
@@ -117,14 +93,7 @@ function unirseSala() {
   router.push({ name: 'sala-espera', params: { id: codigoSala.value } })
 }
 
-// Funció per anar directament al joc sense sala
-function jugarSolo() {
-  if (!duracioSeleccionada.value) {
-    alert("Si us plau, selecciona una durada per a la teva partida individual.");
-    return;
-  }
-  irAlJuego()
-}
+// Funció per unir-se si l'usuari ha escrit un codi
 
 // Funció que es crida en prémer "Som-hi" al modal 
 function confirmarInicio() {
@@ -141,8 +110,7 @@ async function irAlJuego() {
 
     console.log("Dades enviades al POST:", {
       idLloc: route.params.id,
-      perfilId: perfilId,
-      duracio: duracioSeleccionada.value
+      perfilId: perfilId
     });
 
     if (!perfilId) {
@@ -156,8 +124,7 @@ async function irAlJuego() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         idLloc: route.params.id, 
-        perfilId: perfilId,
-        duracio: duracioSeleccionada.value || 60
+        perfilId: perfilId
       })
     });
 
