@@ -5,25 +5,49 @@
         <h1 class="text-3xl font-bold text-gray-900">Cercador</h1>
         <button @click="seleccionarDestiSorpresa" 
                 :disabled="animantSorpresa"
-                class="mt-1 flex items-center gap-1.5 text-[#804f7f] font-bold text-xs uppercase tracking-wider hover:text-[#5d3962] transition-colors disabled:opacity-50">
-          <span>{{ animantSorpresa ? 'Triant...' : '✨ Destí Sorpresa' }}</span>
+                class="mt-1 flex items-center gap-1.5 text-[#804f7f] font-bold text-xs uppercase tracking-wider hover:text-[#5d3962] transition-colors disabled:opacity-50"
+                :class="{ 'animate-pulse scale-105 contrast-125': !animantSorpresa }">
+          <span>{{ animantSorpresa ? 'Triant el teu proper destí...' : '✨ Destí Sorpresa' }}</span>
         </button>
       </div>
       <BotonPerfil @login="actualitzarUsuari" />
     </div>
 
+    <!-- Modal d'Impacte Destí Sorpresa -->
     <div v-if="animantSorpresa" 
-         class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm transition-opacity">
-      <div class="bg-white p-5 rounded-3xl shadow-2xl w-full max-w-xs overflow-hidden animate-in zoom-in duration-300">
-        <p class="text-center font-bold text-[#804f7f] mb-4 text-sm uppercase tracking-widest">Cercant aventura...</p>
-        
-        <div class="h-40 bg-gray-100 rounded-2xl border-2 border-[#bc85ab] overflow-hidden flex items-center justify-center">
-          <div :style="estilSlot" class="flex flex-col transition-all duration-[2500ms] ease-in-out">
-            <div v-for="(img, index) in fotosAnimacio" :key="index" class="h-40 w-full flex-shrink-0">
-              <img :src="img" class="h-full w-full object-cover" />
+         class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#402749]/80 backdrop-blur-md transition-opacity duration-500">
+      
+      <div class="relative w-full max-w-sm flex flex-col items-center">
+        <!-- Text de Feedback -->
+        <p class="text-center font-black text-white mb-8 text-xl uppercase tracking-[0.2em] drop-shadow-lg">
+          Cercant aventura...
+        </p>
+
+        <!-- Tarja de l'Animació -->
+        <div class="w-full bg-[#f5cbdd] p-4 rounded-[2rem] border-[6px] border-[#bc85ab] shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
+          <div class="relative h-64 w-full bg-black rounded-2xl overflow-hidden">
+            
+            <!-- Slot Machine Container -->
+            <div :style="estilScroll" 
+                 class="absolute top-0 left-0 w-full transition-transform duration-[3000ms] ease-[cubic-bezier(0.45,0.05,0.55,0.95)]">
+              <div v-for="(img, idx) in fotosAnimacio" :key="idx" class="h-64 w-full flex-shrink-0">
+                <img :src="img" class="h-full w-full object-cover brightness-90" @error="handleImgError" />
+              </div>
+            </div>
+
+            <!-- Línia Brillant Central -->
+            <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+              <div class="w-full h-1 bg-white shadow-[0_0_15px_rgba(255,255,255,1),0_0_30px_rgba(188,133,171,0.8)] z-10 opacity-80"></div>
+              
+              <!-- Gradients per l'efecte de visor -->
+              <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/60"></div>
             </div>
           </div>
         </div>
+
+        <p class="mt-8 text-[#d9a6c2] font-medium text-center animate-pulse">
+          Triant el teu proper destí...
+        </p>
       </div>
     </div>
 
@@ -137,7 +161,8 @@ const filtreBarri = ref('');
 // 2. AFEGEIX LES NOVES VARIABLES PER L'ANIMACIÓ AQUÍ [cite: 66, 74]
 const animantSorpresa = ref(false);
 const fotosAnimacio = ref([]);
-const estilSlot = ref({ transform: 'translateY(0px)' });
+const estilScroll = ref({ transform: 'translateY(0px)' });
+const placeholderImage = 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=500&auto=format&fit=crop';
 
 // Al iniciar la página
 onMounted(() => {
@@ -171,38 +196,52 @@ async function seleccionarDestiSorpresa() {
   if (animantSorpresa.value) return;
 
   try {
-    const resposta = await fetch(`${API_URL}/api/cercador/aleatori`);
-    const llocEscollit = await resposta.json();
-    
-    const imatgesAleatories = [...totsElsLlocs.value]
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 10) // Fem l'animació una mica més llarga
-      .map(l => l.imatge);
-    
-    fotosAnimacio.value = [...imatgesAleatories, llocEscollit.imatge_referencia];
+    // 1. Iniciem la càrrega del destí real
+    const dadesPromise = fetch(`${API_URL}/api/cercador/aleatori`).then(res => res.json());
 
-    estilSlot.value = { transform: 'translateY(0px)', transition: 'none' };
+    // 2. Preparem un mix d'imatges d'impacte (mínim 10 + destí final)
+    const fotosDisponibles = totsElsLlocs.value
+      .map(l => l.imatge)
+      .filter(Boolean);
+    
+    // Si no n'hi ha prou, utilitzem placeholders
+    const baseFotos = fotosDisponibles.length >= 10 
+      ? fotosDisponibles.sort(() => 0.5 - Math.random()).slice(0, 15)
+      : [...fotosDisponibles, placeholderImage, placeholderImage, placeholderImage, placeholderImage, placeholderImage].slice(0, 10);
+
+    fotosAnimacio.value = baseFotos;
+    estilScroll.value = { transform: 'translateY(0px)' };
     animantSorpresa.value = true;
 
-    setTimeout(() => {
-      const alturaImatge = 160; // ARA ÉS 160px perquè h-40 = 160px
-      const desplacamentTotal = (fotosAnimacio.value.length - 1) * alturaImatge;
-      
-      estilSlot.value = { 
-        transform: `translateY(-${desplacamentTotal}px)`,
-        transition: 'transform 2.5s cubic-bezier(0.15, 0, 0.15, 1)' 
-      };
-    }, 50);
+    // 3. Obtenim el lloc real
+    const llocEscollit = await dadesPromise;
+    const imatgeFinal = llocEscollit.imatge_referencia || placeholderImage;
 
+    // 4. Actualitzem la llista per incloure la foto final al final del recorregut
+    fotosAnimacio.value = [...baseFotos, imatgeFinal];
+
+    // 5. Activem l'animació de transició
+    setTimeout(() => {
+      const alcadaVisor = 256; // h-64 = 256px
+      const desplacamentTotal = (fotosAnimacio.value.length - 1) * alcadaVisor;
+      estilScroll.value = { 
+        transform: `translateY(-${desplacamentTotal}px)` 
+      };
+    }, 100);
+
+    // 6. Redirecció en acabar l'animació (3000ms + petit buffer)
     setTimeout(() => {
       anarALloc(llocEscollit._id);
-      // No posem animantSorpresa a false aquí, es tancarà en marxar de la pàgina
-    }, 3200);
+    }, 3500);
 
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error al seleccionar sorpresa:", error);
     animantSorpresa.value = false;
   }
+}
+
+function handleImgError(e) {
+  e.target.src = placeholderImage;
 }
 
 // Función calculada para filtrar (se actualiza sola cuando escribes)
