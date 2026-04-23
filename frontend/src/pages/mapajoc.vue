@@ -210,6 +210,15 @@ export default {
           if (myPlayer) {
               this.isCapita = myPlayer.capita !== false; 
               this.pistes_gastades = myPlayer.pistes_gastades || 0;
+              
+              // FILTRE DE PUNTS PER PERSONATGE
+              if (myPlayer.punts_assignats && myPlayer.punts_assignats.length > 0) {
+                  // Convertim els IDs a string per comparar
+                  const idsAssignats = myPlayer.punts_assignats.map(id => id.toString());
+                  this.puntsMissio = this.puntsMissio.filter(p => idsAssignats.indexOf(p._id.toString()) !== -1);
+                  console.log("Punts filtrats per al jugador:", this.puntsMissio.length);
+              }
+
               // Inicialitzem les pistes ja revelades
               if (myPlayer.pistes_revelades) {
                   myPlayer.pistes_revelades.forEach(id => this.pistesRevelades.add(id.toString()));

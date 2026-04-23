@@ -247,15 +247,21 @@ onMounted(() => {
       router.push({ name: 'mapa' });
   }); */
 
+  socket.value.on('carta-personatge', function(dades) {
+    console.log('Carta de personatge rebuda:', dades);
+    // Guardem la info al localStorage per a la següent pàgina
+    localStorage.setItem('carta_personatge_actual', JSON.stringify(dades));
+  });
+
   socket.value.on('game-started', function(dades) {
-    // Tots els jugadors marxen cap al mapa amb l'ID de la sessió real
     if (dades.sessioId) {
-      router.push('/mapa/' + dades.sessioId);
+      // Redirigim primer a la carta de personatge
+      router.push('/carta-personatge/' + dades.sessioId);
     } else if (dades.idLloc) {
-      // Fallback: si no hi ha sessió, anem directament al lloc
       router.push('/mapa/' + dades.idLloc);
     }
-});
+  });
+
 });
 
 onUnmounted(() => {
