@@ -5,7 +5,7 @@
     <div v-if="personatge" class="relative z-10 w-full max-w-sm flex flex-col items-center justify-center min-h-full py-12">
       
       <!-- CONTENIDOR DE LA CARTA (Només la carta) -->
-      <div class="perspective-1000 w-full aspect-[2/3] mb-10 shadow-none">
+      <div class="perspective-1000 w-full max-w-[320px] aspect-[2/3] min-h-[480px] mb-10 shadow-none">
         <div 
           class="card-inner w-full h-full shadow-none" 
           :class="{ 'is-flipped': isFlipped }"
@@ -85,25 +85,51 @@ export default {
       return `${this.baseUrl}/personatges/ContraCarta.png`;
     }
   },
-  mounted() {
+  async mounted() {
     const dadesGuardades = localStorage.getItem('carta_personatge_actual');
     if (dadesGuardades) {
       try {
         const parsed = JSON.parse(dadesGuardades);
         if (parsed.sessioId === this.sessioId) {
           this.personatge = parsed.personatge;
-        } else {
-          this.$router.push('/');
+          return;
         }
       } catch (e) {
         console.error("Error parsejant dades de la carta:", e);
-        this.$router.push('/');
       }
-    } else {
-      this.$router.push('/');
     }
+    
+    // Si no hi ha dades al localStorage o el sessioId no coincideix, intentem carregar de l'API
+    await this.carregarPersonatgeDeAPI();
   },
   methods: {
+    async carregarPersonatgeDeAPI() {
+      try {
+        console.log("[CartaPersonatge] Intentant carregar de l'API per a la sessió:", this.sessioId);
+        const res = await fetch(`${this.baseUrl}/api/sessionsJoc/${this.sessioId}`);
+        if (res.ok) {
+          const sessio = await res.json();
+          // Busquem quin personatge té assignat l'usuari actual en aquesta sessió
+          const userStr = localStorage.getItem('usuari');
+          const userObj = userStr ? JSON.parse(userStr) : {};
+          const perfilId = userObj._id;
+
+          const jugador = sessio.jugadors.find(j => j.id_usuari._id === perfilId || j.id_usuari === perfilId);
+          if (jugador && jugador.personatge_id) {
+             const p = jugador.personatge_id;
+             this.personatge = {
+               nom: p.nom,
+               descripcio: p.descripcio || '',
+               imatge: p.imatge ? (p.imatge.startsWith('http') ? p.imatge : this.baseUrl + p.imatge) : ''
+             };
+          } else {
+             console.error("[CartaPersonatge] No s'ha trobat jugador o personatge a la sessió");
+          }
+        }
+      } catch (e) {
+        console.error("[CartaPersonatge] Error carregant de l'API:", e);
+      }
+    },
     continuarAlMapa() {
       this.$router.push('/mapa/' + this.sessioId);
     }

@@ -265,8 +265,18 @@ async function guardarPersonatge() {
       await carregarPersonatges();
       resetForm();
     } else {
-      var dades = await res.json();
-      missatgeError.value = dades.message || 'Error en guardar el personatge.';
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        var dades = await res.json();
+        missatgeError.value = dades.message || 'Error en guardar el personatge.';
+      } else {
+        // Si no és JSON, probablement és un error del servidor o del proxy (ex: 413 Payload Too Large)
+        if (res.status === 413) {
+          missatgeError.value = 'La imatge es massa gran. Intenta-ho amb una foto mes petita.';
+        } else {
+          missatgeError.value = 'Error del servidor (status: ' + res.status + ').';
+        }
+      }
     }
   } catch (err) {
     console.error('[AdminPersonatges] Error en guardar:', err);
