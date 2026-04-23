@@ -16,6 +16,7 @@ import SalaEspera from '../pages/SalaEspera.vue'
 import elmeulogin from '../components/elmeulogin.vue';
 import LeaderboardFinal from '../pages/LeaderboardFinal.vue'
 import camara from '../pages/camara.vue'
+import CartaPersonatge from '../pages/CartaPersonatge.vue'
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/AdminDashboard.vue'
@@ -143,6 +144,11 @@ const routes = [
     name: 'Leaderboard',
     component: LeaderboardFinal,
     props: true
+  },
+  {
+    path: '/carta-personatge/:sessioId',
+    name: 'carta-personatge',
+    component: CartaPersonatge
   },
 ]
 

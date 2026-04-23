@@ -15,6 +15,15 @@
           </div>
         </div>
 
+        <div v-if="locationCoords || adrecaInici" class="mb-8">
+          <button @click="obrirGoogleMaps" class="w-full bg-blue-50 text-blue-600 font-bold py-3 rounded-xl shadow-sm border border-blue-200 hover:bg-blue-100 transition-colors flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/>
+            </svg>
+            Veure ubicació d'inici
+          </button>
+        </div>
+
         <div class="mb-8">
           <h2 class="text-xl font-bold text-gray-800 mb-4">Jugadors Connectats</h2>
           <ul class="space-y-2">
@@ -110,6 +119,9 @@ const loading = ref(true);
 const error = ref('');
 const isCreator = ref(false);
 
+const locationCoords = ref(null);
+const adrecaInici = ref('');
+
 // Recuperar usuari del localStorage o usar un per defecte
 const userStr = localStorage.getItem('usuari');
 const user = userStr ? JSON.parse(userStr) : { nom_usuari: 'Invitado' };
@@ -124,6 +136,17 @@ const durationOptions = [
     { label: '1 hora', value: 60, desc: 'Normal' },
     { label: '90 min', value: 90, desc: 'Fàcil' }
 ];
+
+function obrirGoogleMaps() {
+    if (adrecaInici.value) {
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(adrecaInici.value)}&travelmode=walking`;
+        window.open(url, '_blank');
+    } else if (locationCoords.value) {
+        const [lng, lat] = locationCoords.value;
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
+        window.open(url, '_blank');
+    }
+}
 
 function generarGrups() {
     let list = [...players.value];
@@ -237,6 +260,25 @@ onMounted(() => {
       loading.value = false;
   });
 
+  socket.value.on('room-info', async (data) => {
+      if (data && data.idLloc) {
+          try {
+              const res = await fetch(`${API_URL}/api/mapa/punts/${data.idLloc}`);
+              const lloc = await res.json();
+              if (lloc) {
+                  if (lloc.adreca_inici) {
+                      adrecaInici.value = lloc.adreca_inici;
+                  }
+                  if (lloc.ubicacio && lloc.ubicacio.coordinates) {
+                      locationCoords.value = lloc.ubicacio.coordinates;
+                  }
+              }
+          } catch (e) {
+              console.error("Error obtenint ubicació", e);
+          }
+      }
+  });
+
   socket.value.on('update-players', (playerList) => {
     players.value = playerList;
   });
@@ -251,6 +293,12 @@ onMounted(() => {
       router.push({ name: 'mapa' });
   }); */
 
+  socket.value.on('carta-personatge', function(dades) {
+    console.log('Carta de personatge rebuda:', dades);
+    // Guardem la info al localStorage per a la següent pàgina
+    localStorage.setItem('carta_personatge_actual', JSON.stringify(dades));
+  });
+
   socket.value.on('game-started', function(dades) {
     console.log("[SalaEspera] Joc començat redactat:", dades);
     // Tots els jugadors marxen cap al mapa amb l'ID de la sessió real
@@ -262,7 +310,8 @@ onMounted(() => {
           router.push('/mapa/' + dades.idLloc);
       }
     }
-});
+  });
+
 });
 
 onUnmounted(() => {
