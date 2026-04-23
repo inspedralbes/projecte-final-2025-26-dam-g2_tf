@@ -73,6 +73,7 @@ const SessioJocSchema = new mongoose.Schema({
     personatge_assignat: String,
     foto_secreta: String,
     pistes_gastades: { type: Number, default: 0 },
+    pistes_revelades: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' }], // IDs dels punts revelats
     completat: { type: Boolean, default: false },
     puntsPartida: { type: Number, default: 0 },
     temps: { type: String, default: "0" },
@@ -89,7 +90,7 @@ const SessioJocSchema = new mongoose.Schema({
 
   id_puntos_de_la_partida: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' }], // Llista objectius 
   id_objetivo_actual: { type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' },        // Punt actual 
-  
+
   duracio: { type: Number, default: 60 }, // en minuts
   temps_limit: { type: Date }              // data/hora de finalització
 });

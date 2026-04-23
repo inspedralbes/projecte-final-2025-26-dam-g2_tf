@@ -96,7 +96,7 @@
             <div v-if="puntPendent" class="mt-3 p-4 border-2 border-purple-100 rounded-2xl bg-purple-50/40">
               <p class="text-xs font-black text-purple-400 uppercase mb-2">Nou punt ({{ puntPendent.posicio_x.toFixed(1) }}%, {{ puntPendent.posicio_y.toFixed(1) }}%)</p>
               <input v-model="puntPendent.nom_punt" placeholder="Nom del punt (ex: Façana principal)" class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm mb-2 outline-none" />
-              <input v-model="puntPendent.pista" placeholder="Pista per a l'usuari..." class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm mb-2 italic outline-none" />
+              <textarea v-model="puntPendent.pista" placeholder="💡 Pista per trobar el punt... (Cost: 1 pista)" class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm mb-2 italic outline-none" rows="2"></textarea>
 
               <!-- Selector d'imatge -->
               <div class="mb-3">
@@ -171,7 +171,7 @@
                 <span class="w-6 h-6 rounded-full bg-[#bc85ab] text-white text-xs font-bold flex items-center justify-center flex-shrink-0">{{ i + 1 }}</span>
                 <input v-model="punt.nom_punt" placeholder="Nom del punt" class="flex-1 font-bold text-sm border-b outline-none" />
               </div>
-              <input v-model="punt.pista" placeholder="Pista per trobar el punt..." class="w-full text-xs italic text-gray-500 outline-none mb-2" />
+              <textarea v-model="punt.pista" placeholder="💡 Pista per trobar el punt..." class="w-full text-xs italic text-gray-500 outline-none mb-2 border-b border-gray-100" rows="1"></textarea>
               <!-- Selector d'imatge per punt guardat -->
               <div class="mt-1 mb-2">
                 <label class="text-[9px] font-bold text-purple-400 uppercase mb-1 block">🖼️ Imatge del punt</label>

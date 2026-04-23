@@ -125,4 +125,52 @@ router.get('/:id', async function (req, res) {
     }
 });
 
+// PATCH /api/sessionsJoc/:id/usar-pista — Incrementar el contador de pistes d'un jugador
+router.patch('/:id/usar-pista', async function (req, res) {
+    try {
+        const { perfilId, idPunt } = req.body;
+        if (!perfilId || !idPunt) return res.status(400).json({ missatge: "Faltes dades: perfilId o idPunt" });
+
+        const sessio = await SessioJoc.findById(req.params.id);
+        if (!sessio) return res.status(404).json({ missatge: "Sessió no trobada" });
+
+        // Busquem el jugador a la sessió
+        const jugador = sessio.jugadors.find(j =>
+            j.id_usuari.toString() === perfilId.toString()
+        );
+
+        if (!jugador) return res.status(404).json({ missatge: "Jugador no trobat a la sessió" });
+
+        // Si el punt ja estava revelat, no fem res especial, només confirmem
+        if (jugador.pistes_revelades && jugador.pistes_revelades.includes(idPunt)) {
+            return res.json({
+                missatge: "Pista ja revelada anteriorment",
+                pistes_gastades: jugador.pistes_gastades,
+                pistes_revelades: jugador.pistes_revelades
+            });
+        }
+
+        // Verifiquem el límit de 3 pistes
+        if (jugador.pistes_gastades >= 3) {
+            return res.status(400).json({ missatge: "Has esgotat el límit de 3 pistes!", pistes_gastades: jugador.pistes_gastades });
+        }
+
+        jugador.pistes_gastades += 1;
+        if (!jugador.pistes_revelades) jugador.pistes_revelades = [];
+        jugador.pistes_revelades.push(idPunt);
+
+        await sessio.save();
+
+        res.json({
+            missatge: "Pista utilitzada",
+            pistes_gastades: jugador.pistes_gastades,
+            pistes_revelades: jugador.pistes_revelades
+        });
+
+    } catch (error) {
+        console.error("Error al gastar pista:", error);
+        res.status(500).json({ missatge: "Error de servidor" });
+    }
+});
+
 module.exports = router;
