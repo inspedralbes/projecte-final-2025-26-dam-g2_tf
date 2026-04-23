@@ -74,10 +74,12 @@
             </div>
           </div>
 
-          <div v-if="pistesRevelades.has(puntSeleccionat?._id)" class="modal-pista blink-hint">
+          <!-- Mostrar pista si ja està revelada O si no estem en una sessió real (permet veure pistes en mode prova/lliure) -->
+          <div v-if="puntSeleccionat?.pista && (pistesRevelades.has(puntSeleccionat._id?.toString()) || !sessioId)" class="modal-pista blink-hint">
              💡 {{ puntSeleccionat.pista }}
           </div>
 
+          <!-- Mostrar botó per demanar la pista si estem en una sessió i encara no s'ha revelat -->
           <div v-else-if="puntSeleccionat?.pista && sessioId" class="w-full flex flex-col items-center gap-3">
              <button 
                @click="demanarPista" 
@@ -211,6 +213,7 @@ export default {
 
       if (sessio) {
           console.log("[Mapa] Sessió trobada:", sessio._id, "Temps límit:", sessio.temps_limit);
+          this.sessioId = sessio._id; // Assignem sessioId ja que tenim sessió
           // Si hi ha sessió, busquem el jugador i el seu temps limit
           const userStr = localStorage.getItem('usuari');
           const user = userStr ? JSON.parse(userStr) : {};
@@ -351,12 +354,6 @@ export default {
     },
 
     iniciarTemporitzador(tempsLimit) {
-        // Netegem qualsevol interval previ per evitar que n'hi hagi diversos corrent
-        // i facin "flicker" (parpelleig) entre temps diferents.
-        if (this.intervalTimer) {
-            clearInterval(this.intervalTimer);
-        }
-
         const limit = new Date(tempsLimit).getTime();
         
         const actualizar = () => {

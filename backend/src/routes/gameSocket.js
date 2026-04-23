@@ -115,7 +115,7 @@ function configureSocket(server) {
                     }
                 }
 
-                // 3. Construïm l'array de jugadors
+                // 4. Construïm l'array de jugadors
                 const jugadorsDB = [];
                 for (let i = 0; i < room.players.length; i++) {
                     const p = room.players[i];
@@ -158,7 +158,6 @@ function configureSocket(server) {
                             punts_completats: [],
                             exactitud_media: 0,
                             temps: "0",
-                            temps_limit: tempsLimit,
                             grup_id: groupId,
                             capita: isCapita,
                             punts_assignats: puntsAssignats
