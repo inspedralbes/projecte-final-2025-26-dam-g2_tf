@@ -38,7 +38,9 @@ router.post('/crear', async function (req, res) {
                 exactitud_media: 0,
                 temps: "0"
             }],
-            temps_inici: new Date()
+            temps_inici: new Date(),
+            duracio: req.body.duracio || 60,
+            temps_limit: new Date(Date.now() + (req.body.duracio || 60) * 60000)
         });
 
         await novaSessio.save();
@@ -92,7 +94,9 @@ router.post('/crear-grup', async function (req, res) {
             id_lloc_desti: idLloc,
             id_puntos_de_la_partida: puntsIds,
             jugadors: jugadorsDB,
-            temps_inici: new Date()
+            temps_inici: new Date(),
+            duracio: req.body.duracio || 60,
+            temps_limit: new Date(Date.now() + (req.body.duracio || 60) * 60000)
         });
 
         await novaSessio.save();

@@ -30,12 +30,13 @@ function notifyGameOver(sessioId, sessio, guanyadorId, nomGuanyador) {
         return (b.exactitud_media || 0) - (a.exactitud_media || 0);
     });
 
-    console.log(`[Socket] Emetent game-over a la sala: ${roomCode}`);
+    console.log(`[Socket] Emetent game-over a la sala: ${roomCode}${guanyadorId === 'timeout' ? ' (per TEMPS)' : ''}`);
     ioInstance.to(roomCode).emit('game-over', {
         sessioId: sessioId.toString(),
-        guanyadorId: guanyadorId ? guanyadorId.toString() : null,
-        nomGuanyador: nomGuanyador || 'Un jugador',
-        jugadors: jugadorsOrdenats
+        guanyadorId: guanyadorId === 'timeout' ? 'timeout' : (guanyadorId ? guanyadorId.toString() : null),
+        nomGuanyador: guanyadorId === 'timeout' ? 'EL TEMPS S\'HA ACABAT' : (nomGuanyador || 'Un jugador'),
+        jugadors: jugadorsOrdenats,
+        timeout: guanyadorId === 'timeout'
     });
 }
 
@@ -60,6 +61,7 @@ function configureSocket(server) {
             sales[roomCode] = {
                 creatorId: socket.id,
                 idLloc: dades.idLloc,
+                duracio: dades.duracio || 60, // Per defecte 1 hora
                 players: [{ id: socket.id, nom: dades.nomUsuari, perfilId: dades.perfilId }]
             };
             socket.join(roomCode);
@@ -136,6 +138,12 @@ function configureSocket(server) {
                 }
 
                 // 4. Creem la sessió a la BD
+                const duracioSessio = dades.duracio || room.duracio || 60;
+                room.duracio = duracioSessio; // Actualitzem la durada en memòria per si de cas
+
+                const ara = new Date();
+                const tempsLimit = new Date(ara.getTime() + duracioSessio * 60000);
+
                 const novaSessio = new SessioJoc({
                     codi_sala: roomCode,
                     tipus_partida: mode.toLowerCase(),
@@ -143,14 +151,35 @@ function configureSocket(server) {
                     id_lloc_desti: room.idLloc,
                     id_puntos_de_la_partida: puntsIds,
                     jugadors: jugadorsDB,
-                    temps_inici: new Date()
+                    temps_inici: ara,
+                    duracio: duracioSessio,
+                    temps_limit: tempsLimit
                 });
                 await novaSessio.save();
 
-                console.log('Sessió de joc creada:', novaSessio._id, '| roomCode:', roomCode, '| Mode:', mode);
+                console.log('Sessió de joc creada:', novaSessio._id, '| roomCode:', roomCode, '| Mode:', mode, '| Temps limit:', tempsLimit);
+
+                // 5. Planificar el final per timeout
+                setTimeout(async () => {
+                    try {
+                        const s = await SessioJoc.findById(novaSessio._id);
+                        if (s && s.estat === 'jugant') {
+                            s.estat = 'finalitzada';
+                            await s.save();
+                            console.log(`[Timeout] La sala ${roomCode} ha arribat al límit de temps.`);
+                            notifyGameOver(s._id, s, 'timeout', null);
+                        }
+                    } catch (e) {
+                        console.error('[Timeout] Error al finalitzar sessió:', e);
+                    }
+                }, duracioSessio * 60000);
 
                 // 6. Enviem el sessioId a tots els jugadors
-                io.to(roomCode).emit('game-started', { sessioId: novaSessio._id, mode: mode });
+                io.to(roomCode).emit('game-started', {
+                    sessioId: novaSessio._id,
+                    mode: mode,
+                    tempsLimit: tempsLimit
+                });
 
             } catch (err) {
                 console.error('Error al crear sessió en start-game:', err);

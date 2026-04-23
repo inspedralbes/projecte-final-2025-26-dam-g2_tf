@@ -35,12 +35,33 @@ const modalDades = ref({
   completat_tot: false 
 });
 
-// Notificació de guanyador (per als jugadors que no han acabat)
+// Notificació de guanyador (per als jugadors que no han acabat o timeout)
 const mostrarNotificacioGuanyador = ref(false);
 const nomGuanyador = ref('');
 const sessioIdGuanyador = ref('');
+const isTimeout = ref(false);
+
+// Temporitzador
+const tempsRestant = ref(null);
+let intervalTimer = null;
 
 onMounted(async () => {
+  // 0. Carreguem la sessió per saber el temps límit
+  const codi_sala = route.params.codi_sala;
+  if (codi_sala) {
+    try {
+        const respSessio = await fetch(`${API_URL}/api/sessionsJoc/${codi_sala}`);
+        if (respSessio.ok) {
+            const sessio = await respSessio.json();
+            if (sessio.temps_limit && sessio.estat === 'jugant') {
+                iniciarTemporitzador(sessio.temps_limit);
+            }
+        }
+    } catch (err) {
+        console.error('Error carregant la sessió:', err);
+    }
+  }
+
   // 1. Carreguem la imatge de referència del punt clicat des del backend
   if (idLloc && idPuntParam) {
     try {
@@ -84,7 +105,6 @@ onMounted(async () => {
 
   // Connectem el socket i escoltem l'event 'game-over'
   // Emetem 'join-game-room' perquè el backend ens uneixi a la room correcta
-  const codi_sala = route.params.codi_sala;
   if (codi_sala) {
     socketJoc = io(API_URL);
     // Quan el socket es connecta, demanem unir-nos a la room de la partida
@@ -96,10 +116,12 @@ onMounted(async () => {
       const meuId = usuari.value?._id?.toString();
       // Si soc el guanyador, ignoro l'event: el modal de "Partida Finalitzada!" ja em redirigirà
       if (meuId && dades.guanyadorId && meuId === dades.guanyadorId.toString()) return;
-      // Mostrar notificació als altres jugadors en comptes de redirigir automàticament
+
       sessioIdGuanyador.value = dades.sessioId || codi_sala;
       nomGuanyador.value = dades.nomGuanyador || 'Un jugador';
+      isTimeout.value = dades.timeout || false;
       mostrarNotificacioGuanyador.value = true;
+      if (intervalTimer) clearInterval(intervalTimer);
     });
   }
 });
@@ -115,7 +137,41 @@ onUnmounted(() => {
   if (socketJoc) {
     socketJoc.disconnect();
   }
+  if (intervalTimer) {
+      clearInterval(intervalTimer);
+  }
 });
+
+function iniciarTemporitzador(tempsLimit) {
+    const limit = new Date(tempsLimit).getTime();
+    
+    const actualizar = () => {
+        const ara = new Date().getTime();
+        const diferencia = Math.max(0, Math.floor((limit - ara) / 1000));
+        tempsRestant.value = diferencia;
+        
+        if (diferencia <= 0) {
+            clearInterval(intervalTimer);
+        }
+    };
+    
+    actualizar();
+    intervalTimer = setInterval(actualizar, 1000);
+}
+
+function formatarTemps(segons) {
+    const h = Math.floor(segons / 3600);
+    const m = Math.floor((segons % 3600) / 60);
+    const s = segons % 60;
+    
+    const mm = m < 10 ? '0' + m : m;
+    const ss = s < 10 ? '0' + s : s;
+    
+    if (h > 0) {
+        return `${h}:${mm}:${ss}`;
+    }
+    return `${mm}:${ss}`;
+}
 
 function fotoAnterior() {
   if (fotosActuals.value.length === 0) return;
@@ -225,6 +281,12 @@ async function enviarDadesAlBackend(imatgeEnText) {
     ></video>
 
     <canvas ref="canvasRef" class="hidden"></canvas>
+
+    <!-- TEMPORITZADOR -->
+    <div v-if="tempsRestant !== null" class="absolute top-4 left-4 z-40 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 flex items-center gap-2">
+       <span class="text-sm">⏱️</span>
+       <span class="text-white font-mono font-bold" :class="{'text-red-400 animate-pulse': tempsRestant < 60}">{{ formatarTemps(tempsRestant) }}</span>
+    </div>
 
     <!-- Imatge de referència del punt específic (de la BD) o genèrica de fons -->
     <img 
@@ -337,11 +399,20 @@ async function enviarDadesAlBackend(imatgeEnText) {
           class="relative flex flex-col items-center rounded-2xl overflow-hidden shadow-2xl mx-6 text-center"
           style="background: linear-gradient(160deg, #2a1030 0%, #402749 60%, #1a0820 100%); border: 2px solid #d9a6c2; max-width: 340px; width: 100%; padding: 2rem 1.5rem;"
         >
-          <span class="text-5xl mb-3"></span>
-          <h2 class="text-white font-black text-xl mb-1">La partida ha acabat!</h2>
-          <p class="text-pink-300 text-base font-bold mb-1">
-            <span class="text-white">{{ nomGuanyador }}</span> ha completat totes les fotos!
-          </p>
+          <span v-if="isTimeout" class="text-5xl mb-3">⌛</span>
+          <span v-else class="text-5xl mb-3"></span>
+          <h2 class="text-white font-black text-xl mb-1">{{ isTimeout ? "S'ha acabat el temps!" : "La partida ha acabat!" }}</h2>
+          
+          <template v-if="isTimeout">
+            <p class="text-red-400 text-base font-bold mb-1">TOTHOM HA PERDUT</p>
+            <p class="text-pink-300 text-sm mb-1">No heu obtingut el cromo d'aquesta ruta.</p>
+          </template>
+          <template v-else>
+            <p class="text-pink-300 text-base font-bold mb-1">
+              <span class="text-white">{{ nomGuanyador }}</span> ha completat totes les fotos!
+            </p>
+          </template>
+          
           <p class="text-white/50 text-xs mb-6">Vés al leaderboard per veure els resultats finals.</p>
 
           <button

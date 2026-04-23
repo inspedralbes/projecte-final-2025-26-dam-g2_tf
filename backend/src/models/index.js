@@ -88,7 +88,10 @@ const SessioJocSchema = new mongoose.Schema({
   id_lloc_desti: { type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' },
 
   id_puntos_de_la_partida: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' }], // Llista objectius 
-  id_objetivo_actual: { type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' }        // Punt actual 
+  id_objetivo_actual: { type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' },        // Punt actual 
+  
+  duracio: { type: Number, default: 60 }, // en minuts
+  temps_limit: { type: Date }              // data/hora de finalització
 });
 
 

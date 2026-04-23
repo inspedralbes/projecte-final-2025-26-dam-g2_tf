@@ -1,6 +1,12 @@
 <template>
   <div class="pantalla-mapa">
     
+    <!-- TEMPORITZADOR (Dalt a l'esquerra) -->
+    <div v-if="tempsRestant !== null" class="temporitzador">
+       <span class="rellotge-icon">⏱️</span>
+       <span class="temps-text" :class="{'temps-critic': tempsRestant < 60}">{{ formatarTemps(tempsRestant) }}</span>
+    </div>
+
     <div v-if="!isCapita" class="w-full flex flex-col items-center justify-center min-h-[80vh] text-center px-4">
       <h1 class="text-4xl font-bold text-white mb-8" style="color: #d9a6c2;">Sigue al Capitán</h1>
       <div class="w-24 h-24 rounded-full flex items-center justify-center text-white text-5xl font-bold mb-4 shadow-lg" style="background-color: #bc85ab; width: 100px; height: 100px; border-radius: 50%;">
@@ -79,7 +85,7 @@
       </div>
     </Transition>
 
-    <!--MODAL GAME OVER (un altre jugador ha guanyat) -->
+    <!--MODAL GAME OVER (un altre jugador ha guanyat o temps esgotat) -->
     <Transition name="fade">
       <div
         v-if="mostrarGameOver"
@@ -87,12 +93,26 @@
         style="z-index: 200;"
       >
         <div class="modal-contingut" style="text-align:center; gap: 18px;">
-          <span style="font-size: 3.5rem;"></span>
-          <h2 class="modal-titol">La partida ha acabat!</h2>
-          <p style="color: #d9a6c2; font-size: 0.95rem; margin: 0;">
-            <strong style="color: white;">{{ nomGuanyador }}</strong>
-            ha completat totes les fotos!
-          </p>
+          <span v-if="isTimeout" style="font-size: 3.5rem;">⌛</span>
+          <span v-else style="font-size: 3.5rem;">🏆</span>
+          
+          <h2 class="modal-titol">{{ isTimeout ? 'S\'ha acabat el temps!' : 'La partida ha acabat!' }}</h2>
+          
+          <template v-if="isTimeout">
+            <p style="color: #ff9fb6; font-size: 1.1rem; font-weight: bold; margin: 0;">
+              TOTHOM HA PERDUT
+            </p>
+            <p style="color: #d9a6c2; font-size: 0.95rem; margin: 0;">
+              No heu obtingut el cromo d'aquesta ruta.
+            </p>
+          </template>
+          <template v-else>
+            <p style="color: #d9a6c2; font-size: 0.95rem; margin: 0;">
+              <strong style="color: white;">{{ nomGuanyador }}</strong>
+              ha completat totes les fotos!
+            </p>
+          </template>
+
           <p style="color: rgba(255,255,255,0.45); font-size: 0.75rem; margin: 0;">
             Vés al leaderboard per veure els resultats finals.
           </p>
@@ -127,7 +147,12 @@ export default {
       _socket: null,
       
       isCapita: true,
-      nomCapita: ''
+      nomCapita: '',
+      
+      // Temporitzador
+      tempsRestant: null,
+      intervalTimer: null,
+      isTimeout: false
     };
   },
 
@@ -176,6 +201,11 @@ export default {
           }
       }
 
+      // 4. Temporitzador: calculem quant de temps queda
+      if (sessio && sessio.temps_limit && sessio.estat === 'jugant') {
+          this.iniciarTemporitzador(sessio.temps_limit);
+      }
+
     } catch (error) {
       console.error('Error carregant el mapa:', error);
     }
@@ -192,7 +222,9 @@ export default {
         console.log('[Mapa] game-over rebut:', dades);
         this.sessioIdGameOver = dades.sessioId || sessioId;
         this.nomGuanyador = dades.nomGuanyador || 'Un jugador';
+        this.isTimeout = dades.timeout || false;
         this.mostrarGameOver = true;
+        if (this.intervalTimer) clearInterval(this.intervalTimer);
       });
     }
   },
@@ -201,6 +233,9 @@ export default {
     if (this._socket) {
       this._socket.disconnect();
       this._socket = null;
+    }
+    if (this.intervalTimer) {
+        clearInterval(this.intervalTimer);
     }
   },
 
@@ -256,6 +291,37 @@ export default {
           idPunt: this.puntSeleccionat?._id || ''
         }
       });
+    },
+
+    iniciarTemporitzador(tempsLimit) {
+        const limit = new Date(tempsLimit).getTime();
+        
+        const actualizar = () => {
+            const ara = new Date().getTime();
+            const diferencia = Math.max(0, Math.floor((limit - ara) / 1000));
+            this.tempsRestant = diferencia;
+            
+            if (diferencia <= 0) {
+                clearInterval(this.intervalTimer);
+            }
+        };
+        
+        actualizar();
+        this.intervalTimer = setInterval(actualizar, 1000);
+    },
+
+    formatarTemps(segons) {
+        const h = Math.floor(segons / 3600);
+        const m = Math.floor((segons % 3600) / 60);
+        const s = segons % 60;
+        
+        const mm = m < 10 ? '0' + m : m;
+        const ss = s < 10 ? '0' + s : s;
+        
+        if (h > 0) {
+            return `${h}:${mm}:${ss}`;
+        }
+        return `${mm}:${ss}`;
     }
   }
 };
@@ -271,6 +337,46 @@ export default {
   align-items: center;
   padding: 20px;
   color: white;
+  position: relative; /* Per al temporitzador absolut */
+}
+
+.temporitzador {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    padding: 8px 16px;
+    border-radius: 40px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1.5px solid rgba(217, 166, 194, 0.5);
+    z-index: 50;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.rellotge-icon {
+    font-size: 1.2rem;
+}
+
+.temps-text {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 1px;
+}
+
+.temps-critic {
+    color: #ff5e7e;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
 }
 
 .titol {

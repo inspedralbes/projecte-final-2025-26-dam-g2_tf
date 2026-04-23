@@ -62,6 +62,9 @@ router.post('/', async function (req, res) {
         const lloc = await Lloc.findById(idLloc);
 
         if (!sessio) return res.status(404).json({ missatge: "Sessió no trobada." });
+        if (sessio.estat === 'finalitzada') {
+            return res.status(400).json({ missatge: "La partida ja ha acabat." });
+        }
         if (!lloc) return res.status(404).json({ missatge: "Lloc no trobat." });
 
         // Busquem la imatge de referència per a la IA: primer mirem si el punt concret en té, si no usem la del lloc
