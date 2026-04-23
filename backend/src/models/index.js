@@ -41,6 +41,7 @@ const LlocSchema = new mongoose.Schema({
     type: { type: String, default: 'Point' },
     coordinates: [Number]
   },
+  adreca_inici: { type: String, default: '' },
   imatge_referencia: String,
   foto_mapa: String,
   descripcio: String,
@@ -71,6 +72,7 @@ const SessioJocSchema = new mongoose.Schema({
   jugadors: [{
     id_usuari: { type: mongoose.Schema.Types.ObjectId, ref: 'Perfil' },
     personatge_assignat: String,
+    personatge_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Personatge', default: null },
     foto_secreta: String,
     pistes_gastades: { type: Number, default: 0 },
     pistes_revelades: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' }], // IDs dels punts revelats
@@ -80,7 +82,10 @@ const SessioJocSchema = new mongoose.Schema({
     temps: { type: String, default: "0" },
 
     punts_completats: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' }], // IDs dels punts
-    exactitud_media: { type: Number, default: 0 }, // Para el leaderboard 
+    exactitud_media: { type: Number, default: 0 }, // Para el leaderboard
+
+    // Punts del mapa que veu aquest jugador (els del seu personatge + els comuns)
+    punts_assignats: [{ type: mongoose.Schema.Types.ObjectId }],
 
     // Nous camps per grups
     grup_id: { type: Number, default: null },

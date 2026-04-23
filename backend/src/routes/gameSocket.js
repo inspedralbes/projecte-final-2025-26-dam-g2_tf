@@ -66,6 +66,7 @@ function configureSocket(server) {
             };
             socket.join(roomCode);
             socket.emit('room-created', roomCode);
+            socket.emit('room-info', { idLloc: dades.idLloc });
             io.to(roomCode).emit('update-players', sales[roomCode].players);
         });
 
@@ -75,6 +76,7 @@ function configureSocket(server) {
                 room.players.push({ id: socket.id, nom: dades.nomUsuari, perfilId: dades.perfilId });
                 socket.join(dades.roomCode);
                 socket.emit('room-joined', dades.roomCode);
+                socket.emit('room-info', { idLloc: room.idLloc });
                 io.to(dades.roomCode).emit('update-players', room.players);
             } else {
                 socket.emit('error-room', 'La sala no existeix');
@@ -97,42 +99,60 @@ function configureSocket(server) {
                     return;
                 }
 
-                // 2. Extraiem els _id dels punts de missió
-                const puntsIds = [];
-                for (let i = 0; i < lloc.punts_missio.length; i++) {
-                    puntsIds.push(lloc.punts_missio[i]._id);
+                // 2. Carreguem tots els personatges disponibles
+                const { Personatge } = require('../models');
+                const personatgesDisponibles = await Personatge.find({});
+
+                // 3. Repartim personatges aleatòriament als jugadors
+                const assignacioPersonatge = repartirPersonatgesAleatoriament(room.players, personatgesDisponibles);
+
+                // 4. Calculem quins punts veu cada personatge
+                const puntsMissio = lloc.punts_missio || [];
+                const puntsComuns = [];
+                for (let i = 0; i < puntsMissio.length; i++) {
+                    if (!puntsMissio[i].personatge_id) {
+                        puntsComuns.push(puntsMissio[i]._id);
+                    }
                 }
 
-                // 3. Preparem els temps de la sessió
-                const duracioSessio = dades.duracio || room.duracio || 60;
-                room.duracio = duracioSessio;
-
-                const ara = new Date();
-                const tempsLimit = new Date(ara.getTime() + duracioSessio * 60000);
-
-                // 4. Construïm l'array de jugadors
+                // 3. Construïm l'array de jugadors
                 const jugadorsDB = [];
                 for (let i = 0; i < room.players.length; i++) {
                     const p = room.players[i];
                     if (p.perfilId) {
-                        let groupId = i + 1; // Default: each is their own group
+                        let groupId = i + 1;
                         let isCapita = true;
 
                         if (mode === 'Grup' || mode === 'Grups') {
-                            // Find which group this player is in
                             const targetGroup = groupsConfig.find(g => g.members.includes(p.perfilId));
                             if (targetGroup) {
                                 groupId = targetGroup.grup_id;
                                 isCapita = (targetGroup.capita_id === p.perfilId);
                             } else {
-                                // Fallback just in case
                                 groupId = 1;
                                 isCapita = false;
                             }
                         }
 
+                        // Personatge assignat
+                        const personatgeAssignat = assignacioPersonatge[i];
+                        const personatgeId = personatgeAssignat ? personatgeAssignat._id : null;
+
+                        // Punts visibles
+                        const puntsDelPersonatge = [];
+                        if (personatgeId) {
+                            for (let k = 0; k < puntsMissio.length; k++) {
+                                if (puntsMissio[k].personatge_id && puntsMissio[k].personatge_id.toString() === personatgeId.toString()) {
+                                    puntsDelPersonatge.push(puntsMissio[k]._id);
+                                }
+                            }
+                        }
+                        const puntsAssignats = puntsComuns.concat(puntsDelPersonatge);
+
                         jugadorsDB.push({
                             id_usuari: p.perfilId,
+                            personatge_id: personatgeId,
+                            personatge_assignat: personatgeAssignat ? personatgeAssignat.nom : '',
                             puntsPartida: 0,
                             completat: false,
                             punts_completats: [],
@@ -140,19 +160,25 @@ function configureSocket(server) {
                             temps: "0",
                             temps_limit: tempsLimit,
                             grup_id: groupId,
-                            capita: isCapita
+                            capita: isCapita,
+                            punts_assignats: puntsAssignats
                         });
                     }
                 }
 
-                // 4. Creem la sessió a la BD (Ja tenim els temps calculats a dalt)
+                // 4. Creem la sessió a la BD
+                const duracioSessio = dades.duracio || room.duracio || 60;
+                room.duracio = duracioSessio; // Actualitzem la durada en memòria per si de cas
+
+                const ara = new Date();
+                const tempsLimit = new Date(ara.getTime() + duracioSessio * 60000);
 
                 const novaSessio = new SessioJoc({
                     codi_sala: roomCode,
                     tipus_partida: mode.toLowerCase(),
                     estat: 'jugant',
                     id_lloc_desti: room.idLloc,
-                    id_puntos_de_la_partida: puntsIds,
+                    id_puntos_de_la_partida: lloc.punts_missio.map(p => p._id),
                     jugadors: jugadorsDB,
                     temps_inici: ara,
                     duracio: duracioSessio,
@@ -160,9 +186,33 @@ function configureSocket(server) {
                 });
                 await novaSessio.save();
 
-                console.log('Sessió de joc creada:', novaSessio._id, '| roomCode:', roomCode, '| Mode:', mode, '| Temps limit:', tempsLimit);
+                console.log('Sessió de joc creada:', novaSessio._id, '| roomCode:', roomCode);
 
-                // 5. Planificar el final per timeout
+                // 7. Emetre la carta de personatge a cada socket INDIVIDUALMENT
+                for (let idx = 0; idx < room.players.length; idx++) {
+                    const playerInfo = room.players[idx];
+                    const assignat = assignacioPersonatge[idx];
+                    const jugadorDB = jugadorsDB[idx];
+
+                    if (playerInfo && playerInfo.id && assignat) {
+                        const baseUrl = process.env.VITE_API_URL || 'http://localhost:8088';
+                        const imatgeUrl = assignat.imatge
+                            ? (assignat.imatge.startsWith('http') ? assignat.imatge : baseUrl + assignat.imatge)
+                            : '';
+
+                        io.to(playerInfo.id).emit('carta-personatge', {
+                            sessioId: novaSessio._id.toString(),
+                            personatge: {
+                                nom: assignat.nom,
+                                descripcio: assignat.descripcio || '',
+                                imatge: imatgeUrl
+                            },
+                            puntsAssignats: jugadorDB ? jugadorDB.punts_assignats : []
+                        });
+                    }
+                }
+
+                // 8. Planificar el final per timeout
                 setTimeout(async () => {
                     try {
                         const s = await SessioJoc.findById(novaSessio._id);
@@ -177,7 +227,7 @@ function configureSocket(server) {
                     }
                 }, duracioSessio * 60000);
 
-                // 6. Enviem el sessioId a tots els jugadors
+                // 9. Enviem el sessioId a tots els jugadors (game-started)
                 io.to(roomCode).emit('game-started', {
                     sessioId: novaSessio._id,
                     mode: mode,
@@ -186,7 +236,6 @@ function configureSocket(server) {
 
             } catch (err) {
                 console.error('Error al crear sessió en start-game:', err);
-                // Fallback: enviem l'idLloc perquè puguin jugar en mode individual
                 io.to(roomCode).emit('game-started', { sessioId: null, idLloc: room.idLloc });
             }
         });
@@ -232,4 +281,27 @@ function configureSocket(server) {
 }
 
 module.exports = { configureSocket, notifyGameOver };
+
+function repartirPersonatgesAleatoriament(players, personatgesDisponibles) {
+    const resultat = [];
+    if (!personatgesDisponibles || personatgesDisponibles.length === 0) {
+        for (let i = 0; i < players.length; i++) resultat.push(null);
+        return resultat;
+    }
+
+    if (players.length <= personatgesDisponibles.length) {
+        const pool = [...personatgesDisponibles];
+        for (let i = pool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        for (let i = 0; i < players.length; i++) resultat.push(pool[i]);
+    } else {
+        for (let i = 0; i < players.length; i++) {
+            const idx = Math.floor(Math.random() * personatgesDisponibles.length);
+            resultat.push(personatgesDisponibles[idx]);
+        }
+    }
+    return resultat;
+}
 

@@ -45,6 +45,7 @@
           <h3 class="text-sm font-black text-purple-400 uppercase tracking-widest">Ubicació i Media</h3>
           
           <div class="grid grid-cols-1 gap-2">
+            <input v-model="form.adreca_inici" placeholder="Adreça del punt d'inici (Opcional, ex: Plaça Catalunya)" class="w-full border-2 border-purple-100 p-3 rounded-2xl bg-purple-50/30 text-xs shadow-sm font-bold text-purple-800 placeholder-purple-300 outline-none focus:border-purple-300">
             <input v-model="form.imatge_referencia" placeholder="URL Foto Principal (Realitat)" class="w-full border-2 border-gray-50 p-3 rounded-2xl bg-gray-50 text-xs shadow-sm">
             <input v-model="form.foto_mapa" placeholder="URL Foto Mapa (Dibuix esquemàtic)" class="w-full border-2 border-gray-50 p-3 rounded-2xl bg-gray-50 text-xs shadow-sm">
             <input v-model="form.cromo_imatge" placeholder="URL Cromo (ex: /Cromos/SagradaFamilia_historica.jpg)" class="w-full border-2 border-gray-50 p-3 rounded-2xl bg-gray-50 text-xs shadow-sm">
