@@ -103,7 +103,14 @@ function configureSocket(server) {
                     puntsIds.push(lloc.punts_missio[i]._id);
                 }
 
-                // 3. Construïm l'array de jugadors
+                // 3. Preparem els temps de la sessió
+                const duracioSessio = dades.duracio || room.duracio || 60;
+                room.duracio = duracioSessio;
+
+                const ara = new Date();
+                const tempsLimit = new Date(ara.getTime() + duracioSessio * 60000);
+
+                // 4. Construïm l'array de jugadors
                 const jugadorsDB = [];
                 for (let i = 0; i < room.players.length; i++) {
                     const p = room.players[i];
@@ -131,18 +138,14 @@ function configureSocket(server) {
                             punts_completats: [],
                             exactitud_media: 0,
                             temps: "0",
+                            temps_limit: tempsLimit,
                             grup_id: groupId,
                             capita: isCapita
                         });
                     }
                 }
 
-                // 4. Creem la sessió a la BD
-                const duracioSessio = dades.duracio || room.duracio || 60;
-                room.duracio = duracioSessio; // Actualitzem la durada en memòria per si de cas
-
-                const ara = new Date();
-                const tempsLimit = new Date(ara.getTime() + duracioSessio * 60000);
+                // 4. Creem la sessió a la BD (Ja tenim els temps calculats a dalt)
 
                 const novaSessio = new SessioJoc({
                     codi_sala: roomCode,

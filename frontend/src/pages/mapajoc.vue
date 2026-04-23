@@ -78,7 +78,7 @@
              💡 {{ puntSeleccionat.pista }}
           </div>
 
-          <div v-else-if="puntSeleccionat?.pista" class="w-full flex flex-col items-center gap-3">
+          <div v-else-if="puntSeleccionat?.pista && sessioId" class="w-full flex flex-col items-center gap-3">
              <button 
                @click="demanarPista" 
                :disabled="pistes_gastades >= 3 || demanantPista"
@@ -157,6 +157,7 @@ export default {
       nomGuanyador: '',
       sessioIdGameOver: '',
       _socket: null,
+      sessioId: null, // Per saber si estem en una partida real
       
       isCapita: true,
       nomCapita: '',
@@ -175,16 +176,23 @@ export default {
 
   async mounted() {
     try {
-      // 1. Primer busquem la SESSIÓ per saber quin monument estem jugant
-      const respSessio = await fetch(this.baseApi + '/api/sessionsJoc/' + this.idLloc);
-      if (!respSessio.ok) throw new Error("No s'ha trobat la sessió de joc");
-      const sessio = await respSessio.json();
+      // 1. Busquem la SESSIÓ o el LLOC per saber què mostrar
+      let sessio = null;
+      let idRealMonument = this.idLloc; // Per defecte assumim que l'ID és del monument
 
-      // 2. Ara que sabem que el monument és sessio.idLloc, el carreguem
-      const idRealMonument = sessio.id_lloc_desti;
+      try {
+        const respSessio = await fetch(this.baseApi + '/api/sessionsJoc/' + this.idLloc);
+        if (respSessio.ok) {
+          sessio = await respSessio.json();
+          idRealMonument = sessio.id_lloc_desti;
+        }
+      } catch (e) {
+        console.warn("No s'ha pogut verificar la sessió, intentant carregar com a lloc directament.");
+      }
+
+      // 2. Carreguem les dades del monument (punts, foto, etc.)
       const resposta = await fetch(this.baseApi + '/api/mapa/punts/' + idRealMonument);
-
-      if (!resposta.ok) throw new Error("No s'ha pogut carregar el lloc");
+      if (!resposta.ok) throw new Error("No s'ha pogut carregar el lloc (ID: " + idRealMonument + ")");
       const lloc = await resposta.json();
 
       // 3. Guardem l'ID real del monument per a la càmera
@@ -198,35 +206,62 @@ export default {
       this.urlFinal = this.baseApi + '/foto_mapa/' + nomImatge;
       this.puntsMissio = lloc.punts_missio || [];
 
-      // AFEGIM AIXÒ PER COMPROVAR SI ÉS CAPITÀ
-      const userStr = localStorage.getItem('usuari');
-      const user = userStr ? JSON.parse(userStr) : {};
-      const perfilId = user._id || null;
+      // 4. Temporitzador
+      let limitFinal = null;
 
-      if (sessio && sessio.jugadors && perfilId) {
-          const myPlayer = sessio.jugadors.find(j => 
-              j.id_usuari === perfilId || (j.id_usuari && j.id_usuari._id === perfilId)
-          );
-          if (myPlayer) {
-              this.isCapita = myPlayer.capita !== false; 
-              this.pistes_gastades = myPlayer.pistes_gastades || 0;
-              // Inicialitzem les pistes ja revelades
-              if (myPlayer.pistes_revelades) {
-                  myPlayer.pistes_revelades.forEach(id => this.pistesRevelades.add(id.toString()));
-              }
-              if (!this.isCapita) {
-                  const capitaInfo = sessio.jugadors.find(j => j.grup_id === myPlayer.grup_id && j.capita === true);
-                  if (capitaInfo && capitaInfo.id_usuari) {
-                      this.nomCapita = capitaInfo.id_usuari.nom_usuari || capitaInfo.id_usuari;
+      if (sessio) {
+          console.log("[Mapa] Sessió trobada:", sessio._id, "Temps límit:", sessio.temps_limit);
+          // Si hi ha sessió, busquem el jugador i el seu temps limit
+          const userStr = localStorage.getItem('usuari');
+          const user = userStr ? JSON.parse(userStr) : {};
+          const perfilId = user._id || null;
+
+          if (sessio.jugadors && perfilId) {
+              const myPlayer = sessio.jugadors.find(j => 
+                  (j.id_usuari === perfilId) || 
+                  (j.id_usuari && (j.id_usuari._id === perfilId || j.id_usuari === perfilId))
+              );
+              
+              if (myPlayer) {
+                  console.log("[Mapa] Jugador trobat a la sessió:", myPlayer.id_usuari?.nom_usuari || myPlayer.id_usuari);
+                  this.sessioId = sessio._id;
+                  this.isCapita = myPlayer.capita !== false; 
+                  this.pistes_gastades = myPlayer.pistes_gastades || 0;
+                  
+                  if (myPlayer.pistes_revelades) {
+                      myPlayer.pistes_revelades.forEach(id => this.pistesRevelades.add(id.toString()));
                   }
+                  
+                  limitFinal = myPlayer.temps_limit || sessio.temps_limit;
+
+                  if (!this.isCapita) {
+                      const capitaInfo = sessio.jugadors.find(j => j.grup_id === myPlayer.grup_id && j.capita === true);
+                      if (capitaInfo && capitaInfo.id_usuari) {
+                          this.nomCapita = capitaInfo.id_usuari.nom_usuari || capitaInfo.id_usuari;
+                      }
+                  }
+              } else {
+                  console.warn("[Mapa] El jugador actual no s'ha trobat dins la llista de la sessió.");
               }
           }
+          
+          if (!limitFinal) limitFinal = sessio.temps_limit;
+      } else {
+          console.warn("[Mapa] No s'ha pogut carregar la sessió. El temporitzador podria no funcionar.");
       }
 
-      // 4. Temporitzador: calculem quant de temps queda
-      if (sessio && sessio.temps_limit && sessio.estat === 'jugant') {
-          this.iniciarTemporitzador(sessio.temps_limit);
+      // Si no hi ha límit de la sessió ni del jugador (fallback lloc directe), 
+      // o si per algun motiu limitFinal és null, provem un últim fallback de 60min
+      if (!limitFinal) {
+          console.warn("[Mapa] No s'ha trobat un límit de temps. Aplicant fallback de 60 minuts.");
+          limitFinal = new Date(Date.now() + 60 * 60 * 1000).toISOString();
       }
+      
+      this.iniciarTemporitzador(limitFinal);
+
+      // 4. Temporitzador ja s'ha iniciat individualment a dalt si existeix myPlayer
+      // o a nivell de sessio si no hi ha myPlayer encara.
+      // S'evita duplicar la crida aquí per no sobreescriure la penalització.
 
     } catch (error) {
       console.error('Error carregant el mapa:', error);
@@ -316,6 +351,12 @@ export default {
     },
 
     iniciarTemporitzador(tempsLimit) {
+        // Netegem qualsevol interval previ per evitar que n'hi hagi diversos corrent
+        // i facin "flicker" (parpelleig) entre temps diferents.
+        if (this.intervalTimer) {
+            clearInterval(this.intervalTimer);
+        }
+
         const limit = new Date(tempsLimit).getTime();
         
         const actualizar = () => {
@@ -347,7 +388,7 @@ export default {
     },
 
     async demanarPista() {
-      if (this.pistes_gastades >= 3 || !this.puntSeleccionat || this.demanantPista) return;
+      if (!this.sessioId || this.pistes_gastades >= 3 || !this.puntSeleccionat || this.demanantPista) return;
       
       const confirmacio = confirm("Vols gastar una de les teves 3 pistes per aquest punt?");
       if (!confirmacio) return;
@@ -358,7 +399,7 @@ export default {
         const user = userStr ? JSON.parse(userStr) : {};
         const perfilId = user._id || null;
 
-        const resposta = await fetch(`${this.baseApi}/api/sessionsJoc/${this.idLloc}/usar-pista`, {
+        const resposta = await fetch(`${this.baseApi}/api/sessionsJoc/${this.sessioId}/usar-pista`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ perfilId, idPunt: this.puntSeleccionat._id })
@@ -368,6 +409,10 @@ export default {
         if (resposta.ok) {
           this.pistes_gastades = dades.pistes_gastades;
           this.pistesRevelades.add(this.puntSeleccionat._id.toString());
+          // Actualitzem el temporitzador amb el nou límit
+          if (dades.nou_temps_limit) {
+            this.iniciarTemporitzador(dades.nou_temps_limit);
+          }
         } else {
           alert(dades.missatge || "Error al demanar la pista");
         }

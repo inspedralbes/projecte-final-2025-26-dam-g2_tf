@@ -74,6 +74,7 @@ const SessioJocSchema = new mongoose.Schema({
     foto_secreta: String,
     pistes_gastades: { type: Number, default: 0 },
     pistes_revelades: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' }], // IDs dels punts revelats
+    temps_limit: { type: Date }, 
     completat: { type: Boolean, default: false },
     puntsPartida: { type: Number, default: 0 },
     temps: { type: String, default: "0" },

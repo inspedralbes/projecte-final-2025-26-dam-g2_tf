@@ -24,6 +24,8 @@ router.post('/crear', async function (req, res) {
             puntsIds.push(lloc.punts_missio[i]._id);
         }
 
+        const tempsLimitGlobal = new Date(Date.now() + (req.body.duracio || 60) * 60000);
+
         const novaSessio = new SessioJoc({
             codi_sala: Math.random().toString(36).substring(2, 8).toUpperCase(),
             tipus_partida: 'individual',
@@ -36,11 +38,12 @@ router.post('/crear', async function (req, res) {
                 completat: false,
                 punts_completats: [],
                 exactitud_media: 0,
-                temps: "0"
+                temps: "0",
+                temps_limit: tempsLimitGlobal
             }],
             temps_inici: new Date(),
             duracio: req.body.duracio || 60,
-            temps_limit: new Date(Date.now() + (req.body.duracio || 60) * 60000)
+            temps_limit: tempsLimitGlobal
         });
 
         await novaSessio.save();
@@ -74,6 +77,8 @@ router.post('/crear-grup', async function (req, res) {
             puntsIds.push(lloc.punts_missio[i]._id);
         }
 
+        const tempsLimitGlobal = new Date(Date.now() + (req.body.duracio || 60) * 60000);
+
         // Construïm l'array de jugadors per a la sessió
         const jugadorsDB = [];
         for (let i = 0; i < jugadors.length; i++) {
@@ -83,7 +88,8 @@ router.post('/crear-grup', async function (req, res) {
                 completat: false,
                 punts_completats: [],
                 exactitud_media: 0,
-                temps: "0"
+                temps: "0",
+                temps_limit: tempsLimitGlobal
             });
         }
 
@@ -96,7 +102,7 @@ router.post('/crear-grup', async function (req, res) {
             jugadors: jugadorsDB,
             temps_inici: new Date(),
             duracio: req.body.duracio || 60,
-            temps_limit: new Date(Date.now() + (req.body.duracio || 60) * 60000)
+            temps_limit: tempsLimitGlobal
         });
 
         await novaSessio.save();
@@ -108,19 +114,32 @@ router.post('/crear-grup', async function (req, res) {
     }
 });
 
-// GET /api/sessionsJoc/:id — Obtenir la sessió per ID (populant nom_usuari dels jugadors)
+// GET /api/sessionsJoc/:id — Obtenir la sessió per ID o per Codi de Sala
 router.get('/:id', async function (req, res) {
     try {
-        const sessio = await SessioJoc.findById(req.params.id)
+        const idOrCodi = req.params.id;
+        console.log("[SessionsJoc] Buscant sessió amb:", idOrCodi);
+
+        let query = {};
+        // Si sembla un ObjectId de MongoDB (24 caràcters hex)
+        if (idOrCodi.match(/^[0-9a-fA-F]{24}$/)) {
+            query = { _id: idOrCodi };
+        } else {
+            // Si no, busquem pel codi de sala de 6 caràcters
+            query = { codi_sala: idOrCodi.toUpperCase() };
+        }
+
+        const sessio = await SessioJoc.findOne(query)
             .populate('jugadors.id_usuari', 'nom_usuari');
 
         if (!sessio) {
+            console.warn("[SessionsJoc] Sessió no trobada per:", idOrCodi);
             return res.status(404).json({ missatge: "Sessió no trobada" });
         }
 
         res.json(sessio);
     } catch (error) {
-        console.error("Error obtenint la sessió:", error);
+        console.error("[SessionsJoc] Error obtenint la sessió:", error);
         res.status(500).json({ missatge: "Error de servidor: " + error.message });
     }
 });
@@ -128,10 +147,18 @@ router.get('/:id', async function (req, res) {
 // PATCH /api/sessionsJoc/:id/usar-pista — Incrementar el contador de pistes d'un jugador
 router.patch('/:id/usar-pista', async function (req, res) {
     try {
+        const idOrCodi = req.params.id;
         const { perfilId, idPunt } = req.body;
         if (!perfilId || !idPunt) return res.status(400).json({ missatge: "Faltes dades: perfilId o idPunt" });
 
-        const sessio = await SessioJoc.findById(req.params.id);
+        let query = {};
+        if (idOrCodi.match(/^[0-9a-fA-F]{24}$/)) {
+            query = { _id: idOrCodi };
+        } else {
+            query = { codi_sala: idOrCodi.toUpperCase() };
+        }
+
+        const sessio = await SessioJoc.findOne(query);
         if (!sessio) return res.status(404).json({ missatge: "Sessió no trobada" });
 
         // Busquem el jugador a la sessió
@@ -159,12 +186,30 @@ router.patch('/:id/usar-pista', async function (req, res) {
         if (!jugador.pistes_revelades) jugador.pistes_revelades = [];
         jugador.pistes_revelades.push(idPunt);
 
+        // Apliquem la penalització de temps: -5 minuts (300.000 ms)
+        const PENALITZACIO_MS = 5 * 60 * 1000;
+
+        // Si el jugador té un grup, apliquem la penalització a tot el grup
+        if (jugador.grup_id !== null && jugador.grup_id !== undefined) {
+            sessio.jugadors.forEach(j => {
+                if (j.grup_id === jugador.grup_id) {
+                    const tempsActual = new Date(j.temps_limit || sessio.temps_limit).getTime();
+                    j.temps_limit = new Date(tempsActual - PENALITZACIO_MS);
+                }
+            });
+        } else {
+            // Individual
+            const tempsActual = new Date(jugador.temps_limit || sessio.temps_limit).getTime();
+            jugador.temps_limit = new Date(tempsActual - PENALITZACIO_MS);
+        }
+
         await sessio.save();
 
         res.json({
-            missatge: "Pista utilitzada",
+            missatge: "Pista utilitzada (-5 minuts)",
             pistes_gastades: jugador.pistes_gastades,
-            pistes_revelades: jugador.pistes_revelades
+            pistes_revelades: jugador.pistes_revelades,
+            nou_temps_limit: jugador.temps_limit
         });
 
     } catch (error) {

@@ -117,7 +117,7 @@ const nomUsuari = user.nom_usuari || 'Invitado';
 
 const showModeSelection = ref(false);
 const selectedMode = ref('Individual');
-const selectedDuration = ref(60);
+const selectedDuration = ref(null);
 
 const durationOptions = [
     { label: '45 min', value: 45, desc: 'Difícil' },
@@ -187,6 +187,10 @@ function generarGrups() {
 }
 
 function confirmarModeIComencar() {
+    if (!selectedDuration.value) {
+        alert("Si us plau, selecciona una durada per a la partida.");
+        return;
+    }
     if (socket.value && roomCode.value) {
         const groups = generarGrups();
         const dades = {
@@ -248,12 +252,15 @@ onMounted(() => {
   }); */
 
   socket.value.on('game-started', function(dades) {
+    console.log("[SalaEspera] Joc començat redactat:", dades);
     // Tots els jugadors marxen cap al mapa amb l'ID de la sessió real
     if (dades.sessioId) {
       router.push('/mapa/' + dades.sessioId);
-    } else if (dades.idLloc) {
-      // Fallback: si no hi ha sessió, anem directament al lloc
-      router.push('/mapa/' + dades.idLloc);
+    } else {
+      console.error("[SalaEspera] No s'ha rebut sessioId!", dades);
+      if (dades.idLloc) {
+          router.push('/mapa/' + dades.idLloc);
+      }
     }
 });
 });

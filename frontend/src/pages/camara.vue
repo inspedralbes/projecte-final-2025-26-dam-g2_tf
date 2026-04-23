@@ -53,8 +53,18 @@ onMounted(async () => {
         const respSessio = await fetch(`${API_URL}/api/sessionsJoc/${codi_sala}`);
         if (respSessio.ok) {
             const sessio = await respSessio.json();
-            if (sessio.temps_limit && sessio.estat === 'jugant') {
-                iniciarTemporitzador(sessio.temps_limit);
+            
+            // Busquem el temporitzador individual
+            const meuId = usuari.value?._id?.toString();
+            let me = null;
+            if (sessio.jugadors && meuId) {
+                me = sessio.jugadors.find(j => (j.id_usuari._id || j.id_usuari).toString() === meuId);
+            }
+
+            const finalTime = (me && me.temps_limit) ? me.temps_limit : sessio.temps_limit;
+
+            if (finalTime && sessio.estat === 'jugant') {
+                iniciarTemporitzador(finalTime);
             }
         }
     } catch (err) {
