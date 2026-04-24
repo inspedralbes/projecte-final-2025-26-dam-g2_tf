@@ -61,7 +61,7 @@
 
         <!-- Previsualitzacio imatge -->
         <div v-if="previsualitzacioImatge" class="mt-4 flex items-center gap-4">
-          <img :src="previsualitzacioImatge" class="w-24 h-24 object-cover rounded-2xl border-2 border-[#bc85ab] shadow-md" alt="Previsualitzacio" />
+          <img :src="previsualitzacioImatge" class="w-24 h-24 object-contain rounded-2xl border-2 border-[#bc85ab] shadow-md" alt="Previsualitzacio" />
           <button @click="eliminarFotoSeleccionada" class="text-xs text-red-400 hover:text-red-600 font-bold transition-colors">Treure foto</button>
         </div>
 
@@ -124,7 +124,7 @@
                 v-if="p.imatge"
                 :src="API_URL + p.imatge"
                 :alt="p.nom"
-                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
               />
               <div v-else class="w-full h-full flex items-center justify-center">
                 <svg class="w-16 h-16 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -349,6 +349,7 @@ onMounted(carregarPersonatges);
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+  line-clamp: 3;
   overflow: hidden;
 }
 </style>

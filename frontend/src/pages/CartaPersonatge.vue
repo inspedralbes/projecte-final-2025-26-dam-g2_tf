@@ -33,7 +33,7 @@
               v-if="personatge.imatge" 
               :src="personatge.imatge" 
               :alt="personatge.nom"
-              class="w-full h-full object-cover shadow-none"
+              class="w-full h-full object-contain shadow-none"
             />
             <div v-else class="w-full h-full flex items-center justify-center bg-[#402749] text-indigo-300 shadow-none">
               <span class="text-6xl shadow-none">👤</span>
