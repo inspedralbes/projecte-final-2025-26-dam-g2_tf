@@ -13,29 +13,17 @@
 
       <div class="flex bg-black/20 rounded-2xl p-1 mb-4 border border-white/10">
         <button
-          @click="pestanyaActiva = 'feed'"
+          v-for="tab in ['feed', 'ranking', 'amics']"
+          :key="tab"
+          @click="pestanyaActiva = tab"
           :class="['flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all',
-                  pestanyaActiva === 'feed' ? 'bg-[#f5cbdd] text-[#402749]' : 'text-white/60']"
+                  pestanyaActiva === tab ? 'bg-[#f5cbdd] text-[#402749]' : 'text-white/60']"
         >
-          Muro
-        </button>
-        <button
-          @click="pestanyaActiva = 'ranking'"
-          :class="['flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all',
-                  pestanyaActiva === 'ranking' ? 'bg-[#f5cbdd] text-[#402749]' : 'text-white/60']"
-        >
-          Rànquing
-        </button>
-        <button
-          @click="pestanyaActiva = 'amics'"
-          :class="['flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all',
-                  pestanyaActiva === 'amics' ? 'bg-[#f5cbdd] text-[#402749]' : 'text-white/60']"
-        >
-          Amics
+          {{ tab === 'feed' ? 'Muro' : tab === 'ranking' ? 'Rànquing' : 'Amics' }}
         </button>
       </div>
 
-      <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+      <div v-if="pestanyaActiva === 'feed'" class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide animate-fade-in">
         <button
           v-for="cat in categories"
           :key="cat"
@@ -49,6 +37,7 @@
     </header>
 
     <main class="px-4 max-w-xl mx-auto">
+      <!-- FEED -->
       <div v-if="pestanyaActiva === 'feed'" class="space-y-6 animate-fade-in">
         <div v-if="usuari" class="bg-white p-6 rounded-[40px] shadow-sm border border-white">
           <div class="flex gap-4 mb-4">
@@ -214,6 +203,7 @@
         </div>
       </div>
 
+      <!-- RANKING -->
       <div v-else-if="pestanyaActiva === 'ranking'" class="space-y-6 animate-fade-in">
         <div class="bg-[#402749] text-white p-8 rounded-[40px] shadow-2xl border border-[#f5cbdd]/20">
           <div class="flex justify-between items-end">
@@ -262,10 +252,10 @@
         </div>
       </div>
 
-      <!-- SECCIÓ D'AMICS -->
+      <!-- AMICS (SECCIÓ FILTRADA PER SUB-TAB) -->
       <div v-else-if="pestanyaActiva === 'amics'" class="space-y-6 animate-fade-in">
         
-        <!-- Cercador d'usuaris per nom d'usuari -->
+        <!-- Cercador d'usuaris (Sempre visible a Amics) -->
         <div class="bg-white p-6 rounded-[40px] shadow-sm border border-white">
           <h3 class="text-[#402749] text-xs font-black uppercase mb-4 tracking-widest">Cerca exploradors</h3>
           <div class="flex gap-2">
@@ -312,27 +302,44 @@
               </button>
             </div>
           </div>
-          <div v-else-if="usernameCerca && !cercant" class="mt-4 text-center py-4">
-            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest">No s'han trobat exploradors</p>
-          </div>
         </div>
 
-        <!-- Llista d'amics -->
-        <div class="space-y-4">
-          <h3 class="text-[#402749] text-xs font-black uppercase pl-4 tracking-widest">Els teus amics</h3>
+        <!-- Sub-navegació d'Amics -->
+        <div class="flex bg-white/50 rounded-2xl p-1 border border-[#bc85ab]/20">
+          <button 
+            @click="subPestanyaAmics = 'llista'" 
+            :class="['flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all', 
+                    subPestanyaAmics === 'llista' ? 'bg-[#402749] text-white shadow-lg' : 'text-gray-400']"
+          >
+            Els meus amics
+          </button>
+          <button 
+            @click="subPestanyaAmics = 'peticions'" 
+            :class="['flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all flex items-center justify-center gap-2', 
+                    subPestanyaAmics === 'peticions' ? 'bg-[#402749] text-white shadow-lg' : 'text-gray-400']"
+          >
+            Sol·licituds
+            <span v-if="peticionsPendents.length > 0" class="bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full animate-pulse">
+              {{ peticionsPendents.length }}
+            </span>
+          </button>
+        </div>
+
+        <!-- LLISTA D'AMICS -->
+        <div v-if="subPestanyaAmics === 'llista'" class="space-y-4 animate-fade-in">
           <div v-if="amics.length > 0" class="grid grid-cols-1 gap-3">
             <div 
               v-for="amic in amics" 
               :key="amic._id" 
-              class="bg-[#f5cbdd] p-4 rounded-[30px] shadow-sm flex items-center justify-between border-2 border-white/50"
+              class="bg-white p-4 rounded-[30px] shadow-sm flex items-center justify-between border border-gray-100"
             >
               <div class="flex items-center gap-4">
-                <div @click="router.push(`/perfil-visita/${amic._id}`)" class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-[#402749] font-black border-2 border-[#bc85ab] overflow-hidden cursor-pointer">
+                <div @click="router.push(`/perfil-visita/${amic._id}`)" class="w-12 h-12 rounded-2xl bg-[#f5cbdd] flex items-center justify-center text-[#402749] font-black border-2 border-white overflow-hidden cursor-pointer shadow-sm">
                   <img v-if="amic.avatar" :src="amic.avatar" class="w-full h-full object-cover">
                   <span v-else>{{ amic.nom_usuari?.charAt(0).toUpperCase() }}</span>
                 </div>
                 <div>
-                  <h4 class="font-black text-[#402749] text-sm leading-none">{{ amic.nom_usuari }}</h4>
+                  <h4 class="font-black text-gray-800 text-sm leading-none">{{ amic.nom_usuari }}</h4>
                   <p class="text-[10px] font-bold text-[#804f7f] uppercase mt-1 tracking-wider">{{ amic.nivell || 'Explorador' }}</p>
                 </div>
               </div>
@@ -346,6 +353,49 @@
           </div>
           <div v-else class="bg-white/50 p-12 rounded-[40px] text-center border-2 border-dashed border-[#bc85ab]/20">
             <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">Encara no tens amics</p>
+          </div>
+        </div>
+
+        <!-- SOL·LICITUDS DENTRE D'AMICS -->
+        <div v-else class="space-y-4 animate-fade-in">
+          <div v-if="carregantPeticions" class="text-center py-12">
+            <div class="animate-spin inline-block text-2xl">🌀</div>
+          </div>
+          
+          <div v-else-if="peticionsPendents.length > 0" class="space-y-3">
+            <div 
+              v-for="req in peticionsPendents" 
+              :key="req.id_perfil" 
+              class="bg-[#f5cbdd] p-5 rounded-[30px] border-2 border-white shadow-sm flex items-center justify-between"
+            >
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center font-black text-[#402749] border-2 border-[#bc85ab] shadow-sm">
+                  {{ req.nom_usuari?.charAt(0).toUpperCase() }}
+                </div>
+                <div>
+                  <p class="font-black text-[#402749] tracking-tight">{{ req.nom_usuari }}</p>
+                  <p class="text-[10px] font-bold text-[#804f7f] uppercase tracking-widest">Et vol afegir</p>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <button 
+                  @click="gestionarSolicitud(req, 'acceptar')" 
+                  class="bg-[#804f7f] text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md hover:bg-[#5d3962] transition-all active:scale-95"
+                >
+                  Acceptar
+                </button>
+                <button 
+                  @click="gestionarSolicitud(req, 'rebutjar')" 
+                  class="bg-transparent border-2 border-[#804f7f] text-[#804f7f] px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white/50 transition-all active:scale-95"
+                >
+                  Rebutjar
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div v-else class="text-center py-20 bg-gray-50/50 rounded-[40px] border-2 border-dashed border-gray-200">
+            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">No tens peticions pendents</p>
           </div>
         </div>
       </div>
@@ -366,6 +416,7 @@ const { usuari, login } = useAuth();
 const { obrirModal } = useLoginModal();
 
 const pestanyaActiva = ref('feed');
+const subPestanyaAmics = ref('llista');
 const categories = ['Tots', 'Industrial', 'Gòtic', 'Parcs', 'Graffiti', 'Misteri'];
 const filtreActiu = ref('Tots');
 
@@ -392,6 +443,9 @@ const cercant = ref(false);
 
 const rankingGlobal = ref([]);
 const carregantRanking = ref(false);
+
+const peticionsPendents = ref([]);
+const carregantPeticions = ref(false);
 
 const actualitzarUsuari = (dadesUsuari) => {
   login(dadesUsuari);
@@ -451,7 +505,10 @@ async function publicarPost() {
 
 watch(pestanyaActiva, (nova) => {
   if (nova === 'ranking') carregarRanking();
-  else if (nova === 'amics') carregarAmics();
+  else if (nova === 'amics') {
+     carregarAmics();
+     carregarPeticionsPendents();
+  }
   else carregarPosts();
 });
 
@@ -462,14 +519,16 @@ watch(filtreActiu, () => {
 onMounted(() => {
   if (usuari.value) {
     carregarPosts();
-    carregarRanking(); 
+    carregarRanking();
+    carregarPeticionsPendents();
   }
 });
 
 watch(usuari, (nou) => {
-  if (nou && posts.value.length === 0) {
+  if (nou) {
     carregarPosts();
     carregarAmics();
+    carregarPeticionsPendents();
   }
 });
 
@@ -482,6 +541,42 @@ async function carregarRanking() {
     console.error("Error carregant rànquing:", err);
   } finally {
     carregantRanking.value = false;
+  }
+}
+
+async function carregarPeticionsPendents() {
+  if (!usuari.value) return;
+  carregantPeticions.value = true;
+  try {
+    const res = await fetch(`${API_URL}/api/usuari/${usuari.value._id}`);
+    if (res.ok) {
+      const dades = await res.json();
+      peticionsPendents.value = dades.sollicituds_pendents || [];
+    }
+  } catch (err) {
+    console.error("Error carregar peticions:", err);
+  } finally {
+    carregantPeticions.value = false;
+  }
+}
+
+async function gestionarSolicitud(req, accio) {
+  try {
+    const res = await fetch(`${API_URL}/api/social/peticions/${accio}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        el_meu_perfil_id: usuari.value._id,
+        id_nou_amic_perfil: req.id_perfil,
+        id_amic_perfil: req.id_perfil 
+      })
+    });
+    if (res.ok) {
+      await carregarPeticionsPendents();
+      if (accio === 'acceptar') await carregarAmics();
+    }
+  } catch (err) {
+    console.error("Error gestió petició:", err);
   }
 }
 
@@ -673,8 +768,8 @@ async function enviarSolicitud(target) {
     });
     if (res.ok) {
       alert("Sol·licitud enviada!");
-      resultatCerca.value = null;
-      emailCerca.value = '';
+      usernameCerca.value = '';
+      resultatsCerca.value = [];
     } else {
       const data = await res.json();
       alert(data.message);
