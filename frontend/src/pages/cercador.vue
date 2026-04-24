@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-white p-6 pb-24">
+  <div class="min-h-screen bg-[#402749] p-6 pb-24">
     <div class="flex items-center justify-between mb-8">
       <div>
-        <h1 class="text-3xl font-bold text-gray-900">Cercador</h1>
+        <h1 class="text-3xl font-bold text-white">Cercador</h1>
         <button @click="seleccionarDestiSorpresa" 
                 :disabled="animantSorpresa"
                 class="mt-1 flex items-center gap-1.5 text-[#804f7f] font-bold text-xs uppercase tracking-wider hover:text-[#5d3962] transition-colors disabled:opacity-50"
