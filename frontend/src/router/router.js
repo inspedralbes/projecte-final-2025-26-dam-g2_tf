@@ -150,6 +150,13 @@ const routes = [
     name: 'carta-personatge',
     component: CartaPersonatge
   },
+  {
+    path: '/join/:id',
+    name: 'join-room',
+    beforeEnter: (to, from, next) => {
+      next({ name: 'sala-espera', params: { id: to.params.id } });
+    }
+  },
 ]
 
 const router = createRouter({

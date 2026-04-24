@@ -1,183 +1,183 @@
 const express = require('express');
 const router = express.Router();
-const { Post, Perfil, SessioJoc, Ressenya } = require('../models');
+const { Post, Perfil, SessioJoc, Ressenya, Usuari } = require('../models');
 
 
 // --- NOVA RUTA: Obtenir el Top 10 d'exploradors ---
 router.get('/leaderboard/global', async (req, res) => {
-   try {
-       // Busquem els perfils que tenen la privacitat activada per aparèixer al rànquing [cite: 61, 114]
-       // Ordenem per punts de major a menor
-       const topExploradors = await Perfil.find({ mostrarAlRanking: true })
-           .sort({ punts: -1 })
-           .limit(10)
-           .select('nom_usuari punts avatar nivell'); // Només agafem el que necessitem
+    try {
+        // Busquem els perfils que tenen la privacitat activada per aparèixer al rànquing [cite: 61, 114]
+        // Ordenem per punts de major a menor
+        const topExploradors = await Perfil.find({ mostrarAlRanking: true })
+            .sort({ punts: -1 })
+            .limit(10)
+            .select('nom_usuari punts avatar nivell'); // Només agafem el que necessitem
 
 
-       res.json(topExploradors);
-   } catch (error) {
-       res.status(500).json({ message: "Error al carregar el rànquing global" });
-   }
+        res.json(topExploradors);
+    } catch (error) {
+        res.status(500).json({ message: "Error al carregar el rànquing global" });
+    }
 });
 
 
 router.post('/ressenyes', async (req, res) => {
-   try {
-       const { id_lloc, id_usuari, estrelles, comentari } = req.body;
-       const novaRessenya = new Ressenya({
-           id_lloc,
-           id_usuari,
-           estrelles,
-           comentari
-       });
-       await novaRessenya.save();
-       res.status(201).json({ success: true });
-   } catch (error) {
-       res.status(500).json({ message: "Error al guardar la ressenya" });
-   }
+    try {
+        const { id_lloc, id_usuari, estrelles, comentari } = req.body;
+        const novaRessenya = new Ressenya({
+            id_lloc,
+            id_usuari,
+            estrelles,
+            comentari
+        });
+        await novaRessenya.save();
+        res.status(201).json({ success: true });
+    } catch (error) {
+        res.status(500).json({ message: "Error al guardar la ressenya" });
+    }
 });
 
 
 // --- NOVA RUTA: Rànquing de la sessió finalitzada ---
 router.get('/leaderboard/session/:sessionId', async (req, res) => {
-   try {
-       const { sessionId } = req.params;
-       // Busquem la sessió de joc per obtenir els jugadors i els seus temps/punts
-       // Nota: Assumim que tens un model 'SessioJoc' o similar
-       const sessio = await SessioJoc.findById(sessionId).populate('jugadors.id_usuari', 'nom_usuari avatar');
+    try {
+        const { sessionId } = req.params;
+        // Busquem la sessió de joc per obtenir els jugadors i els seus temps/punts
+        // Nota: Assumim que tens un model 'SessioJoc' o similar
+        const sessio = await SessioJoc.findById(sessionId).populate('jugadors.id_usuari', 'nom_usuari avatar');
 
 
-       if (!sessio) return res.status(404).json({ message: "Sessió no trobada" });
+        if (!sessio) return res.status(404).json({ message: "Sessió no trobada" });
 
 
-       // Ordenem els jugadors pels punts obtinguts en aquesta partida específica
-       const resultatsPartida = sessio.jugadors.sort((a, b) => b.puntsPartida - a.puntsPartida);
+        // Ordenem els jugadors pels punts obtinguts en aquesta partida específica
+        const resultatsPartida = sessio.jugadors.sort((a, b) => b.puntsPartida - a.puntsPartida);
 
 
-       res.json(resultatsPartida);
-   } catch (error) {
-       res.status(500).json({ message: "Error al carregar els resultats de la partida" });
-   }
+        res.json(resultatsPartida);
+    } catch (error) {
+        res.status(500).json({ message: "Error al carregar els resultats de la partida" });
+    }
 });
 
 
 // 1. Obtenir tots els posts
 router.get('/posts', async (req, res) => {
-   try {
-       const { tag } = req.query;
-       let query = {};
+    try {
+        const { tag } = req.query;
+        let query = {};
 
 
-       if (tag && tag !== 'Tots') {
-           query = { tags: tag };
-       }
+        if (tag && tag !== 'Tots') {
+            query = { tags: tag };
+        }
 
 
-       // Mongoose: Busquem posts, ordenem per data descendent
-       const posts = await Post.find(query).sort({ timestamp: -1 });
-       res.json(posts);
-   } catch (error) {
-       res.status(500).json({ message: "Error al carregar el feed" });
-   }
+        // Mongoose: Busquem posts, ordenem per data descendent
+        const posts = await Post.find(query).sort({ timestamp: -1 });
+        res.json(posts);
+    } catch (error) {
+        res.status(500).json({ message: "Error al carregar el feed" });
+    }
 });
 
 
 router.post('/posts', async (req, res) => {
-   try {
-       // 1. Extraiem 'imatges_post' (en plural) que és el que envia el frontend
-       const { id_usuari, nom_usuari, avatar_usuari, text, imatges_post, tags, ubicacio } = req.body;
+    try {
+        // 1. Extraiem 'imatges_post' (en plural) que és el que envia el frontend
+        const { id_usuari, nom_usuari, avatar_usuari, text, imatges_post, tags, ubicacio } = req.body;
 
-       if (!id_usuari) {
-           return res.status(400).json({ message: "ID d'usuari requerit" });
-       }
+        if (!id_usuari) {
+            return res.status(400).json({ message: "ID d'usuari requerit" });
+        }
 
-       const nouPost = new Post({
-           id_usuari,
-           nom_usuari,
-           avatar_usuari: avatar_usuari || '',
-           text: text || '',
-           // Ara fem servir la variable correcta que hem extret a dalt
-           imatges_post: imatges_post || [], 
-           tags: tags || [],
-           ubicacio: ubicacio || '', 
-           likes: [],
-           comentaris: []
-       });
+        const nouPost = new Post({
+            id_usuari,
+            nom_usuari,
+            avatar_usuari: avatar_usuari || '',
+            text: text || '',
+            // Ara fem servir la variable correcta que hem extret a dalt
+            imatges_post: imatges_post || [],
+            tags: tags || [],
+            ubicacio: ubicacio || '',
+            likes: [],
+            comentaris: []
+        });
 
-      await nouPost.save();
-       res.status(201).json({ success: true, post: nouPost });
-   } catch (error) {
-       // Aquest console.log et mostrarà l'error real a la teva terminal de VS Code
-       console.error("Error creando post:", error);
-       res.status(500).json({ message: "Error al guardar la publicació", detall: error.message });
-   }
+        await nouPost.save();
+        res.status(201).json({ success: true, post: nouPost });
+    } catch (error) {
+        // Aquest console.log et mostrarà l'error real a la teva terminal de VS Code
+        console.error("Error creando post:", error);
+        res.status(500).json({ message: "Error al guardar la publicació", detall: error.message });
+    }
 });
 
 
 router.post('/posts/:postId/like', async (req, res) => {
-   try {
-       const { postId } = req.params;
-       const { id_usuari } = req.body;
+    try {
+        const { postId } = req.params;
+        const { id_usuari } = req.body;
 
-       const post = await Post.findById(postId);
-       if (!post) return res.status(404).json({ message: "Post no trobat" });
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ message: "Post no trobat" });
 
-       const index = post.likes.indexOf(id_usuari);
+        const index = post.likes.indexOf(id_usuari);
 
-       if (index === -1) {
-           post.likes.push(id_usuari); 
-       } else {
-           post.likes.splice(index, 1); 
-       }
+        if (index === -1) {
+            post.likes.push(id_usuari);
+        } else {
+            post.likes.splice(index, 1);
+        }
 
-       await post.save();
-       // DEVOLVEMOS EL ARRAY ACTUALIZADO
-       res.json({ success: true, likes: post.likes }); 
-   } catch (error) {
-       res.status(500).json({ message: "Error al gestionar el m'agrada" });
-   }
+        await post.save();
+        // DEVOLVEMOS EL ARRAY ACTUALIZADO
+        res.json({ success: true, likes: post.likes });
+    } catch (error) {
+        res.status(500).json({ message: "Error al gestionar el m'agrada" });
+    }
 });
 
 
 // 4. Eliminar post
 router.delete('/posts/:postId', async (req, res) => {
-   try {
-       // Mongoose gestiona l'ObjectId sol
-       await Post.findByIdAndDelete(req.params.postId);
-       res.json({ success: true });
-   } catch (error) {
-       res.status(500).json({ message: "Error al eliminar" });
-   }
+    try {
+        // Mongoose gestiona l'ObjectId sol
+        await Post.findByIdAndDelete(req.params.postId);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ message: "Error al eliminar" });
+    }
 });
 
 
 router.post('/posts/:postId/comentari', async (req, res) => {
-   try {
-       const { postId } = req.params;
-       const post = await Post.findById(postId);
-       if (!post) return res.status(404).json({ message: "Post no trobat" });
+    try {
+        const { postId } = req.params;
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ message: "Post no trobat" });
 
 
-       const nouComentari = {
-           id_comentari: Date.now().toString(),
-           id_usuari: req.body.userId,
-           nom_usuari: req.body.nom_usuari,
-           avatar_usuari: req.body.avatar_usuari || '',
-           text: req.body.text,
-           timestamp: new Date()
-       };
+        const nouComentari = {
+            id_comentari: Date.now().toString(),
+            id_usuari: req.body.userId,
+            nom_usuari: req.body.nom_usuari,
+            avatar_usuari: req.body.avatar_usuari || '',
+            text: req.body.text,
+            timestamp: new Date()
+        };
 
 
-       post.comentaris.push(nouComentari);
-       post.markModified('comentaris'); // Obligatorio para arrays en Mongoose
-       await post.save();
+        post.comentaris.push(nouComentari);
+        post.markModified('comentaris'); // Obligatorio para arrays en Mongoose
+        await post.save();
 
 
-       res.status(201).json({ success: true, comentari: nouComentari });
-   } catch (error) {
-       console.error("Error al comentar:", error);
-       res.status(500).json({ message: "Error al publicar el comentari" });
-   }
+        res.status(201).json({ success: true, comentari: nouComentari });
+    } catch (error) {
+        console.error("Error al comentar:", error);
+        res.status(500).json({ message: "Error al publicar el comentari" });
+    }
 });
 
 // --- MODERACIÓ PER A ADMINISTRADORS ---
@@ -224,7 +224,7 @@ router.delete('/posts/:postId/comentari/:comentariId', async (req, res) => {
         const result = await Post.findByIdAndUpdate(postId, {
             $pull: { comentaris: { id_comentari: comentariId } }
         });
-        
+
         if (!result) return res.status(404).json({ message: "Post no trobat" });
         res.json({ success: true, message: "Comentari eliminat correctament" });
     } catch (error) {
@@ -237,9 +237,9 @@ router.put('/admin/posts/:postId/revisat', async (req, res) => {
     try {
         const { postId } = req.params;
         // Treiem la marca de reportat i les dades del report
-        await Post.findByIdAndUpdate(postId, { 
+        await Post.findByIdAndUpdate(postId, {
             $set: { reportat: false },
-            $unset: { data_report: "", reportat_per: "" } 
+            $unset: { data_report: "", reportat_per: "" }
         });
         res.json({ success: true, message: "Post marcat com a segur" });
     } catch (error) {
@@ -266,7 +266,7 @@ router.post('/posts/:postId/comentari/:comentariId/report', async (req, res) => 
         comentari.reportat = true;
         comentari.reportat_per = id_usuari_reporter;
         comentari.data_report = new Date();
-        
+
         post.markModified('comentaris');
         await post.save();
 
@@ -283,7 +283,7 @@ router.post('/posts/:postId/report', async (req, res) => { // Canviat de 'report
         const { id_usuari_reporter } = req.body;
 
         const post = await Post.findByIdAndUpdate(postId, {
-            $set: { 
+            $set: {
                 reportat: true,
                 data_report: new Date(),
                 reportat_per: id_usuari_reporter
@@ -301,7 +301,7 @@ router.post('/posts/:postId/report', async (req, res) => { // Canviat de 'report
 router.put('/admin/posts/:postId/comentaris/:comentariId/revisat', async (req, res) => {
     try {
         const { postId, comentariId } = req.params;
-        
+
         // Busquem el post i dins de l'array de comentaris, posem reportat a false
         const post = await Post.findOneAndUpdate(
             { _id: postId, "comentaris.id_comentari": comentariId },
@@ -310,11 +310,110 @@ router.put('/admin/posts/:postId/comentaris/:comentariId/revisat', async (req, r
         );
 
         if (!post) return res.status(404).json({ message: "No s'ha trobat el comentari" });
-        
+
         res.json({ success: true, message: "Comentari marcat com a segur" });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Error al actualitzar el comentari" });
+    }
+});
+
+// --- GESTIÓ D'AMICS ---
+
+// Cercar usuaris per nom d'usuari (regex parcial)
+router.get('/search', async (req, res) => {
+    try {
+        const { username } = req.query;
+        if (!username) return res.status(400).json({ message: "Nom d'usuari requerit" });
+
+        const resultats = await Perfil.find({
+            nom_usuari: { $regex: username, $options: 'i' }
+        }).select('nom_usuari inventari_cromos _id avatar');
+
+        res.json(resultats);
+    } catch (error) {
+        res.status(500).json({ message: "Error en la cerca" });
+    }
+});
+
+// Enviar petició d'amistat
+router.post('/peticions/enviar', async (req, res) => {
+    try {
+        const { de_perfil_id, de_nom, per_a_perfil_id } = req.body;
+
+        const perfilDesti = await Perfil.findById(per_a_perfil_id);
+        if (!perfilDesti) return res.status(404).json({ message: "Perfil no trobat" });
+
+        if (!perfilDesti.sollicituds_pendents) perfilDesti.sollicituds_pendents = [];
+        if (!perfilDesti.amics) perfilDesti.amics = [];
+
+        if (perfilDesti.amics.includes(de_perfil_id)) {
+            return res.status(400).json({ message: "Ja sou amics" });
+        }
+
+        const jaEnviada = perfilDesti.sollicituds_pendents.some(s =>
+            s.id_perfil && s.id_perfil.toString() === de_perfil_id
+        );
+
+        if (jaEnviada) return res.status(400).json({ message: "Sol·licitud ja enviada" });
+
+        perfilDesti.sollicituds_pendents.push({
+            id_perfil: de_perfil_id,
+            nom_usuari: de_nom
+        });
+
+        await perfilDesti.save();
+        res.json({ success: true, message: "Sol·licitud enviada" });
+    } catch (error) {
+        res.status(500).json({ message: "Error al enviar la petició" });
+    }
+});
+
+// Acceptar petició d'amistat
+router.post('/peticions/acceptar', async (req, res) => {
+    try {
+        const { el_meu_perfil_id, id_nou_amic_perfil } = req.body;
+
+        const jo = await Perfil.findById(el_meu_perfil_id);
+        const ell = await Perfil.findById(id_nou_amic_perfil);
+
+        if (!jo || !ell) return res.status(404).json({ message: "Perfil no trobat" });
+
+        if (!jo.amics) jo.amics = [];
+        if (!ell.amics) ell.amics = [];
+
+        if (!jo.amics.includes(id_nou_amic_perfil)) jo.amics.push(id_nou_amic_perfil);
+        if (!ell.amics.includes(el_meu_perfil_id)) ell.amics.push(el_meu_perfil_id);
+
+        jo.sollicituds_pendents = jo.sollicituds_pendents.filter(
+            s => s.id_perfil && s.id_perfil.toString() !== id_nou_amic_perfil.toString()
+        );
+
+        await jo.save();
+        await ell.save();
+
+        res.json({ success: true, user: jo });
+    } catch (error) {
+        res.status(500).json({ message: "Error en acceptar amistat" });
+    }
+});
+
+// Rebutjar petició d'amistat
+router.post('/peticions/rebutjar', async (req, res) => {
+    try {
+        const { el_meu_perfil_id, id_amic_perfil } = req.body;
+
+        const jo = await Perfil.findById(el_meu_perfil_id);
+        if (!jo) return res.status(404).json({ message: "Perfil no trobat" });
+
+        jo.sollicituds_pendents = jo.sollicituds_pendents.filter(
+            s => s.id_perfil && s.id_perfil.toString() !== id_amic_perfil.toString()
+        );
+
+        await jo.save();
+        res.json({ success: true, message: "Sol·licitud rebutjada" });
+    } catch (error) {
+        res.status(500).json({ message: "Error en rebutjar la sol·licitud" });
     }
 });
 

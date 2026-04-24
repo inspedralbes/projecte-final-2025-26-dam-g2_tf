@@ -4,7 +4,15 @@
       <h1 class="text-3xl font-bold mb-6 text-indigo-900">
         <span v-if="!showModeSelection">Sala d'Espera</span>
         <span v-else>Configuració de la Partida</span>
-        <span v-if="roomCode && !showModeSelection" class="text-indigo-600 block text-4xl mt-2 font-mono font-black tracking-widest">{{ roomCode }}</span>
+        <div v-if="roomCode && !showModeSelection" class="mt-4">
+          <span class="text-indigo-600 block text-4xl font-mono font-black tracking-widest">{{ roomCode }}</span>
+          <button 
+            @click="compartirInvitacio" 
+            class="mt-4 bg-[#804f7f] text-white px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest shadow-md active:scale-95 transition-all flex items-center gap-2 mx-auto"
+          >
+            <span>🔗</span> COMPARTIR INVITACIÓ
+          </button>
+        </div>
       </h1>
       
       <div v-if="loading" class="text-gray-500 py-8">
@@ -135,6 +143,21 @@ const durationOptions = [
     { label: '1 hora', value: 60, desc: 'Normal' },
     { label: '90 min', value: 90, desc: 'Fàcil' }
 ];
+
+function compartirInvitacio() {
+    const url = `${window.location.origin}/join/${roomCode.value}`;
+    if (navigator.share) {
+        navigator.share({
+            title: 'Juga amb mi a Barcelona Secreta!',
+            text: `Uneix-te a la meva partida amb el codi: ${roomCode.value}`,
+            url: url
+        }).catch(err => console.log('Error compartint', err));
+    } else {
+        // Fallback: copiar al porta-retalls
+        navigator.clipboard.writeText(url);
+        alert("Enllaç copiat al porta-retalls!");
+    }
+}
 
 function obrirGoogleMaps() {
     if (adrecaInici.value) {

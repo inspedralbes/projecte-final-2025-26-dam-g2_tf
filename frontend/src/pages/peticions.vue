@@ -5,114 +5,111 @@
         <button @click="router.push('/')" class="text-2xl hover:text-gray-600 transition">
           ←
         </button>
-        <h1 class="text-xl font-bold">NOVA PETICIÓ DE RUTA</h1>
+        <h1 class="text-xl font-bold uppercase tracking-tight">PETICIONS</h1>
       </div>
-
-       <!-- Botón Perfil / Login -->
-       <BotonPerfil @login="actualitzarUsuari" />
+      <BotonPerfil @login="actualitzarUsuari" />
     </div>
+
+    <!-- Segments / Tabs -->
+    <div class="flex bg-gray-100 rounded-2xl p-1 mb-8">
+      <button 
+        @click="pestanyaActiva = 'amics'"
+        :class="['flex-1 py-3 rounded-xl text-xs font-black uppercase transition-all', 
+                pestanyaActiva === 'amics' ? 'bg-white shadow-sm text-[#402749]' : 'text-gray-400']"
+      >
+        Amics
+      </button>
+      <button 
+        @click="pestanyaActiva = 'rutes'"
+        :class="['flex-1 py-3 rounded-xl text-xs font-black uppercase transition-all', 
+                pestanyaActiva === 'rutes' ? 'bg-white shadow-sm text-[#402749]' : 'text-gray-400']"
+      >
+        Rutes
+      </button>
+    </div>
+
     <div v-if="successMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
       {{ successMessage }}
     </div>
     <div v-if="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
       {{ errorMessage }}
     </div>
-    <form @submit.prevent="submitForm" class="space-y-6 bg-white p-6 rounded-lg shadow-md">
+
+    <!-- SECCIÓ SOL·LICITUDS D'AMISTAT -->
+    <div v-if="pestanyaActiva === 'amics'" class="space-y-4">
+      <div v-if="loadingAmics" class="text-center py-12">
+        <div class="animate-spin text-2xl">🌀</div>
+      </div>
+      <div v-else-if="sollicituds.length > 0" class="space-y-3">
+        <div 
+          v-for="req in sollicituds" 
+          :key="req.id_perfil" 
+          class="bg-white p-5 rounded-[30px] shadow-sm border border-gray-100 flex items-center justify-between"
+        >
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-[#f5cbdd] flex items-center justify-center font-black text-[#402749] border-2 border-white shadow-sm">
+              {{ req.nom_usuari?.charAt(0).toUpperCase() }}
+            </div>
+            <div>
+              <p class="font-black text-gray-800 tracking-tight">{{ req.nom_usuari }}</p>
+              <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Et vol afegir</p>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button 
+              @click="gestionarSolicitud(req, 'acceptar')" 
+              class="bg-[#402749] text-white p-3 rounded-2xl hover:bg-[#5d3962] transition-colors shadow-sm"
+              title="Acceptar"
+            >
+              ✅
+            </button>
+            <button 
+              @click="gestionarSolicitud(req, 'rebutjar')" 
+              class="bg-gray-100 text-gray-400 p-3 rounded-2xl hover:bg-red-50 hover:text-red-500 transition-colors"
+              title="Rebutjar"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      </div>
+      <div v-else class="text-center py-20 bg-gray-50/50 rounded-[40px] border-2 border-dashed border-gray-200">
+        <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">No tens peticions pendents</p>
+      </div>
+    </div>
+
+    <!-- SECCIÓ NOVA RUTA (FORMULARI ORIGINAL) -->
+    <form v-else @submit.prevent="submitForm" class="space-y-6 bg-white p-6 rounded-3xl shadow-md border border-gray-50">
+      <h2 class="text-xs font-black uppercase text-gray-400 tracking-widest mb-2">Proposar un lloc nou</h2>
       <div>
-        <label for="nom" class="block text-sm font-medium text-gray-700 mb-1">Nom del lloc</label>
-        <input 
-          id="nom" 
-          v-model="form.nom_proposat" 
-          type="text" 
-          placeholder="Ex: Castell de Montjuïc" 
-          class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          required
-        />
+        <label for="nom" class="block text-[10px] font-black text-gray-400 uppercase mb-1 ml-1">Nom del lloc</label>
+        <input id="nom" v-model="form.nom_proposat" type="text" placeholder="Ex: Castell de Montjuïc" class="w-full bg-gray-50 border-none rounded-2xl p-4 text-sm focus:ring-2 ring-gray-200 outline-none font-medium" required />
       </div>
       <div>
-        <label for="desc" class="block text-sm font-medium text-gray-700 mb-1">Descripció del lloc</label>
-        <textarea 
-          id="desc" 
-          v-model="form.motiu" 
-          rows="4" 
-          placeholder="Ex: Descripció del Castell de Montjuïc..." 
-          class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          required
-        ></textarea>
+        <label for="desc" class="block text-[10px] font-black text-gray-400 uppercase mb-1 ml-1">Descripció</label>
+        <textarea id="desc" v-model="form.motiu" rows="3" placeholder="Per què vols que estigui a l'app?" class="w-full bg-gray-50 border-none rounded-2xl p-4 text-sm focus:ring-2 ring-gray-200 outline-none font-medium resize-none" required></textarea>
       </div>
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Ubicació</label>
-        <div class="flex gap-4 mb-4 border-b">
-          <button 
-            type="button"
-            @click="metodeUbicacio = 'mapa'"
-            :class="`pb-2 ${metodeUbicacio === 'mapa' ? 'border-b-2 border-black font-bold' : 'text-gray-500'}`"
-          >
-            Seleccionar al mapa
-          </button>
-          <button 
-            type="button"
-            @click="metodeUbicacio = 'manual'"
-            :class="`pb-2 ${metodeUbicacio === 'manual' ? 'border-b-2 border-black font-bold' : 'text-gray-500'}`"
-          >
-            Escriure adreça
-          </button>
+        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2 ml-1">Ubicació</label>
+        <div class="flex gap-4 mb-4">
+          <button type="button" @click="metodeUbicacio = 'mapa'" :class="`pb-1 text-xs font-black uppercase tracking-widest ${metodeUbicacio === 'mapa' ? 'text-black border-b-2 border-black' : 'text-gray-300'}`">MAPA</button>
+          <button type="button" @click="metodeUbicacio = 'manual'" :class="`pb-1 text-xs font-black uppercase tracking-widest ${metodeUbicacio === 'manual' ? 'text-black border-b-2 border-black' : 'text-gray-300'}`">MANUAL</button>
         </div>
         <div v-show="metodeUbicacio === 'mapa'" class="space-y-2">
-          <div id="mapSelect" class="w-full h-64 rounded-md border border-gray-300 z-0"></div>
-          <p class="text-xs text-gray-500">Fes clic al mapa per marcar la ubicació.</p>
-          <button 
-            type="button" 
-            @click="getLocation" 
-            class="text-sm text-blue-600 hover:underline flex items-center gap-1"
-          >
-            📍 Utilitzar la meva ubicació actual
-          </button>
+          <div id="mapSelect" class="w-full h-64 rounded-3xl border border-gray-100 z-0 overflow-hidden shadow-inner"></div>
+          <button type="button" @click="getLocation" class="text-[10px] font-black text-[#804f7f] uppercase tracking-widest hover:underline px-2">📍 Utilitzar la meva ubicació</button>
         </div>
         <div v-show="metodeUbicacio === 'manual'">
-           <input 
-            v-model="manualAddress" 
-            type="text" 
-            placeholder="Ex: Carrer de Mallorca, 401, Barcelona" 
-            class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-          />
-          <p class="text-xs text-gray-500 mt-1">S'intentarà guardar com a text si no es troben coordenades.</p>
-        </div>
-         <p v-if="form.ubicacio.length > 0 && metodeUbicacio === 'mapa'" class="text-xs text-gray-500 mt-2 bg-gray-50 p-1 rounded">
-          Seleccionat: {{ form.ubicacio[0].toFixed(5) }}, {{ form.ubicacio[1].toFixed(5) }}
-        </p>
-      </div>
-      <div>
-        <label for="img" class="block text-sm font-medium text-gray-700 mb-1">Imatge (URL)</label>
-        <input 
-          id="img" 
-          v-model="imgInput" 
-          type="url" 
-          @change="addImage"
-          placeholder="https://exemple.com/imatge.jpg" 
-          class="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-        />
-        <p class="text-xs text-gray-500 mt-1">Enganxa una URL i sortirà a sota.</p>
-        <div v-if="form.fotos_proporcionades" class="mt-2 relative group w-full h-48 bg-gray-100 rounded overflow-hidden">
-          <img :src="form.fotos_proporcionades" alt="Previsualització" class="w-full h-full object-cover" />
-          <button 
-            type="button" 
-            @click="removeImage" 
-            class="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
-          >
-            ✕
-          </button>
+           <input v-model="manualAddress" type="text" placeholder="Adreça completa..." class="w-full bg-gray-50 border-none rounded-2xl p-4 text-sm focus:ring-2 ring-gray-200 outline-none font-medium" />
         </div>
       </div>
       <button 
         type="submit" 
         :disabled="isSubmitting"
-        class="w-full bg-black text-white py-3 rounded-full font-bold hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        class="w-full bg-[#402749] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-[#5d3962] transition-colors disabled:opacity-50"
       >
-        {{ isSubmitting ? 'Enviant...' : 'Enviar Petició' }}
+        {{ isSubmitting ? 'ENVIANT...' : 'ENVIAR PROPOSTA' }}
       </button>
-
-
     </form>
   </div>
 </template>
@@ -127,24 +124,20 @@ import 'leaflet/dist/leaflet.css';
 import BotonPerfil from '../components/BotonPerfil.vue';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
-
 const router = useRouter();
+const { usuari, login } = useAuth();
+const { obrirModal } = useLoginModal();
+
+const pestanyaActiva = ref('amics');
 const successMessage = ref('');
 const errorMessage = ref('');
 const isSubmitting = ref(false);
-const locationStatus = ref('Obtenir la meva ubicació actual');
 const metodeUbicacio = ref('mapa'); 
 const manualAddress = ref('');
 const imgInput = ref('');
 
-const { usuari, login } = useAuth();
-const { obrirModal } = useLoginModal();
-const usuariId = ref(null);
-
-let map = null;
-let marker = null;
-
-
+const sollicituds = ref([]);
+const loadingAmics = ref(false);
 
 const form = ref({
   nom_proposat: '',
@@ -154,143 +147,122 @@ const form = ref({
   id_usuari: ''
 });
 
+let map = null;
+let marker = null;
+
 onMounted(() => {
   if (usuari.value) {
-    form.value.id_usuari = usuari.value._id || usuari.value.id; 
-    usuariId.value = usuari.value._id || usuari.value.id;
+    form.value.id_usuari = usuari.value._id;
+    carregarPeticionsPendents();
   }
-
-  nextTick(() => {
-    initMap();
-  });
+  nextTick(() => { if (pestanyaActiva.value === 'rutes') initMap(); });
 });
 
-// Actualitzar form.id_usuari si l'usuari fa login després del mount
+watch(pestanyaActiva, (nova) => {
+  if (nova === 'rutes') {
+    nextTick(() => { if (!map) initMap(); else setTimeout(() => map.invalidateSize(), 100); });
+  } else {
+    carregarPeticionsPendents();
+  }
+});
+
 watch(usuari, (nou) => {
   if (nou) {
-    form.value.id_usuari = nou._id || nou.id;
-    usuariId.value = nou._id || nou.id;
+    form.value.id_usuari = nou._id;
+    carregarPeticionsPendents();
   }
 });
 
-const actualitzarUsuari = (dadesUsuari) => {
-  login(dadesUsuari);
-  form.value.id_usuari = dadesUsuari._id || dadesUsuari.id;
-  usuariId.value = dadesUsuari._id || dadesUsuari.id;
-};
+const actualitzarUsuari = (dades) => { login(dades); };
+
+async function carregarPeticionsPendents() {
+  if (!usuari.value) return;
+  loadingAmics.value = true;
+  try {
+    const res = await fetch(`${API_URL}/api/usuari/${usuari.value._id}`);
+    if (res.ok) {
+      const dades = await res.json();
+      sollicituds.value = dades.sollicituds_pendents || [];
+    }
+  } catch (err) {
+    console.error("Error carregant peticions:", err);
+  } finally {
+    loadingAmics.value = false;
+  }
+}
+
+async function gestionarSolicitud(req, accio) {
+  try {
+    const res = await fetch(`${API_URL}/api/social/peticions/${accio}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        el_meu_perfil_id: usuari.value._id,
+        id_nou_amic_perfil: req.id_perfil,
+        id_amic_perfil: req.id_perfil 
+      })
+    });
+    if (res.ok) {
+      successMessage.value = accio === 'acceptar' ? 'Amistat acceptada!' : 'Sol·licitud rebutjada';
+      setTimeout(() => { successMessage.value = ''; }, 2000);
+      carregarPeticionsPendents();
+    }
+  } catch (err) {
+    console.error("Error gestió petició:", err);
+  }
+}
 
 function initMap() {
   const barcelonaCoords = [41.3879, 2.16992];
   const mapDiv = document.getElementById('mapSelect');
-  if (mapDiv) {
+  if (mapDiv && !map) {
     map = L.map('mapSelect').setView(barcelonaCoords, 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
-    map.on('click', (e) => {
-      ponerMarcador(e.latlng.lat, e.latlng.lng);
-    });
-    setTimeout(() => { map.invalidateSize(); }, 100);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    map.on('click', (e) => { ponerMarcador(e.latlng.lat, e.latlng.lng); });
   }
 }
 
 function ponerMarcador(lat, lng) {
-  if (marker) {
-    marker.setLatLng([lat, lng]);
-  } else {
-    marker = L.marker([lat, lng]).addTo(map);
-  }
+  if (marker) marker.setLatLng([lat, lng]);
+  else marker = L.marker([lat, lng]).addTo(map);
   form.value.ubicacio = [lat, lng];
 }
 
 function getLocation() {
-  if (!navigator.geolocation) {
-    alert("El teu navegador no suporta geolocalització.");
-    return;
-  }
-  
-  locationStatus.value = "Obtenint...";
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const { latitude, longitude } = position.coords;      
-      ponerMarcador(latitude, longitude);      
-      if(map) map.setView([latitude, longitude], 16);
-      locationStatus.value = "Ubicació obtinguda ✓";
-    },
-    (error) => {
-      console.error(error);
-      alert("No s'ha pogut obtenir la teva ubicació.");
-      locationStatus.value = "Error";
-    }
-  );
-}
-
-function addImage() {
-    if(imgInput.value) {
-        form.value.fotos_proporcionades = imgInput.value;
-    }
-}
-
-function removeImage() {
-    form.value.fotos_proporcionades = '';
-    imgInput.value = '';
+  navigator.geolocation.getCurrentPosition((position) => {
+    const { latitude, longitude } = position.coords;
+    ponerMarcador(latitude, longitude);
+    if(map) map.setView([latitude, longitude], 16);
+  });
 }
 
 async function submitForm() {
-  isSubmitting.value = true;
-  errorMessage.value = '';
-  successMessage.value = '';
-
   if (!form.value.id_usuari) {
-      // Mostrem el modal de login en lloc d'un missatge d'error text
-      obrirModal('Per enviar una petició de ruta, has d\'iniciar sessió primer. És ràpid!');
-      isSubmitting.value = false;
-      return;
+    obrirModal('Inicia sessió primer!');
+    return;
   }
-
-  const datosAEnviar = { ...form.value };
-
-  if (metodeUbicacio.value === 'manual' && manualAddress.value) {
-      datosAEnviar.motiu = `[Adreça: ${manualAddress.value}] \n${datosAEnviar.motiu}`;      
-      datosAEnviar.ubicacio = []; 
-  }
-
+  isSubmitting.value = true;
   try {
-    const response = await fetch(`${API_URL}/api/peticions`, {
+    const datos = { ...form.value };
+    if (metodeUbicacio.value === 'manual' && manualAddress.value) {
+      datos.motiu = `[Adreça: ${manualAddress.value}] \n${datos.motiu}`;      
+      datos.ubicacio = []; 
+    }
+    const res = await fetch(`${API_URL}/api/peticions`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(datosAEnviar)
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos)
     });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      successMessage.value = 'Petició enviada correctament!';
+    if (res.ok) {
+      successMessage.value = 'Petició enviada!';
       form.value.nom_proposat = '';
       form.value.motiu = '';
-      form.value.ubicacio = [];
-      form.value.fotos_proporcionades = '';
-      manualAddress.value = '';
-      imgInput.value = '';
-      
-      if(marker) {
-        marker.remove();
-        marker = null;
-      }
-      
-      setTimeout(() => { successMessage.value = ''; }, 3000);
-
-    } else {
-      errorMessage.value = data.message || 'Error al enviar la petició.';
+      if(marker) { marker.remove(); marker = null; }
     }
-  } catch (error) {
-    console.error(error);
-    errorMessage.value = 'Error de connexió amb el servidor.';
-  } finally {
-    isSubmitting.value = false;
-  }
+  } finally { isSubmitting.value = false; }
 }
 </script>
+
+<style scoped>
+#mapSelect { min-height: 250px; }
+</style>
