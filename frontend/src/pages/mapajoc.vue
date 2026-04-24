@@ -36,7 +36,7 @@
 
         <!-- Marcadors clicables -->
         <button
-          v-for="(punt, index) in puntsMissio"
+          v-for="(punt, index) in puntsFiltrats"
           :key="index"
           class="marcador"
           :style="{ left: punt.posicio_x + '%', top: punt.posicio_y + '%' }"
@@ -186,8 +186,63 @@ export default {
       demanantPista: false,
 
       // Notificacions en temps real
-      notificacioPunt: null
+      notificacioPunt: null,
+
+      personatgeIdUsuari: null, // Per filtrar els punts del mapa segons el personatge (fallback)
+      puntsAssignatsIds: []     // IDs de punts pre-assignats pel backend
     };
+  },
+
+  computed: {
+    puntsFiltrats() {
+      if (!this.puntsMissio || this.puntsMissio.length === 0) return [];
+      
+      console.log("[Mapa] --- Inici filtratge de punts ---");
+      console.log("[Mapa] Total inicial:", this.puntsMissio.length);
+      console.log("[Mapa] IDs assignats (Backend/Socket):", this.puntsAssignatsIds);
+      console.log("[Mapa] Personatge Usuari (ID):", this.personatgeIdUsuari);
+
+      let resultat = [];
+
+      // A) PRIORITAT: Si tenim IDs assignats explícitament (punts_assignats)
+      if (this.puntsAssignatsIds && this.puntsAssignatsIds.length > 0) {
+        resultat = this.puntsMissio.filter(punt => {
+          const pId = punt._id ? punt._id.toString() : null;
+          const matches = this.puntsAssignatsIds.some(id => id && id.toString() === pId);
+          console.log(`[Mapa] Punt ${punt.nom_punt || punt._id}: ${matches ? 'MOSTRAT' : 'AMAGAT'} (per llista IDs)`);
+          return matches;
+        });
+      } 
+      // B) FALLBACK: Lògica manual si no tenim la llista d'IDs
+      else {
+        console.warn("[Mapa] No hi ha llista d'IDs assignats. Usant lògica de fallback manual.");
+        resultat = this.puntsMissio.filter(punt => {
+          // Si no té personatge, és COMÚ -> Mostra sempre
+          if (!punt.personatge_id) {
+            console.log(`[Mapa] Punt ${punt.nom_punt || punt._id}: MOSTRAT (Punt comú)`);
+            return true;
+          }
+          
+          // ID del personatge del punt (populat o no)
+          const puntPersonatgeId = typeof punt.personatge_id === 'object' && punt.personatge_id !== null
+            ? (punt.personatge_id._id || punt.personatge_id).toString()
+            : (punt.personatge_id ? punt.personatge_id.toString() : null);
+
+          // ID del personatge de l'usuari
+          const usuariPersonatgeId = (this.personatgeIdUsuari && typeof this.personatgeIdUsuari === 'object')
+             ? (this.personatgeIdUsuari._id || this.personatgeIdUsuari).toString()
+             : (this.personatgeIdUsuari ? this.personatgeIdUsuari.toString() : null);
+
+          const matches = puntPersonatgeId && usuariPersonatgeId && puntPersonatgeId === usuariPersonatgeId;
+          console.log(`[Mapa] Punt ${punt.nom_punt || punt._id}: ${matches ? 'MOSTRAT' : 'AMAGAT'} (Character match: ${puntPersonatgeId} vs ${usuariPersonatgeId})`);
+          return matches;
+        });
+      }
+
+      console.log("[Mapa] Resultado final filtratge:", resultat.length, "punts");
+      console.log("[Mapa] --- Fi filtratge ---");
+      return resultat;
+    }
   },
 
   async mounted() {
@@ -234,16 +289,19 @@ export default {
           const perfilId = user._id || null;
 
           if (sessio.jugadors && perfilId) {
-              const myPlayer = sessio.jugadors.find(j => 
-                  (j.id_usuari === perfilId) || 
-                  (j.id_usuari && (j.id_usuari._id === perfilId || j.id_usuari === perfilId))
-              );
+              const myPlayer = sessio.jugadors.find(j => {
+                  if (!j.id_usuari) return false;
+                  const jId = (typeof j.id_usuari === 'object' ? j.id_usuari._id : j.id_usuari).toString();
+                  return jId === perfilId.toString();
+              });
               
               if (myPlayer) {
                   console.log("[Mapa] Jugador trobat a la sessió:", myPlayer.id_usuari?.nom_usuari || myPlayer.id_usuari);
                   this.sessioId = sessio._id;
                   this.isCapita = myPlayer.capita !== false; 
                   this.pistes_gastades = myPlayer.pistes_gastades || 0;
+                  this.personatgeIdUsuari = myPlayer.personatge_id || null;
+                  this.puntsAssignatsIds = myPlayer.punts_assignats || [];
                   
                   if (myPlayer.pistes_revelades) {
                       myPlayer.pistes_revelades.forEach(id => this.pistesRevelades.add(id.toString()));
@@ -258,7 +316,16 @@ export default {
                       }
                   }
               } else {
-                  console.warn("[Mapa] El jugador actual no s'ha trobat dins la llista de la sessió.");
+                  console.warn("[Mapa] El jugador actual no s'ha trobat dins la llista de la sessió API. Intentant localStorage...");
+                  // Fallback: dades de la carta en localStorage
+                  const dadesGuardades = localStorage.getItem('carta_personatge_actual');
+                  if (dadesGuardades) {
+                    const parsed = JSON.parse(dadesGuardades);
+                    if (parsed.sessioId === this.sessioId || parsed.sessioId === this.idLloc) {
+                      this.puntsAssignatsIds = parsed.puntsAssignats || [];
+                      console.log("[Mapa] Punts assignats recuperats de localStorage:", this.puntsAssignatsIds.length);
+                    }
+                  }
               }
           }
           
