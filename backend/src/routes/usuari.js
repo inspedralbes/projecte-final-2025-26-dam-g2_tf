@@ -2,11 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { Usuario, Perfil } = require('../models');
 
-function calcularNivell(punts) {
-    if (punts >= 400) return "Llegenda de la Ciutat";
-    if (punts >= 300) return "Expert en Rutes";
-    if (punts >= 200) return "Fotògraf de Carrer";
-    if (punts >= 100) return "Rastrejador Urbà";
+function calcularNivell(cromos) {
+    if (cromos > 30) return "Mestre Urbà";
+    if (cromos >= 16) return "Guia de Barcelona";
+    if (cromos >= 6) return "Rastrejador Urbà";
     return "Explorador Novell";
 }
 
@@ -33,15 +32,15 @@ router.put('/update', async (req, res) => {
 // 4. AFREGR CROMO (Pujada de nivell automàtica)
 router.put('/afegir-cromo', async (req, res) => {
     try {
-        const { perfilId, nouCromo } = req.body; 
+        const { perfilId, nouCromo } = req.body;
         const perfil = await Perfil.findById(perfilId);
-    
+
         // Afegim el cromo
         perfil.inventari_cromos.push(nouCromo);
-    
+
         // 1 cromo = 1 punt
         perfil.punts = perfil.inventari_cromos.length;
-        
+
         // Calculem el nou nivell amb la funció d'abalt
         perfil.nivell = calcularNivell(perfil.punts);
 
@@ -74,17 +73,17 @@ router.post('/sollicitud-amistat', async (req, res) => {
             return res.status(400).json({ message: "Ja sou amics" });
         }
 
-        const jaEnviada = perfilDesti.sollicituds_pendents.some(s => 
+        const jaEnviada = perfilDesti.sollicituds_pendents.some(s =>
             s.id_perfil && s.id_perfil.toString() === de_perfil_id
         );
-        
+
         if (jaEnviada) {
             return res.status(400).json({ message: "Sol·licitud ja enviada" });
         }
 
-        perfilDesti.sollicituds_pendents.push({ 
-            id_perfil: de_perfil_id, 
-            nom_usuari: de_nom 
+        perfilDesti.sollicituds_pendents.push({
+            id_perfil: de_perfil_id,
+            nom_usuari: de_nom
         });
 
         await perfilDesti.save();

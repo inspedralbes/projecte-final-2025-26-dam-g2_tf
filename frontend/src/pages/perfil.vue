@@ -20,20 +20,24 @@
         
         <h2 class="text-2xl font-bold mb-1">{{ user?.nom_usuari || 'Explorador' }}</h2>
         
-        <p class="text-[#bc85ab] text-[10px] font-black tracking-widest uppercase mb-4">{{ user?.nivell || 'Explorador Novell' }}</p>
+        <p class="text-[#402749] text-xs font-bold tracking-widest uppercase mb-4">{{ user?.nivell || 'Explorador Novell' }}</p>
 
         <div class="max-w-[200px] mx-auto mb-6">
-          <div class="flex justify-between text-[8px] text-gray-500 font-bold mb-1 uppercase">
-            <span>{{ puntsPerAlSeguentNivell }} XP</span>
-            <span>100 XP</span>
-          </div>
-          <div class="w-full bg-black/40 h-1.5 rounded-full overflow-hidden border border-white/5">
+          <div class="w-full bg-[#f5cbdd] h-3 rounded-full overflow-hidden border border-white/5 shadow-inner">
             <div 
-              class="bg-[#bc85ab] h-full transition-all duration-700" 
-              :style="{ width: puntsPerAlSeguentNivell + '%' }"
+              class="bg-gradient-to-r from-[#804f7f] to-[#bc85ab] h-full transition-all duration-1000 ease-out" 
+              :style="{ width: percentatgeProgres + '%' }"
             ></div>
           </div>
-          <p class="text-[8px] text-gray-600 mt-1 uppercase">{{ user?.punts || 0 }} punts totals</p>
+          
+          <p v-if="cromosPerSeguentNivell > 0" class="text-[9px] text-[#402749] mt-2 font-medium">
+            Et falten <span class="font-bold text-[#804f7f]">{{ cromosPerSeguentNivell }}</span> cromos per al següent nivell
+          </p>
+          <p v-else class="text-[9px] text-[#402749] mt-2 font-bold uppercase tracking-wider">
+            Ets un Mestre Urbà!
+          </p>
+          
+          <p class="text-[8px] text-gray-400 mt-1 uppercase">{{ user?.inventari_cromos?.length || 0 }} cromos col·leccionats</p>
         </div>
 
         <div class="mt-4">
@@ -188,8 +192,20 @@ const tempBio = ref('');
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
-const puntsPerAlSeguentNivell = computed(() => {
-  return (user.value?.punts || 0) % 100;
+const percentatgeProgres = computed(() => {
+  const count = user.value?.inventari_cromos?.length || 0;
+  if (count <= 5) return (count / 5) * 100;
+  if (count <= 15) return (count / 15) * 100;
+  if (count <= 30) return (count / 30) * 100;
+  return 100;
+});
+
+const cromosPerSeguentNivell = computed(() => {
+  const count = user.value?.inventari_cromos?.length || 0;
+  if (count <= 5) return 6 - count;
+  if (count <= 15) return 16 - count;
+  if (count <= 30) return 31 - count;
+  return 0;
 });
 
 const emojiRol = computed(() => {
