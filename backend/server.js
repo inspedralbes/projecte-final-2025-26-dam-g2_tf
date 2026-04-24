@@ -42,6 +42,7 @@ async function startServer() {
         app.use('/api/fotos-actuals', require('./src/routes/fotos'));
         app.use('/api/sessionsJoc', require('./src/routes/sessionsJoc'));
         app.use('/api/personatges', require('./src/routes/personatges'));
+        app.use('/api/verificacio', require('./src/routes/verificacio'));
 
         // Configurar Socket.io
         const http = require('http');

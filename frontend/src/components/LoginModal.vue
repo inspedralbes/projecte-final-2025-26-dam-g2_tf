@@ -6,6 +6,8 @@
       class="fixed inset-0 z-[9999] flex items-end justify-center sm:items-center p-4"
       @click.self="tancarModal"
     >
+      <!-- Script face-api.js segur (vladmandic fork és més estable) -->
+      <component :is="'script'" src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js" @load="handleFaceApiLoaded"></component>
       <!-- Fons difuminat amb degradat -->
       <div class="absolute inset-0 bg-gradient-to-br from-[#402749]/80 to-[#1a0a1f]/90 backdrop-blur-md"></div>
 
@@ -131,6 +133,7 @@
 
               <!-- Botó principal -->
               <button
+                v-if="!pasVerificacio || !esRegistre"
                 type="submit"
                 :disabled="carregant"
                 class="w-full bg-gradient-to-r from-[#402749] to-[#804f7f] text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-[#402749]/30 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -139,8 +142,52 @@
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                 </svg>
-                <span>{{ carregant ? 'Un moment...' : (esRegistre ? ' Crear compte' : 'Explorar ara') }}</span>
+                <span>{{ carregant ? 'Un moment...' : (esRegistre ? ' Continuar al Scanner' : 'Explorar ara') }}</span>
               </button>
+
+              <!-- Pas de Verificació Facial -->
+              <div v-else class="space-y-4 animate-fade-in">
+                <div class="relative rounded-2xl overflow-hidden bg-black aspect-video border-2 border-[#bc85ab]">
+                  <video ref="videoRef" autoplay playsinline class="w-full h-full object-cover mirror"></video>
+                  <canvas ref="canvasRef" class="hidden"></canvas>
+                  
+                  <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div class="w-48 h-48 border-2 border-dashed border-white/50 rounded-full"></div>
+                  </div>
+
+                  <div v-if="analitzant" class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white text-center p-4">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-white mb-2"></div>
+                    <span class="text-xs font-bold uppercase tracking-widest">{{ analitzantFinal ? 'Creant compte...' : 'Escanejant...' }}</span>
+                  </div>
+                  
+                  <div v-if="edatDetectada && analitzantFinal" class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-[#402749]/90 backdrop-blur-md px-6 py-2 rounded-2xl shadow-xl flex items-center gap-3 border border-white/20 animate-fade-in">
+                    <div :class="[Math.round(edatDetectada) < 18 ? 'bg-orange-500' : 'bg-green-500', 'w-3 h-3 rounded-full animate-pulse']"></div>
+                    <span class="text-xs font-black text-white uppercase tracking-tighter">Edat final: ~{{ Math.round(edatDetectada) }} ANYS</span>
+                  </div>
+                </div>
+
+                <p class="text-[10px] text-gray-500 text-center italic leading-tight">
+                  Alinea la teva cara amb el cercle. L'IA confirmarà la teva majoria d'edat per seguretat.
+                </p>
+
+                <div class="flex gap-2">
+                  <button 
+                    type="button" 
+                    @click="pasVerificacio = false" 
+                    class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl text-xs font-black uppercase tracking-widest"
+                  >
+                    Tornar
+                  </button>
+                  <button 
+                    type="button" 
+                    @click="confirmarScanneig" 
+                    :disabled="analitzant || !faceApiLlesta || !edatDetectada"
+                    class="flex-[2] py-3 bg-[#402749] text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    {{ analitzantFinal ? 'Processant...' : 'Confirmar i Finalitzar' }}
+                  </button>
+                </div>
+              </div>
             </form>
 
             <!-- Peu del modal: tancament -->
@@ -171,7 +218,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, nextTick, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import { useLoginModal } from '../composables/useLoginModal';
@@ -190,12 +237,210 @@ const contrasenya = ref('');
 const error = ref('');
 const carregant = ref(false);
 
+// Verificació Facial
+const pasVerificacio = ref(false);
+const analitzant = ref(false);
+const analitzantFinal = ref(false);
+const edatDetectada = ref(null);
+const faceApiLlesta = ref(false);
+const videoRef = ref(null);
+const canvasRef = ref(null);
+let mediaStream = null;
+let loopDeteccio = null;
+let historialEdats = [];
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+
+async function handleFaceApiLoaded() {
+  console.log("face-api.js carregat!");
+  try {
+    // Utilitzem el CDN de vladmandic que és molt més fiable per als models
+    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+      faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL)
+    ]);
+    faceApiLlesta.value = true;
+    console.log("Models de face-api carregats des de vladmandic CDN!");
+  } catch (err) {
+    console.error("Error carregant models:", err);
+  }
+}
+
+async function iniciarCamera() {
+  await nextTick();
+  try {
+    if (mediaStream) aturarCamera();
+    
+    mediaStream = await navigator.mediaDevices.getUserMedia({ 
+      video: { 
+        facingMode: 'user',
+        width: { ideal: 640 },
+        height: { ideal: 480 }
+      } 
+    });
+    
+    if (videoRef.value) {
+      videoRef.value.srcObject = mediaStream;
+      videoRef.value.onloadedmetadata = () => {
+        videoRef.value.play();
+        iniciarLoopDeteccio();
+      };
+    } else {
+      console.error("videoRef no trobat després de nextTick");
+      // Reintentem si cal
+      setTimeout(() => {
+        if (videoRef.value) videoRef.value.srcObject = mediaStream;
+      }, 500);
+    }
+  } catch (err) {
+    console.error("Error iniciarCamera:", err);
+    error.value = "No hem pogut accedir a la càmera. Revisa els permisos.";
+  }
+}
+
+function aturarCamera() {
+  aturarLoopDeteccio();
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(track => track.stop());
+    mediaStream = null;
+  }
+}
+
+async function iniciarLoopDeteccio() {
+  if (loopDeteccio) return;
+  
+  const runDeteccio = async () => {
+    if (!videoRef.value || !pasVerificacio.value || analitzantFinal.value) return;
+    
+    try {
+      const detection = await faceapi.detectSingleFace(videoRef.value, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks()
+        .withAgeAndGender();
+
+      if (detection) {
+        // Guardem l'edat en un historial per fer la mitjana (més estable)
+        historialEdats.push(detection.age);
+        if (historialEdats.length > 5) historialEdats.shift();
+        
+        const mitjana = historialEdats.reduce((a, b) => a + b, 0) / historialEdats.length;
+        edatDetectada.value = mitjana;
+      }
+    } catch (err) {
+      console.warn("Error en loop detecció", err);
+    }
+    
+    if (pasVerificacio.value && !analitzantFinal.value) {
+      loopDeteccio = setTimeout(runDeteccio, 500); // Cada mig segon
+    }
+  };
+  
+  runDeteccio();
+}
+
+function aturarLoopDeteccio() {
+  if (loopDeteccio) {
+    clearTimeout(loopDeteccio);
+    loopDeteccio = null;
+  }
+}
+
+async function confirmarScanneig() {
+  if (!videoRef.value || analitzantFinal.value || !edatDetectada.value) return;
+  analitzantFinal.value = true;
+  analitzant.value = true;
+
+  try {
+    const edatEstimada = edatDetectada.value;
+    console.log("Edat final confirmada:", edatEstimada);
+
+    const canvas = canvasRef.value;
+    canvas.width = videoRef.value.videoWidth;
+    canvas.height = videoRef.value.videoHeight;
+    canvas.getContext('2d').drawImage(videoRef.value, 0, 0);
+    const imatgeBase64 = canvas.toDataURL('image/jpeg', 0.8);
+
+    const majorConfirmat = edatEstimada >= 18;
+    const massaJove = edatEstimada < 15;
+
+    if (massaJove) {
+        error.value = "Ho sentim, l'escaner indica que ets massa jove per registrar-te (~"+Math.round(edatEstimada)+" anys).";
+        aturarCamera();
+        pasVerificacio.value = false;
+        analitzant.value = false;
+        analitzantFinal.value = false;
+        return;
+    }
+
+    aturarCamera();
+    await registrarFinal(majorConfirmat, majorConfirmat ? '' : imatgeBase64);
+
+  } catch (err) {
+    console.error(err);
+    error.value = "Error durant la confirmació facial.";
+  } finally {
+    analitzant.value = false;
+    analitzantFinal.value = false;
+  }
+}
+
+async function registrarFinal(esMajor, imatge) {
+  carregant.value = true;
+  const dades = {
+    nom_usuari: nomPublic.value,
+    correu: correu.value,
+    contrasenya: contrasenya.value,
+    es_major_confirmada: esMajor,
+    verificacio_imatge: imatge
+  };
+
+  try {
+    const resposta = await fetch(`${API_URL}/api/auth/registre`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dades)
+    });
+
+    const resultat = await resposta.json();
+
+    if (resultat.success) {
+      if (resultat.usuari.verificacio_estat === 'pendent') {
+          // NO l'autentiquem, li mostrem missatge i resetegem
+          missatgePersonalitzat.value = "Sol·licitud enviada! Un administrador revisarà la teva identitat per confirmar que ets major d'edat. Torna a provar d'entrar en unes hores.";
+          pasVerificacio.value = false;
+          aturarCamera();
+          // Netegem dades sensibles del form
+          contrasenya.value = '';
+          return;
+      }
+
+      // Si està aprovat, procedim normalment
+      login(resultat.usuari);
+      tancarModal();
+      router.push({ name: 'mapa' });
+    } else {
+      error.value = resultat.message;
+      pasVerificacio.value = false;
+    }
+  } catch (err) {
+    error.value = "Error de connexió.";
+  } finally {
+    carregant.value = false;
+  }
+}
 
 /**
  * Executa el login o registre depenent de l'estat del formulari
  */
 async function executarAccio() {
+  if (esRegistre.value && !pasVerificacio.value) {
+    pasVerificacio.value = true;
+    await iniciarCamera();
+    return;
+  }
+
   carregant.value = true;
   error.value = '';
 
@@ -237,6 +482,9 @@ async function executarAccio() {
       } else if (rutaAnar && rutaAnar.name) {
         // Redirigim l'usuari a la ruta que volia visitar originalment
         router.push(rutaAnar);
+      } else if (esRegistre.value) {
+          // Si és registre i no hi ha ruta d'intenció, anem al mapa o perfil
+          router.push('/mapa');
       }
       // Si no hi havia ruta d'intenció, simplement tanquem el modal i deixem l'usuari on era
 
@@ -250,6 +498,9 @@ async function executarAccio() {
     carregant.value = false;
   }
 }
+onUnmounted(() => {
+  aturarCamera();
+});
 </script>
 
 <style scoped>
@@ -307,5 +558,17 @@ async function executarAccio() {
 .error-fade-leave-to {
   opacity: 0;
   transform: translateY(-5px);
+}
+.mirror {
+  transform: rotateY(180deg);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

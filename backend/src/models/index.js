@@ -8,7 +8,14 @@ const UsuariSchema = new mongoose.Schema({
     type: String,
     enum: ['user', 'admin'],
     default: 'user'
-  }
+  },
+  verificacio_estat: {
+    type: String,
+    enum: ['pendent', 'aprovat', 'rebutjat'],
+    default: 'aprovat' // Per defecte aprovat si no es requereix IA, però el registre el posarà a pendent si cal
+  },
+  verificacio_imatge: { type: String, default: '' },
+  data_verificacio_sollicitud: { type: Date, default: null }
 });
 
 const PerfilSchema = new mongoose.Schema({
@@ -76,7 +83,7 @@ const SessioJocSchema = new mongoose.Schema({
     foto_secreta: String,
     pistes_gastades: { type: Number, default: 0 },
     pistes_revelades: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lloc' }], // IDs dels punts revelats
-    temps_limit: { type: Date }, 
+    temps_limit: { type: Date },
     completat: { type: Boolean, default: false },
     puntsPartida: { type: Number, default: 0 },
     temps: { type: String, default: "0" },

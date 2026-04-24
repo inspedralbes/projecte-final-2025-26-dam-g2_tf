@@ -31,15 +31,50 @@ const eliminarPartidasAntiguas = async () => {
     }
 };
 
+// Funció que neteja imatges de verificació de fa més de 2 setmanes
+const netejaVerificacionsAntigues = async () => {
+    try {
+        const { Usuari } = require('../models');
+        const fs = require('fs');
+        const path = require('path');
+
+        const faDosSetmanes = new Date();
+        faDosSetmanes.setDate(faDosSetmanes.getDate() - 14);
+
+        const pendentsAntics = await Usuari.find({
+            verificacio_estat: 'pendent',
+            data_verificacio_sollicitud: { $lt: faDosSetmanes }
+        });
+
+        if (pendentsAntics.length > 0) {
+            console.log(`[Cron] Netejant ${pendentsAntics.length} verificacions antigues...`);
+            for (const u of pendentsAntics) {
+                u.verificacio_estat = 'rebutjat';
+                if (u.verificacio_imatge) {
+                    const cami = path.join(__dirname, '../../public', u.verificacio_imatge);
+                    if (fs.existsSync(cami)) fs.unlinkSync(cami);
+                    u.verificacio_imatge = '';
+                }
+                await u.save();
+            }
+        }
+    } catch (error) {
+        console.error('[Cron] Error netejant verificacions:', error);
+    }
+};
+
 // Iniciar todos los cron jobs (o tareas programadas)
 const iniciarCronJobs = () => {
-    console.log('[Cron] Configurant tasques programades (neteja de partides)...');
+    console.log('[Cron] Configurant tasques programades (neteja de partides i verificacions)...');
 
     // Ejecutar inmediatamente una vez para limpiar al arrancar el servidor
     eliminarPartidasAntiguas();
+    netejaVerificacionsAntigues();
 
-    // Luego, ejecutar cada 12 horas (12 * 60 * 60 * 1000 ms = 43200000 ms)
+    // Luego, ejecutar cada 12 horas para partides
     setInterval(eliminarPartidasAntiguas, 12 * 60 * 60 * 1000);
+    // I cada 24 hores per verificacions (24 * 60 * 60 * 1000 ms)
+    setInterval(netejaVerificacionsAntigues, 24 * 60 * 60 * 1000);
 };
 
 module.exports = {

@@ -37,6 +37,33 @@
         </div>
       </header>
 
+      <!-- Notificació Toast Custom -->
+      <Transition name="toast-fade">
+        <div v-if="notificacio" class="fixed top-6 right-6 z-[100] flex items-center gap-3 bg-white border-2 border-[#402749] px-6 py-4 rounded-2xl shadow-2xl animate-fade-in shadow-[#402749]/20">
+          <div class="w-8 h-8 rounded-full bg-[#f5cbdd] flex items-center justify-center">
+            <svg class="w-4 h-4 text-[#402749]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <p class="text-sm font-black text-[#402749] uppercase tracking-tight">{{ notificacio }}</p>
+        </div>
+      </Transition>
+
+      <!-- Modal de Confirmació Custom -->
+      <Transition name="modal-fade">
+        <div v-if="confirmacioPendents" class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div class="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl border-2 border-[#402749] animate-bounce-in">
+            <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-red-100">
+               <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <h3 class="text-xl font-black text-[#402749] text-center mb-2 uppercase tracking-tighter">{{ confirmacioTitol }}</h3>
+            <p class="text-gray-500 text-center text-sm mb-8 font-medium">{{ confirmacioMissatge }}</p>
+            <div class="flex gap-3">
+              <button @click="cancelarConfirmacio" class="flex-1 py-3 bg-gray-100 text-gray-500 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-200 transition-all">Cancel·lar</button>
+              <button @click="executarConfirmacio" class="flex-1 py-3 bg-red-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-lg shadow-red-200">Confirmar</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
       <div v-if="seleccionats.length > 0" class="fixed bottom-6 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-6 z-50 animate-bounce-in">
         <div class="bg-[#402749] text-white p-4 rounded-3xl shadow-2xl border-2 border-[#f5cbdd] flex items-center gap-6">
           <p class="text-xs font-black uppercase tracking-widest px-2">{{ seleccionats.length }} Seleccionats</p>
@@ -52,7 +79,8 @@
         <div class="flex gap-2 p-1 bg-gray-200/50 w-fit rounded-2xl border border-gray-200 shadow-inner overflow-x-auto">
           <button @click="tabActual = 'ressenyes'" :class="tabActual === 'ressenyes' ? 'bg-[#402749] text-white shadow-md' : 'text-gray-500 hover:bg-white'" class="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300">Ressenyes</button>
           <button @click="tabActual = 'posts'" :class="tabActual === 'posts' ? 'bg-[#402749] text-white shadow-md' : 'text-gray-500 hover:bg-white'" class="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300">Posts Socials</button>
-          <button @click="tabActual = 'eliminats'" :class="tabActual === 'eliminats' ? 'bg-red-600 text-white shadow-md' : 'text-red-500 hover:bg-red-50'" class="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border border-transparent hover:border-red-200">🗑️ Eliminats</button>
+          <button @click="tabActual = 'identitats'" :class="tabActual === 'identitats' ? 'bg-[#402749] text-white shadow-md' : 'text-gray-500 hover:bg-white'" class="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300">Verificació d'Edat</button>
+          <button @click="tabActual = 'eliminats'" :class="tabActual === 'eliminats' ? 'bg-red-600 text-white shadow-md' : 'text-red-500 hover:bg-red-50'" class="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border border-transparent hover:border-red-200">Historial Eliminats</button>
         </div>
 
         <button 
@@ -157,6 +185,45 @@
         </div>
       </section>
 
+      <!-- SECCIÓ VERIFICACIÓ D'IDENTITAT -->
+      <section v-if="tabActual === 'identitats'" class="animate-fade-in">
+        <div v-if="identitatsPendents.length === 0" class="flex flex-col items-center justify-center py-24 text-center">
+            <div class="bg-white p-8 rounded-full shadow-xl mb-6 ring-8 ring-blue-50">
+              <svg class="w-16 h-16 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-black text-[#402749] mb-1">Totes les identitats revisades</h3>
+            <p class="text-gray-400 text-sm max-w-xs mx-auto">No hi ha usuaris pendents de verificar la seva edat.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div v-for="user in identitatsPendents" :key="user._id" class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group transition-all duration-300">
+            <div class="aspect-[4/3] bg-gray-200 relative overflow-hidden">
+                <img :src="`${API_URL}${user.verificacio_imatge}`" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div class="absolute top-4 right-4 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-[9px] text-white font-black uppercase tracking-widest border border-white/20">
+                    Sol·licitud: {{ new Date(user.data_sollicitud).toLocaleDateString() }}
+                </div>
+            </div>
+            <div class="p-6 flex-1 flex flex-col bg-white">
+                <div class="mb-4">
+                  <h4 class="font-black text-[#402749] text-sm uppercase tracking-tight mb-0.5 line-clamp-1">{{ user.nom_usuari }}</h4>
+                  <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">{{ user.correu }}</p>
+                </div>
+                
+                <div class="mt-auto flex gap-2">
+                    <button @click="decidirIdentitat(user._id, 'aprovat')" class="flex-1 bg-[#402749] hover:bg-[#5d3962] text-white py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95">
+                        Aprovar Usuari
+                    </button>
+                    <button @click="decidirIdentitat(user._id, 'rebutjar')" class="flex-1 bg-red-50 text-red-500 border border-red-100 hover:bg-red-500 hover:text-white py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95">
+                        Rebutjar
+                    </button>
+                </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section v-if="tabActual === 'ressenyes'" class="animate-fade-in">
         <div class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
           <table class="w-full text-left border-collapse">
@@ -217,13 +284,18 @@
 import { ref, onMounted, computed } from 'vue';
 import AdminNav from './components/AdminNav.vue';
 
-const API_URL = 'http://localhost:8088'; 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088'; 
 const tabActual = ref('posts');
+const notificacio = ref('');
+const confirmacioPendents = ref(null);
+const confirmacioTitol = ref('');
+const confirmacioMissatge = ref('');
 const ressenyes = ref([]);
 const posts = ref([]);
 const seleccionats = ref([]);
 const filtreCerca = ref('');
 const historialEliminats = ref([]);
+const identitatsPendents = ref([]);
 const estaCarregant = ref(false);
 
 const postsFiltrats = computed(() => {
@@ -258,6 +330,9 @@ const cargarDatos = async () => {
     
     const resRes = await fetch(`${API_URL}/api/social/admin/ressenyes`);
     if (resRes.ok) ressenyes.value = await resRes.json();
+
+    const resIdent = await fetch(`${API_URL}/api/verificacio/pendents`);
+    if (resIdent.ok) identitatsPendents.value = await resIdent.json();
   } catch (err) {
     console.error("Error carregar dades:", err);
   } finally {
@@ -273,20 +348,44 @@ const alternarSeleccioTots = () => {
   }
 };
 
-const marcarRevisat = async (postId) => {
-  if (!confirm("Vols marcar aquest post com a segur?")) return;
-  try {
-    const response = await fetch(`${API_URL}/api/social/admin/posts/${postId}/revisat`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    if (response.ok) {
-      // Re-filtrem localment: si no queden comentaris reportats, treiem el post
-      const post = posts.value.find(p => p._id === postId);
-      if (post) post.reportat = false;
-      actualitzarLlistaLocal(postId);
-    }
-  } catch (err) { console.error(err); }
+const mostrarNotificacio = (msj) => {
+  notificacio.value = msj;
+  setTimeout(() => notificacio.value = '', 3000);
+};
+
+const demanarConfirmacio = (titol, msj, callback) => {
+  confirmacioTitol.value = titol;
+  confirmacioMissatge.value = msj;
+  confirmacioPendents.value = callback;
+};
+
+const cancelarConfirmacio = () => {
+  confirmacioPendents.value = null;
+};
+
+const executarConfirmacio = () => {
+  if (confirmacioPendents.value) {
+    confirmacioPendents.value();
+    confirmacioPendents.value = null;
+  }
+};
+
+const marcarRevisat = (postId) => {
+  demanarConfirmacio("Validar Post", "Segur que vols marcar aquest post com a segur?", async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/social/admin/posts/${postId}/revisat`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (response.ok) {
+        // Re-filtrem localment: si no queden comentaris reportats, treiem el post
+        const post = posts.value.find(p => p._id === postId);
+        if (post) post.reportat = false;
+        actualitzarLlistaLocal(postId);
+        mostrarNotificacio("Post validat amb èxit");
+      }
+    } catch (err) { console.error(err); }
+  });
 };
 
 const validarComentari = async (postId, comentariId) => {
@@ -313,40 +412,59 @@ const actualitzarLlistaLocal = (postId) => {
   }
 };
 
-const eliminarPost = async (postObj) => {
-  if (!confirm("🚨 Eliminar el post sencer?")) return;
-  try {
-    const response = await fetch(`${API_URL}/api/social/posts/${postObj._id}`, { method: 'DELETE' });
-    if (response.ok) {
-      historialEliminats.value.unshift({
-        tipus: 'post',
-        usuari: postObj.nom_usuari,
-        text: postObj.text,
-        dataAccio: new Date().toLocaleTimeString()
-      });
-      posts.value = posts.value.filter(p => p._id !== postObj._id);
-    }
-  } catch (err) { console.error(err); }
+const eliminarPost = (postObj) => {
+  demanarConfirmacio("🚨 Eliminar Post", "Aquesta acció esborrarà el post de forma permanent. Estàs segur?", async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/social/posts/${postObj._id}`, { method: 'DELETE' });
+      if (response.ok) {
+        historialEliminats.value.unshift({
+          tipus: 'post',
+          usuari: postObj.nom_usuari,
+          text: postObj.text,
+          dataAccio: new Date().toLocaleTimeString()
+        });
+        posts.value = posts.value.filter(p => p._id !== postObj._id);
+        mostrarNotificacio("Post eliminat del sistema");
+      }
+    } catch (err) { console.error(err); }
+  });
 };
 
-const eliminarComentari = async (postId, comentariId) => {
-  if (!confirm("Eliminar aquest comentari?")) return;
-  try {
-    // CAMBIO: Asegúrate de si es 'comentari' o 'comentaris' según tu backend
-    const response = await fetch(`${API_URL}/api/social/posts/${postId}/comentari/${comentariId}`, { 
-      method: 'DELETE' 
-    });
-    
-    if (response.ok) {
-      const post = posts.value.find(p => p._id === postId);
-      if (post) {
-        // Filtramos para eliminarlo de la vista sin recargar
-        post.comentaris = post.comentaris.filter(c => (c.id_comentari || c._id) !== comentariId);
+const eliminarComentari = (postId, comentariId) => {
+  demanarConfirmacio("Eliminar Comentari", "Segur que vols esborrar aquest comentari?", async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/social/posts/${postId}/comentari/${comentariId}`, { 
+        method: 'DELETE' 
+      });
+      
+      if (response.ok) {
+        const post = posts.value.find(p => p._id === postId);
+        if (post) {
+          post.comentaris = post.comentaris.filter(c => (c.id_comentari || c._id) !== comentariId);
+        }
+        mostrarNotificacio("Comentari eliminat");
       }
-    } else {
-      console.error("Error 404: Revisa si la ruta del backend es /comentari/ o /comentaris/");
-    }
-  } catch (err) { console.error(err); }
+    } catch (err) { console.error(err); }
+  });
+};
+
+const decidirIdentitat = (userId, estat) => {
+  const titol = estat === 'aprovat' ? "Aprovar Identitat" : "Rebutjar i Esborrar";
+  const msj = estat === 'aprovat' ? "S'activarà el compte de l'usuari definitivament." : "Es borrarà l'usuari i totes les seves dades per ser menor o incomplir les regles.";
+  
+  demanarConfirmacio(titol, msj, async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/verificacio/decidir/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estat })
+      });
+      if (response.ok) {
+        identitatsPendents.value = identitatsPendents.value.filter(u => u._id !== userId);
+        mostrarNotificacio(`Identitat ${estat} amb èxit`);
+      }
+    } catch (err) { console.error(err); }
+  });
 };
 
 const eliminarRessenya = async (resObj) => {
