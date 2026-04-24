@@ -56,14 +56,22 @@
           </tbody>
         </table>
       </div>
+      <ConfirmModal 
+        :obert="mostrarConfirm" 
+        :titol="titolConfirm" 
+        :missatge="missatgeConfirm" 
+        @confirm="confirmarEliminar" 
+        @close="mostrarConfirm = false" 
+      />
     </main>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import AdminNav from './components/AdminNav.vue';
 import AdminFormLloc from './components/AdminFormLloc.vue';
+import ConfirmModal from './components/ConfirmModal.vue';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 const PATH = `${API_URL}/api/mapa/punts`;
@@ -71,6 +79,19 @@ const PATH = `${API_URL}/api/mapa/punts`;
 const llista = ref([]);
 const mostrarForm = ref(false);
 const editandoId = ref(null);
+const mostrarConfirm = ref(false);
+const idAEliminar = ref(null);
+const pasConfirmacio = ref(1);
+
+const titolConfirm = computed(() => {
+  return pasConfirmacio.value === 1 ? "Eliminar Lloc?" : "⚠️ ESTÀS REALMENT SEGUR?";
+});
+
+const missatgeConfirm = computed(() => {
+  return pasConfirmacio.value === 1 
+    ? "¿Estàs segur que vols eliminar aquest lloc? Aquesta acció no es pot desfer."
+    : "ATENCIÓ: Estàs a punt d'esborrar definitivament aquest punt del mapa. Aquesta acció és irreversible. Vols continuar?";
+});
 
 const resetForm = () => ({
   nom: '', barri: '', dificultat: 'Baixa', descripcio: '', explicacio_historica: '',
@@ -134,11 +155,30 @@ const guardarLloc = async (datos) => {
   }
 };
 
-const eliminarLloc = async (id) => {
-  if (!confirm("Eliminar?")) return;
-  await fetch(`${PATH}/${id}`, { method: 'DELETE' });
-  mostrarForm.value = false;
-  cargarDatos();
+const eliminarLloc = (id) => {
+  idAEliminar.value = id;
+  pasConfirmacio.value = 1;
+  mostrarConfirm.value = true;
+};
+
+const confirmarEliminar = async () => {
+  if (!idAEliminar.value) return;
+  
+  if (pasConfirmacio.value === 1) {
+    pasConfirmacio.value = 2;
+    return;
+  }
+  
+  try {
+    await fetch(`${PATH}/${idAEliminar.value}`, { method: 'DELETE' });
+    mostrarConfirm.value = false;
+    mostrarForm.value = false;
+    idAEliminar.value = null;
+    pasConfirmacio.value = 1;
+    cargarDatos();
+  } catch (error) {
+    alert("Error al eliminar");
+  }
 };
 
 onMounted(cargarDatos);
