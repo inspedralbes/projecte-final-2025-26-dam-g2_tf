@@ -19,11 +19,8 @@
               class="w-full h-full object-cover shadow-none"
             />
             <!-- Overlay per incentivar el clic (revertit a l'interior) -->
-            <div v-if="!isFlipped" class="absolute inset-0 flex flex-col items-center justify-center bg-black/10 group cursor-pointer shadow-none">
-               <div class="bg-white/10 backdrop-blur-sm p-4 rounded-full border border-white/20 animate-pulse">
-                  <span class="text-white text-3xl block transform">✨</span>
-               </div>
-               <p class="text-white font-bold mt-4 tracking-widest text-xs uppercase text-center opacity-80">Clica la carta</p>
+            <div v-if="!isFlipped" class="absolute inset-0 flex flex-col items-center justify-center cursor-pointer shadow-none">
+               <p class="text-white font-bold opacity-0 hover:opacity-80 transition-opacity tracking-widest text-xs uppercase text-center">Clica la carta</p>
             </div>
           </div>
 
@@ -150,6 +147,7 @@ export default {
   transform-style: preserve-3d;
   cursor: pointer;
   box-shadow: none !important;
+  outline: none !important;
 }
 
 .card-inner.is-flipped {
@@ -166,6 +164,7 @@ export default {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   box-shadow: none !important;
+  border: none !important;
 }
 
 .card-back {
