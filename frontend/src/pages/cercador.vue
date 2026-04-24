@@ -132,7 +132,7 @@
           </div>
 
           <button @click="anarALloc(lloc.id)"
-            class="bg-[#3b273b] text-white font-bold py-2 px-6 rounded-xl text-sm hover:bg-[#523552] transition transform active:scale-95 shadow-md">
+            class="bg-[rgba(64,39,73,1)] text-white font-bold py-2 px-6 rounded-xl text-sm hover:bg-[rgba(64,39,73,0.8)] transition transform active:scale-95 shadow-md">
             EXPLORAR
           </button>
         </div>

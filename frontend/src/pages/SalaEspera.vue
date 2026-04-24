@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen bg-indigo-50 flex items-center justify-center p-4">
+  <div class="min-h-screen bg-[#402749]/5 flex items-center justify-center p-4">
     <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-lg text-center">
-      <h1 class="text-3xl font-bold mb-6 text-indigo-900">
+      <h1 class="text-3xl font-bold mb-6 text-[#402749]">
         <span v-if="!showModeSelection">Sala d'Espera</span>
         <span v-else>Configuració de la Partida</span>
         <div v-if="roomCode && !showModeSelection" class="mt-4">
-          <span class="text-indigo-600 block text-4xl font-mono font-black tracking-widest">{{ roomCode }}</span>
+          <span class="text-[#402749] block text-4xl font-mono font-black tracking-widest">{{ roomCode }}</span>
           <button 
             @click="compartirInvitacio" 
             class="mt-4 bg-[#804f7f] text-white px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest shadow-md active:scale-95 transition-all flex items-center gap-2 mx-auto"
@@ -16,7 +16,7 @@
       </h1>
       
       <div v-if="loading" class="text-gray-500 py-8">
-        <div class="animate-spin inline-block w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full mb-4"></div>
+        <div class="animate-spin inline-block w-8 h-8 border-4 border-[#402749]/20 border-t-[#402749] rounded-full mb-4"></div>
         <p>Carregant la sala...</p>
       </div>
 
@@ -26,7 +26,7 @@
           <h2 class="text-xl font-bold text-gray-800 mb-4">Jugadors Connectats</h2>
           <ul class="space-y-2">
             <li v-for="player in players" :key="player.id" class="flex items-center bg-gray-50 p-3 rounded-lg">
-              <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold mr-3">
+              <div class="w-10 h-10 bg-[#402749]/10 rounded-full flex items-center justify-center text-[#402749] font-bold mr-3">
                 {{ player.nom.charAt(0).toUpperCase() }}
               </div>
               <span class="font-medium text-gray-700">{{ player.nom }}</span>
@@ -38,14 +38,14 @@
         </div>
 
         <div v-if="isCreator && !showModeSelection" class="mt-8">
-            <button @click="showModeSelection = true" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors">
+            <button @click="showModeSelection = true" class="w-full bg-[#402749] text-white font-bold py-4 rounded-xl shadow-lg hover:bg-[#402749]/80 transition-colors">
                  COMENÇAR PARTIDA
             </button>
         </div>
 
-        <div v-if="isCreator && showModeSelection" class="mt-8 bg-white border-2 border-indigo-100 rounded-xl p-4 text-left">
+        <div v-if="isCreator && showModeSelection" class="mt-8 bg-white border-2 border-[#402749]/10 rounded-xl p-4 text-left">
             <div v-if="locationCoords || adrecaInici" class="mb-6">
-                <button @click="obrirGoogleMaps" class="w-full bg-blue-50 text-blue-600 font-bold py-3 rounded-xl shadow-sm border border-blue-200 hover:bg-blue-100 transition-colors flex items-center justify-center gap-2">
+                <button @click="obrirGoogleMaps" class="w-full bg-[#402749]/5 text-[#402749] font-bold py-3 rounded-xl shadow-sm border border-[#402749]/20 hover:bg-[#402749]/10 transition-colors flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/>
                     </svg>
@@ -53,35 +53,35 @@
                 </button>
             </div>
             
-            <h3 class="text-xl font-bold text-indigo-900 mb-4">Selecciona la Durada</h3>
+            <h3 class="text-xl font-bold text-[#402749] mb-4">Selecciona la Durada</h3>
             <div class="grid grid-cols-3 gap-3 mb-6">
                 <button v-for="opt in durationOptions" :key="opt.value" 
                     @click="selectedDuration = opt.value"
                     class="p-3 rounded-xl border-2 transition-all text-sm font-bold"
-                    :class="selectedDuration === opt.value ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-100 text-gray-500 hover:border-indigo-200'">
+                    :class="selectedDuration === opt.value ? 'border-[#402749] bg-[#402749]/5 text-[#402749]' : 'border-gray-100 text-gray-500 hover:border-[#402749]/30'">
                     {{ opt.label }}<br>
                     <span class="text-[10px] font-normal">{{ opt.desc }}</span>
                 </button>
             </div>
 
-            <h3 class="text-xl font-bold text-indigo-900 mb-4">Selecciona el Mode de Joc</h3>
+            <h3 class="text-xl font-bold text-[#402749] mb-4">Selecciona el Mode de Joc</h3>
             <div class="space-y-3 mb-6">
-                <label class="flex items-center space-x-3 p-3 rounded-lg border hover:bg-indigo-50 cursor-pointer" :class="{'border-indigo-500 bg-indigo-50': selectedMode === 'Individual', 'border-gray-200': selectedMode !== 'Individual'}">
-                    <input type="radio" v-model="selectedMode" value="Individual" class="text-indigo-600 focus:ring-indigo-500 w-5 h-5">
+                <label class="flex items-center space-x-3 p-3 rounded-lg border hover:bg-[#402749]/5 cursor-pointer" :class="{'border-[#402749] bg-[#402749]/5': selectedMode === 'Individual', 'border-gray-200': selectedMode !== 'Individual'}">
+                    <input type="radio" v-model="selectedMode" value="Individual" class="text-[#402749] focus:ring-[#402749] w-5 h-5">
                     <div>
                         <span class="block font-bold text-gray-800">Individual</span>
                         <span class="block text-sm text-gray-500">Cada jugador fa servir el seu propi mòbil.</span>
                     </div>
                 </label>
-                <label class="flex items-center space-x-3 p-3 rounded-lg border hover:bg-indigo-50 cursor-pointer" :class="{'border-indigo-500 bg-indigo-50': selectedMode === 'Grup', 'border-gray-200': selectedMode !== 'Grup'}">
-                    <input type="radio" v-model="selectedMode" value="Grup" class="text-indigo-600 focus:ring-indigo-500 w-5 h-5">
+                <label class="flex items-center space-x-3 p-3 rounded-lg border hover:bg-[#402749]/5 cursor-pointer" :class="{'border-[#402749] bg-[#402749]/5': selectedMode === 'Grup', 'border-gray-200': selectedMode !== 'Grup'}">
+                    <input type="radio" v-model="selectedMode" value="Grup" class="text-[#402749] focus:ring-[#402749] w-5 h-5">
                     <div>
                         <span class="block font-bold text-gray-800">Grup</span>
                         <span class="block text-sm text-gray-500">Tots jugueu junts amb un sol mòbil.</span>
                     </div>
                 </label>
-                <label class="flex items-center space-x-3 p-3 rounded-lg border hover:bg-indigo-50 cursor-pointer" :class="{'border-indigo-500 bg-indigo-50': selectedMode === 'Grups', 'border-gray-200': selectedMode !== 'Grups'}">
-                    <input type="radio" v-model="selectedMode" value="Grups" class="text-indigo-600 focus:ring-indigo-500 w-5 h-5">
+                <label class="flex items-center space-x-3 p-3 rounded-lg border hover:bg-[#402749]/5 cursor-pointer" :class="{'border-[#402749] bg-[#402749]/5': selectedMode === 'Grups', 'border-gray-200': selectedMode !== 'Grups'}">
+                    <input type="radio" v-model="selectedMode" value="Grups" class="text-[#402749] focus:ring-[#402749] w-5 h-5">
                     <div>
                         <span class="block font-bold text-gray-800">Grups</span>
                         <span class="block text-sm text-gray-500">Es formaran grups de forma aleatòria. Un mòbil per grup.</span>
@@ -89,7 +89,7 @@
                 </label>
             </div>
             
-            <button @click="confirmarModeIComencar" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl shadow hover:bg-indigo-700 transition-colors">
+            <button @click="confirmarModeIComencar" class="w-full bg-[#402749] text-white font-bold py-3 rounded-xl shadow hover:bg-[#402749]/80 transition-colors">
                 CONFIRMAR I INICIAR
             </button>
             <button @click="showModeSelection = false" class="w-full mt-2 bg-gray-100 text-gray-600 font-bold py-2 rounded-xl hover:bg-gray-200 transition-colors">
