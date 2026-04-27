@@ -128,10 +128,10 @@
           </template>
 
           <p style="color: rgba(255,255,255,0.45); font-size: 0.75rem; margin: 0;">
-            Vés al leaderboard per veure els resultats finals.
+            Has perdut, tria una altra ruta per tornar-ho a provar.
           </p>
-          <button class="boto-camera" @click="anirAlLeaderboard">
-             VEURE RESULTATS FINALS
+          <button class="boto-camera" @click="anarAHome">
+             TORNAR A L'INICI
           </button>
         </div>
       </div>
@@ -392,11 +392,8 @@ export default {
   },
 
   methods: {
-    anirAlLeaderboard() {
-      this.$router.push({
-        name: 'Leaderboard',
-        params: { sala: this.sessioIdGameOver }
-      });
+    anarAHome() {
+      this.$router.push({ name: 'home' });
     },
 
     async obrirModal(punt) {
@@ -459,6 +456,12 @@ export default {
             
             if (diferencia <= 0) {
                 clearInterval(this.intervalTimer);
+                // Si el temps s'esgota localment, mostrem el Game Over de Timeout
+                if (!this.mostrarGameOver) {
+                    this.isTimeout = true;
+                    this.mostrarGameOver = true;
+                    console.log("[Mapa] Cronòmetre a zero. Mostrant Game Over local.");
+                }
             }
         };
         

@@ -184,6 +184,21 @@ router.post('/', async function (req, res) {
                 }
                 if (!jugador) return res.status(404).json({ missatge: "Jugador no trobat a la sessió." });
 
+                // VERIFICACIÓ DE TEMPS: Si el temps s'ha esgotat (global o individual), no deixem validar
+                const ara = new Date();
+                const limitGlobal = sessio.temps_limit ? new Date(sessio.temps_limit) : null;
+                const limitIndividual = jugador.temps_limit ? new Date(jugador.temps_limit) : limitGlobal;
+
+                if ((limitGlobal && ara > limitGlobal) || (limitIndividual && ara > limitIndividual)) {
+                    console.log(`[Càmera] TEMPS ESGOTAT per a ${perfilId}. Refusant validació.`);
+                    if (sessio.estat === 'jugant') {
+                        sessio.estat = 'finalitzada';
+                        await sessio.save();
+                        notifyGameOver(sessio._id, sessio, 'timeout', null);
+                    }
+                    return res.status(400).json({ missatge: "S'ha acabat el temps! No pots fer més fotos." });
+                }
+
                 // Quin punt s'ha completat? Usem idPunt (lliure ordre) si existeix, si no idLloc
                 const puntAMarcar = idPunt || idLloc;
 

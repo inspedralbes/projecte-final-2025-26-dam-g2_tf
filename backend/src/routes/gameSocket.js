@@ -253,15 +253,22 @@ function configureSocket(server) {
 
         // Event especial: la pàgina de càmera s'uneix a la room del joc actiu
         // El frontend envia el sessioId (_id de SessioJoc) i el backend busca el roomCode a la BD
-        socket.on('join-game-room', async function (sessioId) {
-            if (!sessioId) return;
+        socket.on('join-game-room', async function (idOrCodi) {
+            if (!idOrCodi) return;
             try {
-                const sessio = await SessioJoc.findById(sessioId).select('codi_sala');
+                let query = {};
+                if (idOrCodi.match(/^[0-9a-fA-F]{24}$/)) {
+                    query = { _id: idOrCodi };
+                } else {
+                    query = { codi_sala: idOrCodi.toUpperCase() };
+                }
+
+                const sessio = await SessioJoc.findOne(query).select('codi_sala');
                 if (sessio && sessio.codi_sala) {
                     socket.join(sessio.codi_sala);
                     console.log(`[Socket] Socket ${socket.id} s'ha unit a la room ${sessio.codi_sala} via join-game-room`);
                 } else {
-                    console.warn(`[Socket] join-game-room: sessió ${sessioId} no trobada o sense codi_sala`);
+                    console.warn(`[Socket] join-game-room: sessió ${idOrCodi} no trobada o sense codi_sala`);
                 }
             } catch (err) {
                 console.error('[Socket] Error en join-game-room:', err);

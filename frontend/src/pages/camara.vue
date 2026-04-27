@@ -136,8 +136,8 @@ onMounted(async () => {
   }
 });
 
-function anirAlLeaderboard() {
-  router.push({ name: 'Leaderboard', params: { sala: sessioIdGuanyador.value } });
+function anarAHome() {
+  router.push({ name: 'home' });
 }
 
 onUnmounted(() => {
@@ -162,6 +162,12 @@ function iniciarTemporitzador(tempsLimit) {
         
         if (diferencia <= 0) {
             clearInterval(intervalTimer);
+            // Si el temps s'esgota localment, mostrem la notificació de Timeout
+            if (!mostrarNotificacioGuanyador.value) {
+                isTimeout.value = true;
+                mostrarNotificacioGuanyador.value = true;
+                console.log("[Càmera] Cronòmetre a zero. Mostrant notificació de Timeout local.");
+            }
         }
     };
     
@@ -197,12 +203,8 @@ function tancarModal() {
   mostrarModal.value = false;
 
   if (modalDades.value.completat_tot) {
-    // La partida ha acabat → anem al Leaderboard amb l'ID de la sessió
-    const sessioId = modalDades.value.sessioId || route.params.codi_sala;
-    router.push({ 
-      name: 'Leaderboard', 
-      params: { sala: sessioId }
-    });
+    // La partida ha acabat → anem al Inici
+    router.push({ name: 'home' });
   } else {
     // Si no ha acabat → tornem al mapa amb l'ID de la sessió
     router.push('/mapa/' + route.params.codi_sala);
@@ -392,7 +394,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
             class="w-full py-4 font-bold text-sm transition-opacity hover:opacity-80 active:scale-95"
             style="background-color: #d9a6c2; color: #2a1030;"
           >
-            {{ !modalDades.exit ? ' TORNAR A INTENTAR' : modalDades.completat_tot ? 'VEURE RESULTATS FINALS' : ' GENIAL!' }}
+            {{ !modalDades.exit ? ' TORNAR A INTENTAR' : modalDades.completat_tot ? 'TORNAR A L\'INICI' : ' GENIAL!' }}
           </button>
         </div>
       </div>
@@ -423,14 +425,14 @@ async function enviarDadesAlBackend(imatgeEnText) {
             </p>
           </template>
           
-          <p class="text-white/50 text-xs mb-6">Vés al leaderboard per veure els resultats finals.</p>
+          <p class="text-white/50 text-xs mb-6">Has perdut, tria una altra ruta per tornar-ho a provar.</p>
 
           <button
-            @click="anirAlLeaderboard"
+            @click="anarAHome"
             class="w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest transition-all active:scale-95 hover:opacity-90"
             style="background-color: #d9a6c2; color: #2a1030;"
           >
-             VEURE RESULTATS FINALS
+             TORNAR A L'INICI
           </button>
         </div>
       </div>
