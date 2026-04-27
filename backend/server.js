@@ -30,17 +30,19 @@ async function startServer() {
         const { iniciarCronJobs } = require('./src/utils/cron');
         iniciarCronJobs();
 
+        const { comprovarToqueDeQueda } = require('./src/utils/horari');
+
         // Rutes
-        app.use('/api/cercador', require('./src/routes/cercador'));
+        app.use('/api/cercador', comprovarToqueDeQueda, require('./src/routes/cercador'));
         app.use('/api/usuari', require('./src/routes/usuari'));
         app.use('/api/social', require('./src/routes/social'));
-        app.use('/api/mapa', require('./src/routes/mapa'));
+        app.use('/api/mapa', comprovarToqueDeQueda, require('./src/routes/mapa'));
         app.use('/api/peticions', require('./src/routes/peticions'));
         app.use('/api/admin', require('./src/routes/admin'));
         app.use('/api/auth', require('./src/routes/auth'));
-        app.use('/api/validar-foto', require('./src/routes/camara'));
+        app.use('/api/validar-foto', comprovarToqueDeQueda, require('./src/routes/camara'));
         app.use('/api/fotos-actuals', require('./src/routes/fotos'));
-        app.use('/api/sessionsJoc', require('./src/routes/sessionsJoc'));
+        app.use('/api/sessionsJoc', comprovarToqueDeQueda, require('./src/routes/sessionsJoc'));
         app.use('/api/personatges', require('./src/routes/personatges'));
         app.use('/api/verificacio', require('./src/routes/verificacio'));
 

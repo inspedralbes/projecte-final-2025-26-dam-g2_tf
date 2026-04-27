@@ -64,7 +64,11 @@ const LlocSchema = new mongoose.Schema({
   }],
   barri: String,
   tags: [String],
-  control_horari: { hora_tancament: String, actiu: Boolean },
+  control_horari: {
+    actiu: { type: Boolean, default: false },
+    hora_inici: { type: Number, default: 22 },
+    hora_fi: { type: Number, default: 7 }
+  },
   millors_temps: [{ usuari: String, temps_segons: Number }],
   fotos_historiques: [String],
   fotos_actuals: [String],
@@ -170,6 +174,13 @@ const PersonatgeSchema = new mongoose.Schema({
   data_creacio: { type: Date, default: Date.now }
 });
 
+const ConfigSchema = new mongoose.Schema({
+  key: { type: String, default: 'toque_de_queda' },
+  hora_inici: { type: Number, default: 22 },
+  hora_fi: { type: Number, default: 7 },
+  actiu: { type: Boolean, default: true }
+});
+
 
 module.exports = {
   Usuari: mongoose.model('Usuari', UsuariSchema, 'Usuari'),
@@ -179,6 +190,7 @@ module.exports = {
   PeticioRuta: mongoose.model('PeticioRuta', PeticioRutaSchema, 'PeticioRuta'),
   Ressenya: mongoose.model('Ressenya', RessenyaSchema, 'Ressenya'),
   Post: mongoose.model('Post', PostSchema, 'Post'),
-  Personatge: mongoose.model('Personatge', PersonatgeSchema, 'Personatge')
+  Personatge: mongoose.model('Personatge', PersonatgeSchema, 'Personatge'),
+  Config: mongoose.model('Config', ConfigSchema, 'Config')
 };
 

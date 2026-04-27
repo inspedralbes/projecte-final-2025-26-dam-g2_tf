@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Lloc, PeticioRuta } = require('../models/index');
+const { Lloc, PeticioRuta, Config } = require('../models/index');
 
 // 1. LOGIN DE L'ADMINISTRADOR
 router.post('/login', async function (req, res) {
@@ -90,6 +90,30 @@ router.put('/peticions/:id', async function (req, res) {
         res.json({ success: true, message: "La petició ha estat " + estatNou });
     } catch (error) {
         res.status(500).json({ message: "Error al processar la petició" });
+    }
+});
+
+// 4. CONFIGURACIÓ HORARI (TOQUE DE QUEDA)
+router.get('/configuracio/horari', async function (req, res) {
+    try {
+        const config = await Config.findOne({ key: 'toque_de_queda' });
+        res.json(config);
+    } catch (error) {
+        res.status(500).json({ message: "Error al llegir la configuració" });
+    }
+});
+
+router.put('/configuracio/horari', async function (req, res) {
+    try {
+        const { hora_inici, hora_fi, actiu } = req.body;
+        const config = await Config.findOneAndUpdate(
+            { key: 'toque_de_queda' },
+            { hora_inici, hora_fi, actiu },
+            { upsert: true, new: true }
+        );
+        res.json({ success: true, config });
+    } catch (error) {
+        res.status(500).json({ message: "Error al actualitzar la configuració" });
     }
 });
 

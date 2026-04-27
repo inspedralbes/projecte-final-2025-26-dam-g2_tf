@@ -22,11 +22,24 @@
 
           <div class="p-4 border-2 border-purple-50 rounded-2xl bg-purple-50/30">
             <h4 class="text-[10px] font-black text-purple-400 uppercase mb-2">Control Horari (Opcional)</h4>
-            <div class="flex items-center gap-4">
+            <div class="flex flex-col gap-3">
               <label class="flex items-center gap-2 text-sm text-purple-800 cursor-pointer font-bold">
-                <input type="checkbox" v-model="form.control_horari.actiu" class="w-4 h-4 accent-purple-600"> Actiu
+                <input type="checkbox" v-model="form.control_horari.actiu" class="w-4 h-4 accent-purple-600"> Bloqueig actiu
               </label>
-              <input v-if="form.control_horari.actiu" v-model="form.control_horari.hora_tancament" type="time" class="border-2 border-white rounded-xl p-2 text-xs bg-white shadow-sm outline-none">
+              <div v-if="form.control_horari.actiu" class="grid grid-cols-2 gap-3">
+                <div class="flex flex-col gap-1">
+                  <label class="text-[10px] font-bold text-purple-400 uppercase">Hora de tancament</label>
+                  <select v-model.number="form.control_horari.hora_inici" class="border-2 border-white rounded-xl p-2 text-xs bg-white shadow-sm outline-none focus:border-purple-200">
+                    <option v-for="h in 24" :key="h - 1" :value="h - 1">{{ String(h - 1).padStart(2, '0') }}:00</option>
+                  </select>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label class="text-[10px] font-bold text-purple-400 uppercase">Hora d'obertura</label>
+                  <select v-model.number="form.control_horari.hora_fi" class="border-2 border-white rounded-xl p-2 text-xs bg-white shadow-sm outline-none focus:border-purple-200">
+                    <option v-for="h in 24" :key="h - 1" :value="h - 1">{{ String(h - 1).padStart(2, '0') }}:00</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -281,6 +294,12 @@ const prepararFormulari = (dades) => {
       personatge_id: (p.personatge_id && typeof p.personatge_id === 'object') ? p.personatge_id._id : p.personatge_id
     }));
   }
+  // Assegurem que control_horari té sempre els camps del nou model
+  clon.control_horari = {
+    actiu: clon.control_horari?.actiu ?? false,
+    hora_inici: clon.control_horari?.hora_inici ?? 22,
+    hora_fi: clon.control_horari?.hora_fi ?? 7
+  };
   return clon;
 };
 

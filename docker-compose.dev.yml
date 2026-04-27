@@ -29,3 +29,14 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=8088
+
+      # AFEGIM EL PROXY AMB UN PORT NO PRIVILEGIAT
+  proxy:
+    image: nginx:alpine
+    volumes:
+      - ./proxy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8081:80" # Mapegem el 8081 (fora) al 80 (dins del contenidor)
+    depends_on:
+      - frontend
+      - backend
