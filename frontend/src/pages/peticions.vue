@@ -10,12 +10,7 @@
       <BotonPerfil @login="actualitzarUsuari" />
     </div>
 
-    <div v-if="successMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-      {{ successMessage }}
-    </div>
-    <div v-if="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-      {{ errorMessage }}
-    </div>
+
 
     <!-- SECCIÓ NOVA RUTA (FORMULARI) -->
     <form @submit.prevent="submitForm" class="space-y-6 bg-white p-6 rounded-3xl shadow-md border border-gray-50">
@@ -50,6 +45,19 @@
         {{ isSubmitting ? 'ENVIANT...' : 'ENVIAR PROPOSTA' }}
       </button>
     </form>
+    <!-- Custom Modal -->
+    <div v-if="customModal.show" class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+      <div class="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl transform transition-all text-center">
+        <h3 class="text-xl font-black text-[#402749] mb-4 tracking-tighter">{{ customModal.title }}</h3>
+        <p class="text-gray-600 mb-8 font-medium">{{ customModal.message }}</p>
+        
+        <div class="flex gap-4 justify-center">
+          <button @click="handleModalConfirm" class="flex-1 py-3 px-4 bg-[#402749] text-white font-bold uppercase tracking-wider text-xs rounded-xl hover:bg-[#402749]/80 transition-colors shadow-lg shadow-purple-900/20">
+            D'acord
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -67,9 +75,17 @@ const router = useRouter();
 const { usuari, login } = useAuth();
 const { obrirModal } = useLoginModal();
 
-const successMessage = ref('');
-const errorMessage = ref('');
 const isSubmitting = ref(false);
+
+// --- Custom Modal Logic ---
+const customModal = ref({ show: false, title: '', message: '' });
+function showCustomAlert(message, title = 'Avís') {
+  customModal.value = { show: true, title, message };
+}
+function handleModalConfirm() {
+  customModal.value.show = false;
+}
+
 const metodeUbicacio = ref('mapa'); 
 const manualAddress = ref('');
 
@@ -141,11 +157,15 @@ async function submitForm() {
       body: JSON.stringify(datos)
     });
     if (res.ok) {
-      successMessage.value = 'Petició enviada!';
+      showCustomAlert('La teva petició ha estat enviada amb èxit i està pendent de revisió.', 'Petició enviada!');
       form.value.nom_proposat = '';
       form.value.motiu = '';
       if(marker) { marker.remove(); marker = null; }
+    } else {
+      showCustomAlert('Hi ha hagut un error en enviar la petició.', 'Error');
     }
+  } catch (err) {
+    showCustomAlert('Error de connexió.', 'Error');
   } finally { isSubmitting.value = false; }
 }
 </script>

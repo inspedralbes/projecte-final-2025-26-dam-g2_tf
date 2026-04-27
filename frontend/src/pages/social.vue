@@ -400,6 +400,22 @@
         </div>
       </div>
     </main>
+    <!-- Custom Modal -->
+    <div v-if="customModal.show" class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+      <div class="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl transform transition-all text-center">
+        <h3 class="text-xl font-black text-[#402749] mb-4 tracking-tighter">{{ customModal.title }}</h3>
+        <p class="text-gray-600 mb-8 font-medium">{{ customModal.message }}</p>
+        
+        <div class="flex gap-4 justify-center">
+          <button v-if="customModal.type === 'confirm'" @click="handleModalCancel" class="flex-1 py-3 px-4 bg-gray-100 text-gray-700 font-bold uppercase tracking-wider text-xs rounded-xl hover:bg-gray-200 transition-colors">
+            Cancel·lar
+          </button>
+          <button @click="handleModalConfirm" class="flex-1 py-3 px-4 bg-[#402749] text-white font-bold uppercase tracking-wider text-xs rounded-xl hover:bg-[#402749]/80 transition-colors shadow-lg shadow-purple-900/20">
+            D'acord
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -419,6 +435,25 @@ const pestanyaActiva = ref('feed');
 const subPestanyaAmics = ref('llista');
 const categories = ['Tots', 'Industrial', 'Gòtic', 'Parcs', 'Graffiti', 'Misteri'];
 const filtreActiu = ref('Tots');
+
+// --- Custom Modal Logic ---
+const customModal = ref({ show: false, type: 'alert', title: '', message: '', onConfirm: null, onCancel: null });
+function showCustomAlert(message, title = 'Avís') {
+  customModal.value = { show: true, type: 'alert', title, message, onConfirm: null, onCancel: null };
+}
+function showCustomConfirm(message, onConfirmCallback, title = 'Confirmació') {
+  customModal.value = { show: true, type: 'confirm', title, message, onConfirm: onConfirmCallback, onCancel: null };
+}
+function handleModalConfirm() {
+  const cb = customModal.value.onConfirm;
+  customModal.value.show = false;
+  if (cb) cb();
+}
+function handleModalCancel() {
+  const cb = customModal.value.onCancel;
+  customModal.value.show = false;
+  if (cb) cb();
+}
 
 // Post creation refs
 const nouPostText = ref('');
@@ -653,11 +688,12 @@ async function enviarComentari(postId) {
 }
 
 async function eliminarPost(postId) {
-  if (!confirm('Eliminar post?')) return;
-  try {
-    await fetch(`${API_URL}/api/social/posts/${postId}`, { method: 'DELETE' });
-    carregarPosts();
-  } catch (err) { console.error("Error eliminant:", err); }
+  showCustomConfirm('Vols eliminar aquest post?', async () => {
+    try {
+      await fetch(`${API_URL}/api/social/posts/${postId}`, { method: 'DELETE' });
+      carregarPosts();
+    } catch (err) { console.error("Error eliminant:", err); }
+  });
 }
 
 function triggerFileInput() { fileInput.value?.click(); }
@@ -665,7 +701,7 @@ function triggerFileInput() { fileInput.value?.click(); }
 function handleFileUpload(event) {
   const files = Array.from(event.target.files);
   if (nouPostImatges.value.length + files.length > 3) {
-    alert("Només pots pujar un màxim de 3 fotos.");
+    showCustomAlert("Només pots pujar un màxim de 3 fotos.");
     return;
   }
   files.forEach(file => {
@@ -685,34 +721,34 @@ function afegirTag() {
 
 function eliminarTag(idx) { nouPostTags.value.splice(idx, 1); }
 
-function reportarLloc(post) { alert(`Reportat: ${post.nom_usuari || 'post'}`); }
+function reportarLloc(post) { showCustomAlert(`Reportat: ${post.nom_usuari || 'post'}`); }
 
 async function reportarComentari(postId, comentari) {
   if (!usuari.value) { obrirModal('Inicia sessió per poder reportar contingut.'); return; }
-  if (confirm(`Vols marcar el comentari de "${comentari.nom_usuari}" com a inapropiat?`)) {
+  showCustomConfirm(`Vols marcar el comentari de "${comentari.nom_usuari}" com a inapropiat?`, async () => {
     try {
       const res = await fetch(`${API_URL}/api/social/posts/${postId}/comentari/${comentari.id_comentari}/report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_usuari_reporter: usuari.value._id, motiu: "Contingut inapropiat" })
       });
-      if (res.ok) alert("Gràcies. El comentari serà revisat.");
+      if (res.ok) showCustomAlert("Gràcies. El comentari serà revisat.");
     } catch (err) { console.error("Error enviant report:", err); }
-  }
+  });
 }
 
 async function reportarPostSencer(post) {
   if (!usuari.value) { obrirModal('Inicia sessió per poder reportar contingut.'); return; }
-  if (confirm(`Vols reportar la publicació de "${post.nom_usuari}" per contingut inapropiat?`)) {
+  showCustomConfirm(`Vols reportar la publicació de "${post.nom_usuari}" per contingut inapropiat?`, async () => {
     try {
       const res = await fetch(`${API_URL}/api/social/posts/${post._id}/report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_usuari_reporter: usuari.value._id, motiu: "Reportat des del feed" })
       });
-      if (res.ok) alert("Gràcies. El post ha estat enviat a revisió.");
+      if (res.ok) showCustomAlert("Gràcies. El post ha estat enviat a revisió.");
     } catch (err) { console.error("Error enviant report del post:", err); }
-  }
+  });
 }
 
 async function carregarAmics() {
@@ -767,18 +803,18 @@ async function enviarSolicitud(target) {
       })
     });
     if (res.ok) {
-      alert("Sol·licitud enviada!");
+      showCustomAlert("Sol·licitud enviada!");
       usernameCerca.value = '';
       resultatsCerca.value = [];
     } else {
       const data = await res.json();
-      alert(data.message);
+      showCustomAlert(data.message);
     }
   } catch (err) { console.error("Error en enviar solicitud:", err); }
 }
 
 function convidarPartida(amic) {
-  alert(`Invitació enviada a ${amic.nom_usuari} (Funcionalitat en desenvolupament amb WebSockets)`);
+  showCustomAlert(`Invitació enviada a ${amic.nom_usuari} (Funcionalitat en desenvolupament amb WebSockets)`);
 }
 </script>
 
