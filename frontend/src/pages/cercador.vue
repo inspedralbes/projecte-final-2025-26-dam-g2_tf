@@ -162,7 +162,7 @@ const filtreBarri = ref('');
 const animantSorpresa = ref(false);
 const fotosAnimacio = ref([]);
 const estilScroll = ref({ transform: 'translateY(0px)' });
-const placeholderImage = 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=500&auto=format&fit=crop';
+const placeholderImage = 'https://images.unsplash.com/photo-1467226632440-65f0b4957444?q=80&w=500&auto=format&fit=crop'; // Imatge de Barcelona com a fallback generis
 
 // Al iniciar la página
 onMounted(() => {
@@ -204,10 +204,17 @@ async function seleccionarDestiSorpresa() {
       .map(l => l.imatge)
       .filter(Boolean);
     
-    // Si no n'hi ha prou, utilitzem placeholders
-    const baseFotos = fotosDisponibles.length >= 10 
-      ? fotosDisponibles.sort(() => 0.5 - Math.random()).slice(0, 15)
-      : [...fotosDisponibles, placeholderImage, placeholderImage, placeholderImage, placeholderImage, placeholderImage].slice(0, 10);
+    // Si no n'hi ha prou, eixamplem les fotos disponibles repetint-les (evitem el placeholder si podem)
+    let baseFotos = [];
+    if (fotosDisponibles.length > 0) {
+      while (baseFotos.length < 15) {
+        baseFotos = [...baseFotos, ...fotosDisponibles.sort(() => 0.5 - Math.random())];
+      }
+      baseFotos = baseFotos.slice(0, 15);
+    } else {
+      // Si no hi ha cap foto a la BD, usem el placeholder neutre
+      baseFotos = Array(10).fill(placeholderImage);
+    }
 
     fotosAnimacio.value = baseFotos;
     estilScroll.value = { transform: 'translateY(0px)' };
