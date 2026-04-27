@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-[#f5cbdd]/20 pb-24 font-sans text-gray-800">
+  <div class="min-h-screen bg-[rgba(64,39,73)] pb-24 font-sans text-gray-800">
     <header class="bg-gradient-to-br from-[#402749] to-[#5d3962] text-white p-6 rounded-b-[40px] shadow-xl mb-6 sticky top-0 z-40">
       <div class="flex justify-between items-center mb-6">
         <div>

@@ -6,7 +6,7 @@
     </div>
 
     <header class="p-6">
-      <h1 class="text-2xl md:text-4xl font-bold">Descobreix rutes</h1>
+      <h1 class="text-3xl font-black italic uppercase tracking-tighter text-white">Descobreix rutes</h1>
     </header>
 
     <div 

@@ -1,11 +1,11 @@
 <template>
   <div class="p-4 max-w-lg mx-auto pb-32">
     <div class="flex items-center justify-between mb-8">
-      <div class="flex items-center gap-4">
-        <button @click="router.push('/')" class="text-2xl hover:text-gray-600 transition">
+      <div class="flex items-center gap-4 text-white">
+        <button @click="router.push('/')" class="text-3xl hover:text-gray-300 transition pb-1">
           ←
         </button>
-        <h1 class="text-xl font-bold uppercase tracking-tight">PROPOSAR RUTA</h1>
+        <h1 class="text-3xl font-black italic uppercase tracking-tighter text-white">PROPOSAR RUTA</h1>
       </div>
       <BotonPerfil @login="actualitzarUsuari" />
     </div>

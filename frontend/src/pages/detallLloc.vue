@@ -16,8 +16,8 @@
       <div class="flex justify-between items-start mb-6">
         <div class="flex-1">
           <h1 class="text-3xl font-black text-gray-800 leading-tight">{{ lloc.nom }}</h1>
-          <div class="inline-block bg-purple-100 px-3 py-1 rounded-lg mt-2">
-            <p class="text-purple-700 font-bold text-xs uppercase tracking-widest">
+          <div class="inline-block bg-purple-50 px-3 py-1 rounded-lg mt-2">
+            <p class="text-purple-900 font-bold text-xs uppercase tracking-widest">
               {{ lloc.dificultat }}
             </p>
           </div>
@@ -45,7 +45,7 @@
 
       <button 
         @click="comencarJoc"
-        class="relative z-30 w-full bg-purple-600 text-white font-black py-5 rounded-[20px] mt-10 shadow-xl shadow-purple-200 active:scale-95 transition-all uppercase tracking-widest text-sm"
+        class="relative z-30 w-full bg-[rgba(64,39,73)] text-white font-black py-5 rounded-[20px] mt-10 shadow-xl shadow-purple-200 active:scale-95 transition-all uppercase tracking-widest text-sm"
       >
         COMENÇAR RUTA
       </button>

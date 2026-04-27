@@ -2,10 +2,10 @@
   <div class="min-h-screen bg-[#402749] p-6 pb-24">
     <div class="flex items-center justify-between mb-8">
       <div>
-        <h1 class="text-3xl font-bold text-white">Cercador</h1>
+        <h1 class="text-3xl font-black italic uppercase tracking-tighter text-white">Cercador</h1>
         <button @click="seleccionarDestiSorpresa" 
                 :disabled="animantSorpresa"
-                class="mt-1 flex items-center gap-1.5 text-[#804f7f] font-bold text-xs uppercase tracking-wider hover:text-[#5d3962] transition-colors disabled:opacity-50"
+                class="mt-1 flex items-center gap-1.5 text-purple-400 font-bold text-xs uppercase tracking-wider hover:text-purple-300 transition-colors disabled:opacity-50"
                 :class="{ 'animate-pulse scale-105 contrast-125': !animantSorpresa }">
           <span>{{ animantSorpresa ? 'Triant el teu proper destí...' : '✨ Destí Sorpresa' }}</span>
         </button>

@@ -13,11 +13,11 @@
     <div class="flex-1 flex flex-col justify-center space-y-8">
       <!-- Secció per CREAR una sala nova -->
       <div class="bg-purple-50 p-6 rounded-[25px] border border-purple-100 shadow-sm text-center">
-        <h2 class="text-xl font-bold text-purple-900 mb-2">Crear nova sala</h2>
+        <h2 class="text-xl font-bold text-[rgba(64,39,73)] mb-2">Crear nova sala</h2>
         <p class="text-gray-600 mb-6 text-sm">Convida els teus amics compartint un codi.</p>
         <button 
           @click="crearSala"
-          class="w-full bg-purple-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-purple-200 active:scale-95 transition-all uppercase tracking-wide"
+          class="w-full bg-[rgba(64,39,73)] text-white font-bold py-4 rounded-xl shadow-lg shadow-purple-200 active:scale-95 transition-all uppercase tracking-wide"
         >
           Crear Sala
         </button>
