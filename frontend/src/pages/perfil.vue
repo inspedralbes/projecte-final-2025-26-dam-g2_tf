@@ -89,52 +89,7 @@
     </p>
   </div>
 
-  <div class="grid grid-cols-2 gap-y-10 gap-x-6 relative py-4">
-    <div class="absolute inset-y-0 left-1/2 w-px bg-gradient-to-b from-transparent via-[#bc85ab]/10 to-transparent"></div>
-
-    <div 
-      v-for="(cromo, index) in (user?.inventari_cromos || [])" 
-      :key="index" 
-      class="album-slot group"
-    >
-      <div 
-        class="relative bg-[#1a0a1f] p-1 rounded-sm shadow-2xl transform transition-transform group-hover:rotate-0"
-        :class="index % 2 === 0 ? '-rotate-2' : 'rotate-2'"
-      >
-        <div class="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-[#bc85ab]/40"></div>
-        <div class="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-[#bc85ab]/40"></div>
-
-        <div class="aspect-[4/5] overflow-hidden bg-black/40">
-          <img 
-            :src="imatgeCromo(cromo.imatge_cromo || cromo.imatge_usuari)" 
-            class="w-full h-full object-cover sepia-[0.3] hover:sepia-0 transition-all duration-500"
-          >
-        </div>
-      </div>
-
-      <div class="mt-3 text-center">
-        <p class="text-[10px] font-medium text-[#bc85ab] italic tracking-tight leading-tight">
-          {{ cromo.nom_lloc || 'Barcelona, 2026' }}
-        </p>
-        <p class="text-[8px] text-gray-600 font-bold mt-0.5">
-          {{ new Date(cromo.data_obtencio).toLocaleDateString('ca-ES') }}
-        </p>
-      </div>
-    </div>
-
-    <div v-for="i in ((user?.inventari_cromos?.length || 0) % 2 === 0 ? 0 : 1)" :key="'empty-'+i" class="opacity-20">
-      <div class="aspect-[4/5] border-2 border-dashed border-[#bc85ab]/30 rounded-sm flex items-center justify-center">
-        <span class="text-[10px] text-[#bc85ab] font-black">?</span>
-      </div>
-    </div>
-  </div>
-
-  <div v-if="!user?.inventari_cromos?.length" class="py-20 text-center space-y-4">
-    <div class="w-16 h-20 border-2 border-[#bc85ab]/20 mx-auto rounded-sm flex items-center justify-center opacity-30">
-      <span class="text-2xl"></span>
-    </div>
-    <p class="text-gray-600 text-[10px] font-bold uppercase tracking-widest">El teu diari està buit</p>
-  </div>
+  <DiariExploracio :cromos="user?.inventari_cromos || []" />
 </div>
 
      <div v-if="activeTab === 'amics'" class="space-y-6">
@@ -182,6 +137,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
+import DiariExploracio from '../components/DiariExploracio.vue';
 
 const router = useRouter();
 const { usuari: authUsuari, logout } = useAuth();
