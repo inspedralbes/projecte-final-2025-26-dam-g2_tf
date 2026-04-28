@@ -44,16 +44,15 @@
               </td>
               <td class="p-6 text-center" @click.stop>
                 <div class="flex flex-col items-center gap-1">
-                  <button
-                    @click="toggleRestricció(item)"
-                    :class="item.control_horari?.actiu
-                      ? 'bg-orange-100 text-orange-600 hover:bg-orange-200'
-                      : 'bg-gray-100 text-gray-400 hover:bg-gray-200'"
-                    class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase transition-all"
-                  >
-                    <span>{{ item.control_horari?.actiu ? '🔒' : '🔓' }}</span>
-                    <span>{{ item.control_horari?.actiu ? 'Activada' : 'Desactivada' }}</span>
-                  </button>
+   <button
+  @click="toggleRestricció(item)"
+  :class="item.control_horari?.actiu
+    ? 'bg-orange-100 text-orange-600 hover:bg-orange-200'
+    : 'bg-gray-100 text-gray-400 hover:bg-gray-200'"
+  class="flex items-center justify-center px-4 py-2 rounded-xl text-xs font-black uppercase transition-all min-w-[120px]"
+>
+  <span>{{ item.control_horari?.actiu ? 'Activada' : 'Desactivada' }}</span>
+</button>
                   <span v-if="item.control_horari?.actiu" class="text-[9px] text-gray-400 font-semibold">
                     {{ String(item.control_horari?.hora_inici ?? 22).padStart(2,'0') }}:00 – {{ String(item.control_horari?.hora_fi ?? 7).padStart(2,'0') }}:00
                   </span>
