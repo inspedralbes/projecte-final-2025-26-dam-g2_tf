@@ -64,11 +64,11 @@ const LlocSchema = new mongoose.Schema({
   }],
   barri: String,
   tags: [String],
-  control_horari: {
+ control_horari: {
     actiu: { type: Boolean, default: false },
-    hora_inici: { type: Number, default: 22 },
-    hora_fi: { type: Number, default: 7 }
-  },
+    hora_inici: { type: String, default: "22:00" }, // Canviem Number per String
+    hora_fi: { type: String, default: "07:00" }    // Canviem Number per String
+},
   millors_temps: [{ usuari: String, temps_segons: Number }],
   fotos_historiques: [String],
   fotos_actuals: [String],

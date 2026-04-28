@@ -43,11 +43,30 @@
         </section>
       </div>
 
+      <!-- Avís de bloqueig horari -->
+      <div v-if="esBloqueig" class="mt-8 p-5 bg-orange-50 border-2 border-orange-200 rounded-3xl flex flex-col items-center gap-3 text-center">
+        <span class="text-4xl">🔒</span>
+        <p class="font-black text-orange-700 text-base">Aquesta ruta no està disponible ara mateix.</p>
+        <p class="text-orange-600 text-sm">
+          Tornarà a estar activa a les 
+          <strong>{{ lloc.control_horari.hora_fi }}</strong>.
+        </p>
+      </div>
+
       <button 
+        v-if="!esBloqueig"
         @click="comencarJoc"
         class="relative z-30 w-full bg-[rgba(64,39,73)] text-white font-black py-5 rounded-[20px] mt-10 shadow-xl shadow-purple-200 active:scale-95 transition-all uppercase tracking-widest text-sm"
       >
         COMENÇAR RUTA
+      </button>
+
+      <button 
+        v-else
+        disabled
+        class="relative z-30 w-full bg-gray-200 text-gray-400 font-black py-5 rounded-[20px] mt-4 uppercase tracking-widest text-sm cursor-not-allowed"
+      >
+        RUTA NO DISPONIBLE
       </button>
       
     </div>
@@ -55,7 +74,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router' 
 import { useAuth } from '../composables/useAuth';
 import { useLoginModal } from '../composables/useLoginModal';
@@ -69,6 +88,28 @@ const { obrirModal } = useLoginModal();
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
+// Comprova si la ruta està bloquejada en funció de l'hora actual
+const esBloqueig = computed(() => {
+  if (!lloc.value) return false;
+  const horari = lloc.value.control_horari;
+  if (!horari?.actiu) return false;
+
+  const ara = new Date();
+  const minutsActuals = ara.getHours() * 60 + ara.getMinutes();
+  
+  const [hInici, mInici] = (horari.hora_inici ?? "22:00").split(':').map(Number);
+  const [hFi, mFi] = (horari.hora_fi ?? "07:00").split(':').map(Number);
+  const minutsInici = hInici * 60 + mInici;
+  const minutsFi = hFi * 60 + mFi;
+
+  // Cas nocturn: el bloqueig travessa la mitjanit (ex: 22:30 → 07:30)
+  if (minutsInici > minutsFi) {
+    return minutsActuals >= minutsInici || minutsActuals < minutsFi;
+  }
+  // Cas diürn: bloqueig dins del mateix dia (ex: 13:00 → 17:00)
+  return minutsActuals >= minutsInici && minutsActuals < minutsFi;
+});
+
 function obrirGoogleMaps() {
   if (!lloc.value || !lloc.value.ubicacio || !lloc.value.ubicacio.coordinates) {    
   console.error("No hay coordenadas disponibles");
@@ -81,8 +122,6 @@ function obrirGoogleMaps() {
   
   window.open(url, '_blank');
 }
-
-
 
 function anarACamara() {
   if (!usuari.value) {
@@ -103,8 +142,6 @@ function comencarJoc() {
     params: { id: route.params.id } 
   });
 }
-
-
 
 onMounted(async () => {
   try {

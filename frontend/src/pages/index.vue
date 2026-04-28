@@ -33,6 +33,14 @@
           <h2 class="text-xl md:text-3xl font-bold mb-2">{{ lloc.nom }}</h2>
           <p class="text-sm md:text-base text-gray-200 line-clamp-2">{{ lloc.descripcio }}</p>
           
+          <!-- Avís de ruta bloquejada -->
+          <div v-if="esBloqueig(lloc)" class="mt-3 flex items-center gap-2 bg-black/50 backdrop-blur-sm px-3 py-2 rounded-xl">
+            <span class="text-lg">🔒</span>
+            <span class="text-xs font-bold text-orange-300">
+              No disponible fins les {{ lloc.control_horari?.hora_fi ?? '07:00' }}
+            </span>
+          </div>
+
           <button 
             v-if="activeIndex === index"
             class="mt-4 bg-white text-purple-900 py-2 px-6 rounded-full font-bold self-start transform transition-all active:scale-95"
@@ -63,6 +71,23 @@ import BotonPerfil from '../components/BotonPerfil.vue';
 const llistaLlocs = ref([]);
 const activeIndex = ref(0);
 const scrollContainer = ref(null);
+
+// Comprova si una ruta està bloquejada en aquest moment
+const esBloqueig = (lloc) => {
+  const horari = lloc?.control_horari;
+  if (!horari?.actiu) return false;
+  
+  const ara = new Date();
+  const minutsActuals = ara.getHours() * 60 + ara.getMinutes();
+  
+  const [hInici, mInici] = (horari.hora_inici ?? "22:00").split(':').map(Number);
+  const [hFi, mFi] = (horari.hora_fi ?? "07:00").split(':').map(Number);
+  const minutsInici = hInici * 60 + mInici;
+  const minutsFi = hFi * 60 + mFi;
+  
+  if (minutsInici > minutsFi) return minutsActuals >= minutsInici || minutsActuals < minutsFi;
+  return minutsActuals >= minutsInici && minutsActuals < minutsFi;
+};
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 

@@ -20,29 +20,40 @@
           <textarea v-model="form.descripcio" placeholder="Descripció breu..." class="w-full border-2 border-gray-50 p-3 rounded-2xl bg-gray-50" rows="2"></textarea>
           <textarea v-model="form.explicacio_historica" placeholder="Explicació històrica detallada..." class="w-full border-2 border-gray-50 p-3 rounded-2xl bg-gray-50" rows="4"></textarea>
 
-          <div class="p-4 border-2 border-purple-50 rounded-2xl bg-purple-50/30">
-            <h4 class="text-[10px] font-black text-purple-400 uppercase mb-2">Control Horari (Opcional)</h4>
-            <div class="flex flex-col gap-3">
-              <label class="flex items-center gap-2 text-sm text-purple-800 cursor-pointer font-bold">
-                <input type="checkbox" v-model="form.control_horari.actiu" class="w-4 h-4 accent-purple-600"> Bloqueig actiu
-              </label>
-              <div v-if="form.control_horari.actiu" class="grid grid-cols-2 gap-3">
-                <div class="flex flex-col gap-1">
-                  <label class="text-[10px] font-bold text-purple-400 uppercase">Hora de tancament</label>
-                  <select v-model.number="form.control_horari.hora_inici" class="border-2 border-white rounded-xl p-2 text-xs bg-white shadow-sm outline-none focus:border-purple-200">
-                    <option v-for="h in 24" :key="h - 1" :value="h - 1">{{ String(h - 1).padStart(2, '0') }}:00</option>
-                  </select>
-                </div>
-                <div class="flex flex-col gap-1">
-                  <label class="text-[10px] font-bold text-purple-400 uppercase">Hora d'obertura</label>
-                  <select v-model.number="form.control_horari.hora_fi" class="border-2 border-white rounded-xl p-2 text-xs bg-white shadow-sm outline-none focus:border-purple-200">
-                    <option v-for="h in 24" :key="h - 1" :value="h - 1">{{ String(h - 1).padStart(2, '0') }}:00</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
+          <div class="bg-gray-50 p-4 rounded-xl border border-purple-100 mt-4">
+  <h3 class="text-[11px] font-black text-[#402749] mb-3 uppercase tracking-widest">
+    Control Horari (Opcional)
+  </h3>
+  
+  <div class="flex items-center gap-6">
+    <label class="flex items-center gap-2 cursor-pointer">
+      <input type="checkbox" v-model="form.control_horari.actiu" class="w-5 h-5 accent-[#804f7f]">
+      <span class="text-sm font-bold text-gray-600">Activa el bloqueig</span>
+    </label>
 
+    <div v-if="form.control_horari.actiu" class="flex items-center gap-4 animate-fade-in">
+      <div class="flex flex-col">
+        <span class="text-[9px] text-[#bc85ab] font-bold uppercase mb-1">Hora tancament</span>
+        <input 
+          type="time" 
+          v-model="form.control_horari.hora_inici" 
+          class="border rounded-lg px-2 py-1 text-sm outline-none focus:border-[#804f7f]"
+        />
+      </div>
+
+      <span class="text-gray-400 self-end mb-2">→</span>
+
+      <div class="flex flex-col">
+        <span class="text-[9px] text-[#bc85ab] font-bold uppercase mb-1">Hora obertura</span>
+        <input 
+          type="time" 
+          v-model="form.control_horari.hora_fi" 
+          class="border rounded-lg px-2 py-1 text-sm outline-none focus:border-[#804f7f]"
+        />
+      </div>
+    </div>
+  </div>
+</div>
           <div>
             <label class="text-[10px] font-bold text-gray-400 uppercase ml-2">Etiquetes (polsa Enter)</label>
             <div class="flex flex-wrap gap-2 p-3 border-2 border-gray-50 rounded-2xl bg-gray-50 mt-1">
@@ -297,8 +308,8 @@ const prepararFormulari = (dades) => {
   // Assegurem que control_horari té sempre els camps del nou model
   clon.control_horari = {
     actiu: clon.control_horari?.actiu ?? false,
-    hora_inici: clon.control_horari?.hora_inici ?? 22,
-    hora_fi: clon.control_horari?.hora_fi ?? 7
+    hora_inici: clon.control_horari?.hora_inici ?? "22:00",
+    hora_fi: clon.control_horari?.hora_fi ?? "07:00"
   };
   return clon;
 };

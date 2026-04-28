@@ -27,8 +27,8 @@
         <table class="w-full">
           <thead class="bg-gray-50 border-b text-left">
             <tr class="text-[11px] text-[#bc85ab] uppercase tracking-[0.2em] font-black">
-              <th class="p-6">Lloc </th>
-              <th class="p-6 text-center">Estat</th>
+              <th class="p-6">Lloc</th>
+              <th class="p-6 text-center">Restricció Horària</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
@@ -42,15 +42,22 @@
                   </div>
                 </div>
               </td>
-              <td class="p-6 text-center">
-                <span 
-                  :class="item.control_horari?.actiu ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-400'"
-                  class="text-[9px] font-black uppercase px-3 py-1 rounded-full"
-                >
-                  {{ item.control_horari?.actiu ? 'Actiu' : 'Inactiu' }}
-                </span>
-              </td>
-              <td class="p-6 text-center">
+              <td class="p-6 text-center" @click.stop>
+                <div class="flex flex-col items-center gap-1">
+                  <button
+                    @click="toggleRestricció(item)"
+                    :class="item.control_horari?.actiu
+                      ? 'bg-orange-100 text-orange-600 hover:bg-orange-200'
+                      : 'bg-gray-100 text-gray-400 hover:bg-gray-200'"
+                    class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase transition-all"
+                  >
+                    <span>{{ item.control_horari?.actiu ? '🔒' : '🔓' }}</span>
+                    <span>{{ item.control_horari?.actiu ? 'Activada' : 'Desactivada' }}</span>
+                  </button>
+                  <span v-if="item.control_horari?.actiu" class="text-[9px] text-gray-400 font-semibold">
+                    {{ String(item.control_horari?.hora_inici ?? 22).padStart(2,'0') }}:00 – {{ String(item.control_horari?.hora_fi ?? 7).padStart(2,'0') }}:00
+                  </span>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -96,7 +103,7 @@ const missatgeConfirm = computed(() => {
 const resetForm = () => ({
   nom: '', barri: '', dificultat: 'Baixa', descripcio: '', explicacio_historica: '',
   imatge_referencia: '', foto_mapa: '', tags: [], punts_missio: [],
-  control_horari: { hora_tancament: '20:00', actiu: false },
+  control_horari: { actiu: false, hora_inici: 22, hora_fi: 7 },
   lat: 41.3879, lng: 2.1699, adreca_inici: '',
   cromo_imatge: ''
 });
@@ -128,7 +135,7 @@ const prepararEdicion = (item) => {
     lat: item.ubicacio?.coordinates[1] || 41.3879, 
     lng: item.ubicacio?.coordinates[0] || 2.1699,
     adreca_inici: item.adreca_inici || '',
-    control_horari: item.control_horari || { hora_tancament: '20:00', actiu: false },
+    control_horari: item.control_horari || { actiu: false, hora_inici: 22, hora_fi: 7 },
     cromo_imatge: item.cromo_imatge || ''
   };
   mostrarForm.value = true;
@@ -178,6 +185,25 @@ const confirmarEliminar = async () => {
     cargarDatos();
   } catch (error) {
     alert("Error al eliminar");
+  }
+};
+
+const toggleRestricció = async (item) => {
+  const horariActual = item.control_horari || { actiu: false, hora_inici: 22, hora_fi: 7 };
+  const nouActiu = !horariActual.actiu;
+  try {
+    const res = await fetch(`${PATH}/${item._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        control_horari: { ...horariActual, actiu: nouActiu }
+      })
+    });
+    if (res.ok) {
+      item.control_horari = { ...horariActual, actiu: nouActiu };
+    }
+  } catch (err) {
+    console.error('Error al canviar la restricció:', err);
   }
 };
 
