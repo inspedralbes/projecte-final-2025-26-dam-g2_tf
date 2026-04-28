@@ -178,6 +178,22 @@
                 </div>
               </div>
 
+              <div class="mb-3">
+                <label class="text-[10px] font-bold text-purple-400 uppercase mb-1 block">📸 Foto Històrica (contraportada)</label>
+                <select v-model="puntPendent.foto_historica" class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm outline-none bg-white">
+                  <option value="">-- Sense foto històrica --</option>
+                  <option v-for="foto in fotosHistoriquesDisponibles" :key="foto.path" :value="foto.path">{{ foto.carpeta }} / {{ foto.nom }}</option>
+                </select>
+                <div v-if="puntPendent.foto_historica" class="mt-2 rounded-xl overflow-hidden border-2 border-amber-100">
+                  <img :src="baseApi + puntPendent.foto_historica" class="w-full max-h-32 object-cover" alt="Previsu. històrica" />
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="text-[10px] font-bold text-purple-400 uppercase mb-1 block">📜 Text històric (contraportada)</label>
+                <textarea v-model="puntPendent.text_historic" placeholder="Explica la historia i cultura d'aquest punt..." class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm outline-none" rows="3"></textarea>
+              </div>
+
               <div class="flex gap-2">
                 <button type="button" @click="confirmarPunt" class="flex-1 bg-purple-600 text-white py-2 rounded-xl text-sm font-bold hover:bg-purple-700">Afegir punt</button>
                 <button type="button" @click="puntPendent = null; puntPendentEsPersonatge = false;" class="flex-1 bg-gray-100 text-gray-500 py-2 rounded-xl text-sm font-bold">Cancel·lar</button>
@@ -208,6 +224,24 @@
                   <img :src="baseApi + punt.imatge_referencia" class="w-full max-h-24 object-cover" alt="Imatge assignada" />
                 </div>
               </div>
+              <!-- Foto històrica per la contraportada -->
+              <div class="mt-1 mb-2">
+                <label class="text-[9px] font-bold text-amber-500 uppercase mb-1 block">📸 Foto Històrica</label>
+                <select v-model="punt.foto_historica" class="w-full border border-gray-200 p-1.5 rounded-lg text-xs outline-none bg-gray-50">
+                  <option value="">-- Sense --</option>
+                  <option v-for="foto in fotosHistoriquesDisponibles" :key="foto.path" :value="foto.path">{{ foto.carpeta }} / {{ foto.nom }}</option>
+                </select>
+                <div v-if="punt.foto_historica" class="mt-1.5 rounded-lg overflow-hidden border border-amber-200">
+                  <img :src="baseApi + punt.foto_historica" class="w-full max-h-24 object-cover" alt="Històrica" />
+                </div>
+              </div>
+
+              <!-- Text històric per la contraportada -->
+              <div class="mt-1 mb-2">
+                <label class="text-[9px] font-bold text-amber-500 uppercase mb-1 block">📜 Text Històric</label>
+                <textarea v-model="punt.text_historic" placeholder="Text històric del punt..." class="w-full border border-gray-200 p-1.5 rounded-lg text-xs outline-none" rows="2"></textarea>
+              </div>
+
               <p class="text-[10px] text-gray-400">X: {{ punt.posicio_x?.toFixed(1) }}% / Y: {{ punt.posicio_y?.toFixed(1) }}%</p>
 
               <!-- Personatge associat -->
@@ -283,6 +317,7 @@ const baseApi = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 const imatgeMapaRef = ref(null);
 const puntPendent = ref(null);
 const fotosDisponibles = ref([]);
+const fotosHistoriquesDisponibles = ref([]);
 const personatgesDisponibles = ref([]);
 const puntPendentEsPersonatge = ref(false);
 
@@ -373,6 +408,8 @@ function clicAlMapa(event) {
     nom_punt: '',
     pista: '',
     imatge_referencia: '',
+    foto_historica: '',
+    text_historic: '',
     personatge_id: null
   };
   puntPendentEsPersonatge.value = false;
@@ -421,6 +458,17 @@ async function carregarFotos() {
   }
 }
 
+async function carregarFotosHistoriques() {
+  try {
+    var resposta = await fetch(baseApi + '/api/fotos-historiques/totes');
+    if (!resposta.ok) return;
+    var dades = await resposta.json();
+    fotosHistoriquesDisponibles.value = dades.fotos || [];
+  } catch (err) {
+    console.error('Error carregant fotos històriques:', err);
+  }
+}
+
 async function carregarPersonatges() {
   try {
     var resposta = await fetch(baseApi + '/api/personatges');
@@ -434,6 +482,7 @@ async function carregarPersonatges() {
 onMounted(function() {
   initMapa();
   carregarFotos();
+  carregarFotosHistoriques();
   carregarPersonatges();
 });
 </script>

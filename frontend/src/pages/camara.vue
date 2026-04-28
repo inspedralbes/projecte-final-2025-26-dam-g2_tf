@@ -27,9 +27,12 @@ let socketJoc = null; // Socket per rebre l'event game-over de la resta de jugad
 
 // Modal cromo
 const mostrarModal = ref(false);
+const cardGirada = ref(false); // controla l'animació de gira
 const modalDades = ref({ 
   nom_lloc: '', 
   imatge_historica: '', 
+  foto_historica: '',
+  text_historic: '',
   coincidencia: '', 
   cromo_nou: false,
   completat_tot: false 
@@ -261,15 +264,22 @@ async function enviarDadesAlBackend(imatgeEnText) {
       modalDades.value = {
         exit: dades.exit !== false,
         nom_lloc: dades.nom_lloc,
-        imatge_punt: dades.imatge_punt || dades.imatge_historica || '',  // imatge del punt de missió
+        imatge_punt: dades.imatge_punt || dades.imatge_historica || '',
         imatge_historica: dades.imatge_historica,
+        foto_historica: dades.foto_historica || '',
+        text_historic: dades.text_historic || '',
         url_foto: dades.url_foto || '',
         coincidencia: dades.coincidencia,
         cromo_nou: dades.cromo_nou,
         completat_tot: dades.completat_tot || false,
         sessioId: dades.sessioId || route.params.codi_sala
       };
+      cardGirada.value = false;
       mostrarModal.value = true;
+      // Si hi ha foto històrica, girem la carta automàticament després de 600ms
+      if (dades.foto_historica) {
+        setTimeout(() => { cardGirada.value = true; }, 600);
+      }
     } else {
       alert(' ' + (dades.missatge || 'Error en validar'));
     }
@@ -349,7 +359,63 @@ async function enviarDadesAlBackend(imatgeEnText) {
         style="background: rgba(0,0,0,0.85); backdrop-filter: blur(6px);"
         @click.self="tancarModal"
       >
+        <!-- CARTA QUE GIRA -->
+        <div v-if="modalDades.exit && modalDades.foto_historica" class="card-container mx-6">
+          <div class="card" :class="{ girada: cardGirada }">
+            <!-- CARA DAVANT: foto del punt actual -->
+            <div class="card-cara card-davant rounded-2xl overflow-hidden shadow-2xl"
+              style="background: linear-gradient(160deg, #2a1030 0%, #402749 60%, #1a0820 100%); border: 2px solid #d9a6c2;">
+              <div class="w-full flex flex-col items-center pt-5 pb-3 px-5">
+                <span class="text-2xl mb-1">📸</span>
+                <h2 class="text-white font-bold text-base text-center">Punt trobat!</h2>
+                <p class="text-pink-300 text-xs mt-1 text-center">{{ modalDades.nom_lloc }}</p>
+              </div>
+              <div class="w-full px-5 pb-4">
+                <div class="w-full rounded-xl overflow-hidden" style="border: 2px solid #d9a6c2; aspect-ratio: 4/3;">
+                  <img v-if="modalDades.imatge_punt"
+                    :src="modalDades.imatge_punt.startsWith('http') ? modalDades.imatge_punt : `${API_URL}${modalDades.imatge_punt}`"
+                    class="w-full h-full object-cover" alt="Foto del punt" />
+                  <div v-else class="w-full h-full flex items-center justify-center bg-black/40">
+                    <span class="text-white/50 text-sm">Sense imatge</span>
+                  </div>
+                </div>
+              </div>
+              <div class="px-5 pb-2 text-center">
+                <span class="text-pink-200 text-xs bg-black/40 px-3 py-1 rounded-full">📸 Similitud: {{ modalDades.coincidencia }}</span>
+              </div>
+              <p class="text-white/40 text-[10px] text-center pb-4">Girant la carta...</p>
+            </div>
+
+            <!-- CARA DARRERE: foto històrica + text -->
+            <div class="card-cara card-darrere rounded-2xl overflow-hidden shadow-2xl"
+              style="border: 2px solid #f59e0b;">
+              <div class="relative w-full h-full">
+                <img
+                  :src="modalDades.foto_historica.startsWith('http') ? modalDades.foto_historica : `${API_URL}${modalDades.foto_historica}`"
+                  class="w-full h-full object-cover"
+                  alt="Foto històrica"
+                />
+                <!-- Overlay amb el text històric -->
+                <div class="absolute inset-0 flex flex-col justify-end"
+                  style="background: linear-gradient(to top, rgba(0,0,0,0.88) 45%, rgba(0,0,0,0.1) 100%);">
+                  <div class="p-4">
+                    <p class="text-amber-400 text-[10px] font-black uppercase tracking-widest mb-1">🏛️ Sabies que...</p>
+                    <p class="text-white text-xs leading-relaxed">{{ modalDades.text_historic }}</p>
+                    <button
+                      @click="tancarModal"
+                      class="mt-4 w-full py-3 rounded-xl font-black text-sm uppercase tracking-widest transition-all active:scale-95 hover:opacity-90"
+                      style="background-color: #f59e0b; color: #1a0820;"
+                    >{{ modalDades.completat_tot ? '🏁 TORNAR A L\'INICI' : '✨ GENIAL!' }}</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODAL SIMPLE (sense foto històrica o foto incorrecta) -->
         <div
+          v-else
           class="relative flex flex-col items-center rounded-2xl overflow-hidden shadow-2xl mx-6"
           style="background: linear-gradient(160deg, #2a1030 0%, #402749 60%, #1a0820 100%); border: 2px solid #d9a6c2; max-width: 340px; width: 100%;"
         >
@@ -364,16 +430,10 @@ async function enviarDadesAlBackend(imatgeEnText) {
           </div>
 
           <div v-if="modalDades.exit" class="w-full px-6 pb-3">
-            <div
-              class="w-full rounded-xl overflow-hidden shadow-lg"
-              style="border: 2px solid #d9a6c2; aspect-ratio: 4/3;"
-            >
-              <img
-                v-if="modalDades.imatge_punt"
+            <div class="w-full rounded-xl overflow-hidden shadow-lg" style="border: 2px solid #d9a6c2; aspect-ratio: 4/3;">
+              <img v-if="modalDades.imatge_punt"
                 :src="modalDades.imatge_punt.startsWith('http') ? modalDades.imatge_punt : `${API_URL}${modalDades.imatge_punt}`"
-                class="w-full h-full object-cover"
-                alt="Foto del punt"
-              />
+                class="w-full h-full object-cover" alt="Foto del punt" />
               <div v-else class="w-full h-full flex items-center justify-center bg-black/40">
                 <span class="text-white/50 text-sm">Sense imatge</span>
               </div>
@@ -381,12 +441,8 @@ async function enviarDadesAlBackend(imatgeEnText) {
           </div>
 
           <div class="flex flex-col items-center gap-2 pb-3">
-            <span class="text-pink-200 text-xs bg-black/40 px-3 py-1 rounded-full">
-              📸 Similitud: {{ modalDades.coincidencia }}
-            </span>
-            <p v-if="modalDades.completat_tot && modalDades.rango" class="text-yellow-400 font-black text-xs uppercase tracking-widest">
-              Medalla d'{{ modalDades.rango }}
-            </p>
+            <span class="text-pink-200 text-xs bg-black/40 px-3 py-1 rounded-full">📸 Similitud: {{ modalDades.coincidencia }}</span>
+            <p v-if="modalDades.completat_tot && modalDades.rango" class="text-yellow-400 font-black text-xs uppercase tracking-widest">Medalla d'{{ modalDades.rango }}</p>
           </div>
 
           <button
@@ -394,7 +450,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
             class="w-full py-4 font-bold text-sm transition-opacity hover:opacity-80 active:scale-95"
             style="background-color: #d9a6c2; color: #2a1030;"
           >
-            {{ !modalDades.exit ? ' TORNAR A INTENTAR' : modalDades.completat_tot ? 'TORNAR A L\'INICI' : ' GENIAL!' }}
+            {{ !modalDades.exit ? '↩ TORNAR A INTENTAR' : modalDades.completat_tot ? 'TORNAR A L\'INICI' : '✨ GENIAL!' }}
           </button>
         </div>
       </div>
@@ -449,5 +505,32 @@ async function enviarDadesAlBackend(imatgeEnText) {
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
   transform: scale(0.95);
+}
+
+/* === ANIMACIÓ GIRA CARTA === */
+.card-container {
+  width: 100%;
+  max-width: 340px;
+  perspective: 1000px;
+}
+.card {
+  position: relative;
+  width: 100%;
+  min-height: 480px;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card.girada {
+  transform: rotateY(180deg);
+}
+.card-cara {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.card-darrere {
+  transform: rotateY(180deg);
 }
 </style>

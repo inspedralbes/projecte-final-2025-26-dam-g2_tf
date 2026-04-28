@@ -19,6 +19,7 @@ app.use(cors());
 
 app.use('/foto_mapa', express.static(path.join(__dirname, 'public/foto_mapa')));
 app.use('/fotos_actuals', express.static(path.join(__dirname, 'public/fotos_actuals')));
+app.use('/fotos_historiques', express.static(path.join(__dirname, 'public/fotos_historiques')));
 app.use('/personatges', express.static(path.join(__dirname, 'public/personatges')));
 // missatge de prova
 async function startServer() {
@@ -42,6 +43,7 @@ async function startServer() {
         app.use('/api/auth', require('./src/routes/auth'));
         app.use('/api/validar-foto', comprovarToqueDeQueda, require('./src/routes/camara'));
         app.use('/api/fotos-actuals', require('./src/routes/fotos'));
+        app.use('/api/fotos-historiques', require('./src/routes/fotos_historiques'));
         app.use('/api/sessionsJoc', comprovarToqueDeQueda, require('./src/routes/sessionsJoc'));
         app.use('/api/personatges', require('./src/routes/personatges'));
         app.use('/api/verificacio', require('./src/routes/verificacio'));

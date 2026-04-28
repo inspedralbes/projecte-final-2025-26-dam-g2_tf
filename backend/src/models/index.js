@@ -60,15 +60,17 @@ const LlocSchema = new mongoose.Schema({
     posicio_y: Number, // Valor de 0 a 100
     pista: String,
     imatge_referencia: String,
+    foto_historica: { type: String, default: '' },  // ruta dins /fotos_historiques/
+    text_historic: { type: String, default: '' },   // text d'història per la contraportada
     personatge_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Personatge', default: null }
   }],
   barri: String,
   tags: [String],
- control_horari: {
+  control_horari: {
     actiu: { type: Boolean, default: false },
     hora_inici: { type: String, default: "22:00" }, // Canviem Number per String
     hora_fi: { type: String, default: "07:00" }    // Canviem Number per String
-},
+  },
   millors_temps: [{ usuari: String, temps_segons: Number }],
   fotos_historiques: [String],
   fotos_actuals: [String],

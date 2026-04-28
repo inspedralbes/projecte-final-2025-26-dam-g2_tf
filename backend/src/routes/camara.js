@@ -70,6 +70,8 @@ router.post('/', async function (req, res) {
         // Busquem la imatge de referència per a la IA: primer mirem si el punt concret en té, si no usem la del lloc
         let imatgeReferencia = lloc.imatge_referencia;
         let imatgePuntMissio = null; // Imatge específica del punt per mostrar a l'usuari
+        let fotoHistorica = ''; // Foto antiga per la contraportada
+        let textHistoric = '';  // Text d'història per la contraportada
         let puntTrobat = false;
         let nomPunt = lloc.nom; // Per defecte el nom del lloc
         if (idPunt) {
@@ -85,6 +87,9 @@ router.post('/', async function (req, res) {
                     } else {
                         console.log(`[Càmera] Punt "${p.nom_punt}" NO té imatge_referencia pròpia → usant la del lloc`);
                     }
+                    // Recollim foto i text històric del punt
+                    fotoHistorica = p.foto_historica || '';
+                    textHistoric = p.text_historic || '';
                     break;
                 }
             }
@@ -313,6 +318,8 @@ router.post('/', async function (req, res) {
                     nom_lloc: lloc.nom,
                     imatge_punt: imatgePuntMissio || imatgeReferencia,  // imatge del punt per mostrar al modal
                     imatge_historica: imatgeReferencia,
+                    foto_historica: fotoHistorica,   // foto antiga per la contraportada
+                    text_historic: textHistoric,     // text d'història per la contraportada
                     sessioId: codi_sala,
                     missatge: haAcabatLaLlista ? "Partida finalitzada!" : "Punt trobat! Torna al mapa pel següent.",
                     url_foto: "/fotos_partides_usuaris/" + nomFitxer
