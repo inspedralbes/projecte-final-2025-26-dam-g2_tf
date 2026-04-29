@@ -6,8 +6,6 @@
       class="fixed inset-0 z-[9999] flex items-end justify-center sm:items-center p-4"
       @click.self="tancarModal"
     >
-      <!-- Script face-api.js segur (vladmandic fork és més estable) -->
-      <component :is="'script'" src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js" @load="handleFaceApiLoaded"></component>
       <!-- Fons difuminat amb degradat -->
       <div class="absolute inset-0 bg-gradient-to-br from-[#402749]/80 to-[#1a0a1f]/90 backdrop-blur-md"></div>
 
@@ -223,10 +221,11 @@
 
 
 <script setup>
-import { ref, nextTick, onUnmounted } from 'vue';
+import { ref, nextTick, onUnmounted, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import { useLoginModal } from '../composables/useLoginModal';
+import { useFaceDetection } from '../composables/useFaceDetection';
 import DisclaimerModal from './DisclaimerModal.vue'; 
 
 // Obtenim l'estat global del modal
@@ -244,152 +243,39 @@ const error = ref('');
 const carregant = ref(false);
 const mostrarDisclaimer = ref(false); 
 
-// Verificació Facial
-const pasVerificacio = ref(false);
-const analitzant = ref(false);
-const analitzantFinal = ref(false);
-const edatDetectada = ref(null);
-const faceApiLlesta = ref(false);
-const videoRef = ref(null);
-const canvasRef = ref(null);
-let mediaStream = null;
-let loopDeteccio = null;
-let historialEdats = [];
+// Lògica de Verificació Facial d'IA
+const {
+  pasVerificacio,
+  analitzant,
+  analitzantFinal,
+  edatDetectada,
+  faceApiLlesta,
+  videoRef,
+  canvasRef,
+  handleFaceApiLoaded,
+  iniciarCamera,
+  aturarCamera,
+  confirmarScanneig: confirmarScanneigIA
+} = useFaceDetection();
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
-async function handleFaceApiLoaded() {
-  console.log("face-api.js carregat!");
-  try {
-    // Utilitzem el CDN de vladmandic que és molt més fiable per als models
-    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
-    await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-      faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL)
-    ]);
-    faceApiLlesta.value = true;
-    console.log("Models de face-api carregats des de vladmandic CDN!");
-  } catch (err) {
-    console.error("Error carregant models:", err);
-  }
-}
-
-async function iniciarCamera() {
-  await nextTick();
-  try {
-    if (mediaStream) aturarCamera();
-    
-    mediaStream = await navigator.mediaDevices.getUserMedia({ 
-      video: { 
-        facingMode: 'user',
-        width: { ideal: 640 },
-        height: { ideal: 480 }
-      } 
-    });
-    
-    if (videoRef.value) {
-      videoRef.value.srcObject = mediaStream;
-      videoRef.value.onloadedmetadata = () => {
-        videoRef.value.play();
-        iniciarLoopDeteccio();
-      };
-    } else {
-      console.error("videoRef no trobat després de nextTick");
-      // Reintentem si cal
-      setTimeout(() => {
-        if (videoRef.value) videoRef.value.srcObject = mediaStream;
-      }, 500);
-    }
-  } catch (err) {
-    console.error("Error iniciarCamera:", err);
-    error.value = "No hem pogut accedir a la càmera. Revisa els permisos.";
-  }
-}
-
-function aturarCamera() {
-  aturarLoopDeteccio();
-  if (mediaStream) {
-    mediaStream.getTracks().forEach(track => track.stop());
-    mediaStream = null;
-  }
-}
-
-async function iniciarLoopDeteccio() {
-  if (loopDeteccio) return;
-  
-  const runDeteccio = async () => {
-    if (!videoRef.value || !pasVerificacio.value || analitzantFinal.value) return;
-    
-    try {
-      const detection = await faceapi.detectSingleFace(videoRef.value, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks()
-        .withAgeAndGender();
-
-      if (detection) {
-        // Guardem l'edat en un historial per fer la mitjana (més estable)
-        historialEdats.push(detection.age);
-        if (historialEdats.length > 5) historialEdats.shift();
-        
-        const mitjana = historialEdats.reduce((a, b) => a + b, 0) / historialEdats.length;
-        edatDetectada.value = mitjana;
-      }
-    } catch (err) {
-      console.warn("Error en loop detecció", err);
-    }
-    
-    if (pasVerificacio.value && !analitzantFinal.value) {
-      loopDeteccio = setTimeout(runDeteccio, 500); // Cada mig segon
-    }
-  };
-  
-  runDeteccio();
-}
-
-function aturarLoopDeteccio() {
-  if (loopDeteccio) {
-    clearTimeout(loopDeteccio);
-    loopDeteccio = null;
-  }
-}
-
 async function confirmarScanneig() {
-  if (!videoRef.value || analitzantFinal.value || !edatDetectada.value) return;
-  analitzantFinal.value = true;
-  analitzant.value = true;
-
   try {
-    const edatEstimada = edatDetectada.value;
-    console.log("Edat final confirmada:", edatEstimada);
+    const resultat = await confirmarScanneigIA();
+    if (!resultat) return;
 
-    const canvas = canvasRef.value;
-    canvas.width = videoRef.value.videoWidth;
-    canvas.height = videoRef.value.videoHeight;
-    canvas.getContext('2d').drawImage(videoRef.value, 0, 0);
-    const imatgeBase64 = canvas.toDataURL('image/jpeg', 0.8);
-
-    const majorConfirmat = edatEstimada >= 18;
-    const massaJove = edatEstimada < 15;
-
-    if (massaJove) {
-        error.value = "Ho sentim, l'escaner indica que ets massa jove per registrar-te (~"+Math.round(edatEstimada)+" anys).";
-        aturarCamera();
-        pasVerificacio.value = false;
-        analitzant.value = false;
-        analitzantFinal.value = false;
-        return;
+    if (resultat.massaJove) {
+      error.value = "Ho sentim, l'escaner indica que ets massa jove per registrar-te (~"+Math.round(resultat.edatEstimada)+" anys).";
+      pasVerificacio.value = false;
+      return;
     }
 
-    aturarCamera();
-    await registrarFinal(majorConfirmat, majorConfirmat ? '' : imatgeBase64);
+    await registrarFinal(resultat.esMajor, resultat.esMajor ? '' : resultat.imatgeBase64);
 
   } catch (err) {
     console.error(err);
-    error.value = "Error durant la confirmació facial.";
-  } finally {
-    analitzant.value = false;
-    analitzantFinal.value = false;
+    error.value = err.message || "Error durant la confirmació facial.";
   }
 }
 
@@ -441,7 +327,9 @@ async function registrarFinal(esMajor, imatge) {
 function continuarDiferit() {
   mostrarDisclaimer.value = false;
   pasVerificacio.value = true;
-  iniciarCamera();
+  iniciarCamera().catch(err => {
+    error.value = err.message;
+  });
 }
 
 /**
@@ -458,7 +346,10 @@ async function executarAccio() {
   // Si és registre i encara no estem al pas de verificació, activem la càmera
   if (esRegistre.value && !pasVerificacio.value) {
     pasVerificacio.value = true;
-    await iniciarCamera();
+    iniciarCamera().catch(err => {
+      error.value = err.message;
+      pasVerificacio.value = false;
+    });
     return;
   }
   
@@ -519,6 +410,11 @@ async function executarAccio() {
     carregant.value = false;
   }
 }
+
+onMounted(() => {
+  handleFaceApiLoaded();
+});
+
 onUnmounted(() => {
   aturarCamera();
 });
