@@ -43,6 +43,9 @@ const mostrarNotificacioGuanyador = ref(false);
 const nomGuanyador = ref('');
 const sessioIdGuanyador = ref('');
 const isTimeout = ref(false);
+const cardDefeatFlipped = ref(false);
+const faseDerrota = ref(0);
+const cardDefeatFlippedBig = ref(false);
 
 // Temporitzador
 const tempsRestant = ref(null);
@@ -133,7 +136,13 @@ onMounted(async () => {
       sessioIdGuanyador.value = dades.sessioId || codi_sala;
       nomGuanyador.value = dades.nomGuanyador || 'Un jugador';
       isTimeout.value = dades.timeout || false;
-      mostrarNotificacioGuanyador.value = true;
+      
+      if (isTimeout.value) {
+        faseDerrota.value = 1;
+      } else {
+        faseDerrota.value = 2;
+        mostrarNotificacioGuanyador.value = true;
+      }
       if (intervalTimer) clearInterval(intervalTimer);
     });
   }
@@ -155,6 +164,11 @@ onUnmounted(() => {
   }
 });
 
+function girarCartaDefeat() {
+  faseDerrota.value = 2;
+  mostrarNotificacioGuanyador.value = true;
+}
+
 function iniciarTemporitzador(tempsLimit) {
     const limit = new Date(tempsLimit).getTime();
     
@@ -166,9 +180,9 @@ function iniciarTemporitzador(tempsLimit) {
         if (diferencia <= 0) {
             clearInterval(intervalTimer);
             // Si el temps s'esgota localment, mostrem la notificació de Timeout
-            if (!mostrarNotificacioGuanyador.value) {
+            if (!mostrarNotificacioGuanyador.value && faseDerrota.value === 0) {
                 isTimeout.value = true;
-                mostrarNotificacioGuanyador.value = true;
+                faseDerrota.value = 1;
                 console.log("[Càmera] Cronòmetre a zero. Mostrant notificació de Timeout local.");
             }
         }
@@ -456,10 +470,34 @@ async function enviarDadesAlBackend(imatgeEnText) {
       </div>
     </Transition>
 
+    <!-- FASE 1: CARTA GRAN DEL POLICIA -->
+    <Transition name="fade">
+      <div
+        v-if="faseDerrota === 1"
+        class="min-h-screen bg-[#402749] flex flex-col items-center justify-center p-8 overflow-y-auto overflow-x-hidden"
+        style="position: fixed; inset: 0; z-index: 300;"
+      >
+        <div class="relative z-10 w-full max-w-sm flex flex-col items-center justify-center min-h-full py-12">
+          <div 
+            class="perspective-1000 w-full max-w-[350px] aspect-[2/3] min-h-[525px] mb-10 shadow-none cursor-pointer"
+            @click="girarCartaDefeat"
+          >
+            <div class="w-full h-full flex items-center justify-center overflow-hidden bg-[#402749] shadow-none">
+              <img 
+                :src="API_URL + '/personatges/El%20policia.jpg'" 
+                alt="Carta El Policia" 
+                class="w-full h-full object-contain shadow-none scale-105" 
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
     <!-- Notificació: un altre jugador ha guanyat -->
     <Transition name="fade">
       <div
-        v-if="mostrarNotificacioGuanyador"
+        v-if="mostrarNotificacioGuanyador && faseDerrota === 2"
         class="absolute inset-0 z-50 flex items-center justify-center"
         style="background: rgba(0,0,0,0.88); backdrop-filter: blur(8px);"
       >

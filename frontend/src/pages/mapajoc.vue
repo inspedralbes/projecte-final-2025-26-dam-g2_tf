@@ -100,9 +100,34 @@
     </Transition>
 
     <!--MODAL GAME OVER (un altre jugador ha guanyat o temps esgotat) -->
+    <!-- FASE 1: CARTA GRAN DEL POLICIA -->
     <Transition name="fade">
       <div
-        v-if="mostrarGameOver"
+        v-if="faseDerrota === 1"
+        class="min-h-screen bg-[#402749] flex flex-col items-center justify-center p-8 overflow-y-auto overflow-x-hidden"
+        style="position: fixed; inset: 0; z-index: 300;"
+      >
+        <div class="relative z-10 w-full max-w-sm flex flex-col items-center justify-center min-h-full py-12">
+          <div 
+            class="perspective-1000 w-full max-w-[350px] aspect-[2/3] min-h-[525px] mb-10 shadow-none cursor-pointer"
+            @click="girarCartaDefeat"
+          >
+            <div class="w-full h-full flex items-center justify-center overflow-hidden bg-[#402749] shadow-none">
+              <img 
+                :src="baseApi + '/personatges/El%20policia.jpg'"  
+                alt="Carta El Policia" 
+                class="w-full h-full object-contain shadow-none scale-105" 
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!--MODAL GAME OVER (un altre jugador ha guanyat o temps esgotat) -->
+    <Transition name="fade">
+      <div
+        v-if="mostrarGameOver && faseDerrota === 2"
         class="modal-fons"
         style="z-index: 200;"
       >
@@ -116,7 +141,7 @@
             <p style="color: #ff9fb6; font-size: 1.1rem; font-weight: bold; margin: 0;">
               TOTHOM HA PERDUT
             </p>
-            <p style="color: #d9a6c2; font-size: 0.95rem; margin: 0;">
+            <p style="color: #d9a6c2; font-size: 0.95rem; margin: 10px 0 0 0;">
               No heu obtingut el cromo d'aquesta ruta.
             </p>
           </template>
@@ -167,6 +192,9 @@ export default {
       baseApi: import.meta.env.VITE_API_URL || 'http://localhost:8088',
       // Game-over
       mostrarGameOver: false,
+      faseDerrota: 0,
+      cardDefeatFlipped: false,
+      cardDefeatFlippedBig: false,
       nomGuanyador: '',
       sessioIdGameOver: '',
       _socket: null,
@@ -364,7 +392,12 @@ export default {
         this.sessioIdGameOver = dades.sessioId || sessioId;
         this.nomGuanyador = dades.nomGuanyador || 'Un jugador';
         this.isTimeout = dades.timeout || false;
-        this.mostrarGameOver = true;
+        if (this.isTimeout) {
+          this.faseDerrota = 1;
+        } else {
+          this.faseDerrota = 2;
+          this.mostrarGameOver = true;
+        }
         if (this.intervalTimer) clearInterval(this.intervalTimer);
       });
 
@@ -394,6 +427,11 @@ export default {
   methods: {
     anarAHome() {
       this.$router.push({ name: 'home' });
+    },
+
+    girarCartaDefeat() {
+      this.faseDerrota = 2;
+      this.mostrarGameOver = true;
     },
 
     async obrirModal(punt) {
@@ -448,7 +486,6 @@ export default {
         }
 
         const limit = new Date(tempsLimit).getTime();
-        
         const actualizar = () => {
             const ara = new Date().getTime();
             const diferencia = Math.max(0, Math.floor((limit - ara) / 1000));
@@ -457,9 +494,9 @@ export default {
             if (diferencia <= 0) {
                 clearInterval(this.intervalTimer);
                 // Si el temps s'esgota localment, mostrem el Game Over de Timeout
-                if (!this.mostrarGameOver) {
+                if (!this.mostrarGameOver && this.faseDerrota === 0) {
                     this.isTimeout = true;
-                    this.mostrarGameOver = true;
+                    this.faseDerrota = 1;
                     console.log("[Mapa] Cronòmetre a zero. Mostrant Game Over local.");
                 }
             }

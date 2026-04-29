@@ -113,7 +113,11 @@ function configureSocket(server) {
 
                 // 2. Carreguem tots els personatges disponibles
                 const { Personatge } = require('../models');
-                const personatgesDisponibles = await Personatge.find({});
+                let personatgesDisponibles = await Personatge.find({});
+                personatgesDisponibles = personatgesDisponibles.filter(p =>
+                    !p.nom.toLowerCase().includes('el policia') &&
+                    !p.nom.toLowerCase().includes('el policía')
+                );
 
                 // 3. Repartim personatges aleatòriament als jugadors
                 const assignacioPersonatge = repartirPersonatgesAleatoriament(room.players, personatgesDisponibles);
