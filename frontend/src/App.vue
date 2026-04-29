@@ -7,6 +7,9 @@
     <NavBar v-if="mostrarNavBar" />
 
     <LoginModal />
+
+    <DisclaimerModal />
+    
   </div>
 </template>
 
@@ -15,6 +18,7 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import NavBar from './components/navBar.vue';
 import LoginModal from './components/LoginModal.vue';
+import DisclaimerModal from './components/DisclaimerModal.vue';
 
 const route = useRoute();
 
