@@ -3,19 +3,18 @@ const router = express.Router();
 const { Post, Perfil, SessioJoc, Ressenya, Usuari } = require('../models');
 
 
-// --- NOVA RUTA: Obtenir el Top 10 d'exploradors ---
 router.get('/leaderboard/global', async (req, res) => {
     try {
-        // Busquem els perfils que tenen la privacitat activada per aparèixer al rànquing [cite: 61, 114]
-        // Ordenem per punts de major a menor
-        const topExploradors = await Perfil.find({ mostrarAlRanking: true })
-            .sort({ punts: -1 })
+        // Eliminem el filtre 'mostrarAlRanking' si no existeix al model
+        // O el mantenim si penses afegir-lo al PerfilSchema
+        const topExploradors = await Perfil.find({}) 
+            .sort({ punts: -1 }) // De més a menys punts
             .limit(10)
-            .select('nom_usuari punts avatar nivell'); // Només agafem el que necessitem
-
+            .select('nom_usuari punts avatar nivell'); // Seleccionem els camps necessaris
 
         res.json(topExploradors);
     } catch (error) {
+        console.error("Error al rànquing:", error);
         res.status(500).json({ message: "Error al carregar el rànquing global" });
     }
 });
@@ -113,6 +112,28 @@ router.post('/posts', async (req, res) => {
     }
 });
 
+// Ruta al fitxer backend/src/routes/social.js
+
+router.post('/amics/eliminar', async (req, res) => {
+  const { el_meu_perfil_id, id_amic_a_borrar } = req.body;
+
+  try {
+    // 1. Treure l'amic del meu perfil
+    await Perfil.findByIdAndUpdate(el_meu_perfil_id, {
+      $pull: { amics: id_amic_a_borrar }
+    });
+
+    // 2. Treure'm a mi de la llista d'amics de l'altre (amistat bidireccional)
+    await Perfil.findByIdAndUpdate(id_amic_a_borrar, {
+      $pull: { amics: el_meu_perfil_id }
+    });
+
+    res.status(200).json({ message: "Amic eliminat correctament" });
+  } catch (error) {
+    console.error("Error al eliminar amic:", error);
+    res.status(500).json({ message: "Error intern del servidor" });
+  }
+});
 
 router.post('/posts/:postId/like', async (req, res) => {
     try {

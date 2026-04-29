@@ -1,6 +1,54 @@
 const express = require('express');
 const router = express.Router();
 const { SessioJoc, Lloc } = require('../models');
+const { Perfil } = require('../models'); // Assegura't d'importar Perfil
+
+// POST /api/sessionsJoc/:id/finalitzar
+router.post('/:id/finalitzar', async function (req, res) {
+    try {
+        const idOrCodi = req.params.id;
+        const { perfilId, puntsGuanyats, tempsFinal } = req.body;
+
+        let query = idOrCodi.match(/^[0-9a-fA-F]{24}$/) 
+            ? { _id: idOrCodi } 
+            : { codi_sala: idOrCodi.toUpperCase() };
+
+        const sessio = await SessioJoc.findOne(query);
+        if (!sessio) return res.status(404).json({ missatge: "Sessió no trobada" });
+
+        // 1. Actualitzem l'estat del jugador dins la sessió
+        const jugador = sessio.jugadors.find(j => j.id_usuari.toString() === perfilId.toString());
+        if (jugador) {
+            jugador.completat = true;
+            jugador.puntsPartida = puntsGuanyats;
+            jugador.temps = tempsFinal;
+        }
+
+        // 2. IMPORTANT: Sumar punts al rànquing global (Model Perfil)
+        // També podríem actualitzar el nivell aquí si cal
+        await Perfil.findByIdAndUpdate(perfilId, {
+            $inc: { punts: puntsGuanyats }
+        });
+
+        // 3. Comprovem si tots els jugadors han acabat per tancar la sala
+        const totsAcabat = sessio.jugadors.every(j => j.completat);
+        if (totsAcabat) {
+            sessio.estat = 'finalitzada';
+        }
+
+        await sessio.save();
+
+        res.json({ 
+            success: true, 
+            missatge: "Punts sumats al perfil i partida guardada",
+            puntsTotalsPartida: puntsGuanyats
+        });
+
+    } catch (error) {
+        console.error("Error al finalitzar sessió:", error);
+        res.status(500).json({ missatge: "Error de servidor" });
+    }
+});
 
 // POST /api/sessionsJoc/crear — Crear la sessió quan l'usuari comença a jugar
 router.post('/crear', async function (req, res) {

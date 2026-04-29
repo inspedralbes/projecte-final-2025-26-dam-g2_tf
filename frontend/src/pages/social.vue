@@ -253,149 +253,139 @@
       </div>
 
       <!-- AMICS (SECCIÓ FILTRADA PER SUB-TAB) -->
-      <div v-else-if="pestanyaActiva === 'amics'" class="space-y-6 animate-fade-in">
+      <div v-else-if="pestanyaActiva === 'amics'" class="space-y-6 animate-fade-in pb-12">
         
-        <!-- Cercador d'usuaris (Sempre visible a Amics) -->
-        <div class="bg-white p-6 rounded-[40px] shadow-sm border border-white">
-          <h3 class="text-[#402749] text-xs font-black uppercase mb-4 tracking-widest">Cerca exploradors</h3>
-          <div class="flex gap-2">
-            <input 
-              v-model="usernameCerca" 
-              type="text" 
-              placeholder="Busca pel nom d'usuari..."
-              class="flex-1 bg-gray-50 border-none rounded-2xl p-4 text-sm focus:ring-2 ring-[#804f7f]/20 outline-none font-medium text-gray-600 transition-all"
-              @input="cercarUsuari"
-            >
-            <button 
-              @click="cercarUsuari" 
-              class="bg-[#804f7f] text-white px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest"
-              :disabled="cercant"
-            >
-              {{ cercant ? '...' : '🔍' }}
-            </button>
-          </div>
+        <div class="relative group">
+          <input 
+            v-model="usernameCerca" 
+            type="text" 
+            placeholder="Escriu el nom d'un amic..."
+            class="w-full bg-white/10 backdrop-blur-md border-2 border-white/10 focus:border-[#f5cbdd]/50 rounded-[25px] py-5 px-6 text-sm font-bold text-white shadow-inner transition-all outline-none placeholder:text-white/30"
+            @input="cercarUsuari"
+          >
+          <button 
+            @click="cercarUsuari" 
+            class="absolute right-2 top-2 bottom-2 bg-[#f5cbdd] text-[#402749] px-6 rounded-[18px] text-[10px] font-black uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-lg"
+            :disabled="cercant"
+          >
+            {{ cercant ? 'Cercant...' : 'Cercar' }}
+          </button>
+        </div>
 
-          <!-- Resultats de cerca -->
-          <div v-if="resultatsCerca.length > 0" class="mt-6 space-y-3">
-            <div 
-              v-for="resUser in resultatsCerca" 
-              :key="resUser._id" 
-              class="p-4 bg-[#f5cbdd] rounded-2xl flex items-center justify-between border border-white"
-            >
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-[#bc85ab] flex items-center justify-center text-white font-bold overflow-hidden border-2 border-white shadow-sm">
-                  <img v-if="resUser.avatar" :src="resUser.avatar" class="w-full h-full object-cover">
-                  <span v-else>{{ resUser.nom_usuari?.charAt(0).toUpperCase() }}</span>
-                </div>
-                <div>
-                  <p class="font-black text-[#402749] text-sm leading-none">{{ resUser.nom_usuari }}</p>
-                  <p class="text-[9px] font-bold text-[#804f7f] uppercase mt-1 px-2 py-0.5 bg-white/50 rounded-full inline-block">
-                    {{ calcularNivell(resUser.inventari_cromos) }}
-                  </p>
-                </div>
+       <div v-if="resultatsCerca.length > 0" class="space-y-3 animate-slide-up">
+          <p class="text-[10px] font-black text-[#f5cbdd] uppercase tracking-[0.2em] ml-2">Exploradors trobats</p>
+          <div v-for="resUser in resultatsCerca" :key="resUser._id" 
+               class="bg-white/10 backdrop-blur-md p-4 rounded-[30px] flex items-center justify-between border border-white/10 shadow-xl">
+            
+            <div class="flex items-center gap-3 overflow-hidden">
+              <div class="w-11 h-11 rounded-2xl bg-[#bc85ab] border-2 border-white/20 shadow-sm overflow-hidden shrink-0">
+                <img v-if="resUser.avatar" :src="resUser.avatar" class="w-full h-full object-cover">
+                <span v-else class="flex items-center justify-center h-full text-white font-black text-lg">{{ resUser.nom_usuari?.charAt(0).toUpperCase() }}</span>
               </div>
-              <button 
-                @click="enviarSolicitud(resUser)" 
-                class="bg-[#804f7f] text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-md"
-              >
-                Afegir Amic
-              </button>
+              
+              <div class="flex flex-col min-w-0">
+                <p class="font-black text-white text-sm truncate">{{ resUser.nom_usuari }}</p>
+                <p class="text-[9px] font-bold text-[#f5cbdd] uppercase opacity-70 tracking-tighter">Explorador de Barcelona</p>
+              </div>
             </div>
+
+            <button 
+              @click="enviarSolicitud(resUser)" 
+              class="border border-[#f5cbdd]/40 text-[#f5cbdd] px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest hover:bg-[#f5cbdd] hover:text-[#402749] transition-all active:scale-90 shrink-0 ml-4 shadow-lg shadow-[#f5cbdd]/5"
+            >
+              Afegir
+            </button>
           </div>
         </div>
 
-        <!-- Sub-navegació d'Amics -->
-        <div class="flex bg-white/50 rounded-2xl p-1 border border-[#bc85ab]/20">
+        <div class="flex bg-black/20 backdrop-blur-md rounded-[22px] p-1.5 border border-white/5 shadow-inner">
           <button 
             @click="subPestanyaAmics = 'llista'" 
-            :class="['flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all', 
-                    subPestanyaAmics === 'llista' ? 'bg-[#402749] text-white shadow-lg' : 'text-gray-400']"
+            :class="['flex-1 py-3 rounded-[18px] text-[10px] font-black uppercase transition-all', 
+                    subPestanyaAmics === 'llista' ? 'bg-[#f5cbdd] text-[#402749] shadow-md' : 'text-white/40']"
           >
-            Els meus amics
+            Els meus amics ({{ amics.length }})
           </button>
           <button 
             @click="subPestanyaAmics = 'peticions'" 
-            :class="['flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all flex items-center justify-center gap-2', 
-                    subPestanyaAmics === 'peticions' ? 'bg-[#402749] text-white shadow-lg' : 'text-gray-400']"
+            :class="['flex-1 py-3 rounded-[18px] text-[10px] font-black uppercase transition-all flex items-center justify-center gap-2', 
+                    subPestanyaAmics === 'peticions' ? 'bg-[#f5cbdd] text-[#402749] shadow-md' : 'text-white/40']"
           >
-            Sol·licituds
-            <span v-if="peticionsPendents.length > 0" class="bg-red-500 text-white text-[8px] px-1.5 py-0.5 rounded-full animate-pulse">
+            Pendents
+            <span v-if="peticionsPendents.length > 0" class="bg-red-500 text-white text-[9px] w-5 h-5 flex items-center justify-center rounded-full animate-bounce shadow-lg">
               {{ peticionsPendents.length }}
             </span>
           </button>
         </div>
 
-        <!-- LLISTA D'AMICS -->
-        <div v-if="subPestanyaAmics === 'llista'" class="space-y-4 animate-fade-in">
-          <div v-if="amics.length > 0" class="grid grid-cols-1 gap-3">
-            <div 
-              v-for="amic in amics" 
-              :key="amic._id" 
-              class="bg-white p-4 rounded-[30px] shadow-sm flex items-center justify-between border border-gray-100"
-            >
-              <div class="flex items-center gap-4">
-                <div @click="router.push(`/perfil-visita/${amic._id}`)" class="w-12 h-12 rounded-2xl bg-[#f5cbdd] flex items-center justify-center text-[#402749] font-black border-2 border-white overflow-hidden cursor-pointer shadow-sm">
-                  <img v-if="amic.avatar" :src="amic.avatar" class="w-full h-full object-cover">
-                  <span v-else>{{ amic.nom_usuari?.charAt(0).toUpperCase() }}</span>
+      <div v-if="subPestanyaAmics === 'llista'" class="space-y-4">
+          <div v-if="amics.length > 0" class="grid grid-cols-1 gap-4">
+            <div v-for="amic in amics" :key="amic._id" 
+                 class="bg-white/5 hover:bg-white/10 p-5 rounded-[35px] shadow-lg flex items-center justify-between border border-white/10 group transition-all duration-300">
+              
+              <div class="flex items-center gap-4 flex-1">
+                <div @click="router.push(`/perfil-visita/${amic._id}`)" class="relative cursor-pointer">
+                  <div class="w-14 h-14 rounded-[22px] bg-[#f5cbdd] border-2 border-white/20 overflow-hidden shadow-md group-hover:scale-105 transition-transform">
+                    <img v-if="amic.avatar" :src="amic.avatar" class="w-full h-full object-cover">
+                    <span v-else class="flex items-center justify-center h-full text-[#402749] font-black text-xl">
+                      {{ amic.nom_usuari?.charAt(0).toUpperCase() }}
+                    </span>
+                  </div>
+                  <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-4 border-[rgba(64,39,73)] rounded-full shadow-sm"></div>
                 </div>
-                <div>
-                  <h4 class="font-black text-gray-800 text-sm leading-none">{{ amic.nom_usuari }}</h4>
-                  <p class="text-[10px] font-bold text-[#804f7f] uppercase mt-1 tracking-wider">{{ amic.nivell || 'Explorador' }}</p>
+
+                <div class="flex-1">
+                  <h4 @click="router.push(`/perfil-visita/${amic._id}`)" class="font-black text-white text-base leading-tight cursor-pointer group-hover:text-[#f5cbdd] transition-colors">
+                    {{ amic.nom_usuari }}
+                  </h4>
+                  <span class="text-[9px] font-black text-[#bc85ab] uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full mt-1.5 inline-block border border-white/5">
+                    {{ amic.nivell || 'Explorador' }}
+                  </span>
                 </div>
               </div>
+
               <button 
-                @click="convidarPartida(amic)" 
-                class="bg-[#402749] text-white px-4 py-2 rounded-2xl text-[9px] font-black uppercase tracking-tighter hover:bg-[#5d3962] transition-all active:scale-95"
+                @click="confirmarEliminarAmic(amic)" 
+                class="ml-2 p-3 text-white/20 hover:text-red-400 hover:bg-red-500/10 rounded-2xl transition-all active:scale-90"
+                title="Eliminar amic"
               >
-                Convidar a partida
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
               </button>
+
             </div>
           </div>
-          <div v-else class="bg-white/50 p-12 rounded-[40px] text-center border-2 border-dashed border-[#bc85ab]/20">
-            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">Encara no tens amics</p>
+          
+          <div v-else class="py-20 text-center">
+            <div class="text-6xl mb-4 opacity-20">🧭</div>
+            <p class="text-white/40 text-[10px] font-black uppercase tracking-[0.3em]">No tens amics encara</p>
           </div>
         </div>
 
-        <!-- SOL·LICITUDS DENTRE D'AMICS -->
-        <div v-else class="space-y-4 animate-fade-in">
-          <div v-if="carregantPeticions" class="text-center py-12">
-            <div class="animate-spin inline-block text-2xl">🌀</div>
-          </div>
-          
-          <div v-else-if="peticionsPendents.length > 0" class="space-y-3">
-            <div 
-              v-for="req in peticionsPendents" 
-              :key="req.id_perfil" 
-              class="bg-[#f5cbdd] p-5 rounded-[30px] border-2 border-white shadow-sm flex items-center justify-between"
-            >
-              <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center font-black text-[#402749] border-2 border-[#bc85ab] shadow-sm">
-                  {{ req.nom_usuari?.charAt(0).toUpperCase() }}
+        <div v-else class="space-y-4">
+          <div v-if="peticionsPendents.length > 0" class="space-y-4">
+            <div v-for="req in peticionsPendents" :key="req.id_perfil" 
+                 class="bg-gradient-to-br from-[#f5cbdd] to-[#bc85ab] p-[1px] rounded-[32px] shadow-2xl">
+              <div class="bg-[#402749] p-5 rounded-[31px] flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-2xl bg-white/10 text-[#f5cbdd] flex items-center justify-center font-black text-xl border border-white/10">
+                    {{ req.nom_usuari?.charAt(0).toUpperCase() }}
+                  </div>
+                  <div>
+                    <p class="font-black text-white">{{ req.nom_usuari }}</p>
+                    <p class="text-[10px] font-bold text-[#f5cbdd] uppercase opacity-60">Vol ser el teu amic</p>
+                  </div>
                 </div>
-                <div>
-                  <p class="font-black text-[#402749] tracking-tight">{{ req.nom_usuari }}</p>
-                  <p class="text-[10px] font-bold text-[#804f7f] uppercase tracking-widest">Et vol afegir</p>
+                <div class="flex gap-2">
+                  <button @click="gestionarSolicitud(req, 'acceptar')" class="w-10 h-10 bg-green-500 text-white rounded-xl shadow-md flex items-center justify-center hover:scale-110 active:scale-90 transition-all">✓</button>
+                  <button @click="gestionarSolicitud(req, 'rebutjar')" class="w-10 h-10 bg-white/10 text-white/40 rounded-xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all">✕</button>
                 </div>
-              </div>
-              <div class="flex gap-2">
-                <button 
-                  @click="gestionarSolicitud(req, 'acceptar')" 
-                  class="bg-[#804f7f] text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md hover:bg-[#5d3962] transition-all active:scale-95"
-                >
-                  Acceptar
-                </button>
-                <button 
-                  @click="gestionarSolicitud(req, 'rebutjar')" 
-                  class="bg-transparent border-2 border-[#804f7f] text-[#804f7f] px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white/50 transition-all active:scale-95"
-                >
-                  Rebutjar
-                </button>
               </div>
             </div>
           </div>
-          
-          <div v-else class="text-center py-20 bg-gray-50/50 rounded-[40px] border-2 border-dashed border-gray-200">
-            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">No tens peticions pendents</p>
+          <div v-else class="py-20 text-center bg-black/10 rounded-[40px] border-2 border-dashed border-white/5">
+            <p class="text-white/30 text-[10px] font-black uppercase tracking-widest">Sense peticions pendents</p>
           </div>
         </div>
       </div>
@@ -578,6 +568,7 @@ async function carregarRanking() {
     carregantRanking.value = false;
   }
 }
+
 
 async function carregarPeticionsPendents() {
   if (!usuari.value) return;
@@ -816,6 +807,41 @@ async function enviarSolicitud(target) {
 function convidarPartida(amic) {
   showCustomAlert(`Invitació enviada a ${amic.nom_usuari} (Funcionalitat en desenvolupament amb WebSockets)`);
 }
+
+// --- FUNCIONS PER ELIMINAR AMICS (COPIA AIXÒ) ---
+
+const eliminarAmic = async (idAmic) => {
+  try {
+    const res = await fetch(`${API_URL}/api/social/amics/eliminar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        el_meu_perfil_id: usuari.value._id, 
+        id_amic_a_borrar: idAmic 
+      })
+    });
+
+    if (res.ok) {
+      // Filtrem la llista localment perquè l'amic desaparegui al moment
+      amics.value = amics.value.filter(a => a._id !== idAmic);
+      showCustomAlert("Amic eliminat correctament.");
+    } else {
+      showCustomAlert("No s'ha pogut eliminar l'amic.");
+    }
+  } catch (err) {
+    console.error("Error eliminant amic:", err);
+  }
+};
+
+const confirmarEliminarAmic = (amic) => {
+  showCustomConfirm(
+    `Segur que vols eliminar a ${amic.nom_usuari} de la teva llista d'amics?`,
+    () => eliminarAmic(amic._id),
+    "Eliminar Amic"
+  );
+};
+
+// --- FI DELS CANVIS ---
 </script>
 
 <style scoped>
