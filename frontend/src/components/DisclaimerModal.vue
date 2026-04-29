@@ -20,19 +20,19 @@
           <ul class="space-y-3">
             <li class="flex gap-2">
               <span>📍</span>
-              <span><strong>Seguretat Física:</strong> Estigues sempre atent al teu entorn. No entris en zones prohibides, perilloses o privades per fer una fotografia[cite: 96, 157].</span>
+              <span><strong>Seguretat Física:</strong> Estigues sempre atent al teu entorn. No entris en zones prohibides, perilloses o privades per fer una fotografia.</span>
             </li>
             <li class="flex gap-2">
               <span>👥</span>
-              <span><strong>Privacitat:</strong> No capturis imatges de persones desconegudes sense el seu consentiment[cite: 96].</span>
+              <span><strong>Privacitat:</strong> No capturis imatges de persones desconegudes sense el seu consentiment.</span>
             </li>
             <li class="flex gap-2">
               <span>🔞</span>
-              <span><strong>Majors d'edat:</strong> Aquesta app inclou anàlisi facial per verificar que l'usuari és major de 18 anys[cite: 107, 186].</span>
+              <span><strong>Majors d'edat:</strong> Aquesta app inclou anàlisi facial per verificar que l'usuari és major de 18 anys.</span>
             </li>
             <li class="flex gap-2">
               <span>🛡️</span>
-              <span><strong>Dades:</strong> Les coordenades GPS només s'utilitzen per validar la teva posició en el joc i no es compartiran amb tercers[cite: 139, 172].</span>
+              <span><strong>Dades:</strong> Les coordenades GPS només s'utilitzen per validar la teva posició en el joc i no es compartiran amb tercers.</span>
             </li>
           </ul>
         </div>

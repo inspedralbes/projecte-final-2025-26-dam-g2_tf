@@ -204,24 +204,30 @@
             </div>
           </div>
 
-          <!-- Botó de tancar (X) -->
-          <button
+        <button
             @click="tancarModal"
             class="absolute top-4 right-4 w-8 h-8 bg-white/20 hover:bg-white/30 text-white rounded-full flex items-center justify-center transition-all hover:rotate-90 duration-300 text-sm font-bold"
           >
             ✕
           </button>
-        </div>
-      </Transition>
-    </div>
-  </Transition>
+        </div> </Transition>
+
+      <DisclaimerModal 
+        v-if="mostrarDisclaimer" 
+        @acceptat="continuarDiferit" 
+      />
+
+    </div> </Transition>
 </template>
+
+
 
 <script setup>
 import { ref, nextTick, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import { useLoginModal } from '../composables/useLoginModal';
+import DisclaimerModal from './DisclaimerModal.vue'; 
 
 // Obtenim l'estat global del modal
 const { obert, missatgePersonalitzat, rutaIntencio, tancarModal } = useLoginModal();
@@ -236,6 +242,7 @@ const correu = ref('');
 const contrasenya = ref('');
 const error = ref('');
 const carregant = ref(false);
+const mostrarDisclaimer = ref(false); 
 
 // Verificació Facial
 const pasVerificacio = ref(false);
@@ -431,16 +438,30 @@ async function registrarFinal(esMajor, imatge) {
   }
 }
 
+function continuarDiferit() {
+  mostrarDisclaimer.value = false;
+  pasVerificacio.value = true;
+  iniciarCamera();
+}
+
 /**
  * Executa el login o registre depenent de l'estat del formulari
  */
 async function executarAccio() {
+  // 1. Control del Disclaimer
+  if (esRegistre.value && !pasVerificacio.value && !localStorage.getItem('disclaimer_acceptat')) {
+    mostrarDisclaimer.value = true;
+    return; 
+  }
+
+  // 2. Control de la Càmera (Aquesta part faltava al teu últim missatge)
+  // Si és registre i encara no estem al pas de verificació, activem la càmera
   if (esRegistre.value && !pasVerificacio.value) {
     pasVerificacio.value = true;
     await iniciarCamera();
     return;
   }
-
+  
   carregant.value = true;
   error.value = '';
 
