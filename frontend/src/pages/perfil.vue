@@ -82,12 +82,7 @@
 
 
 <div v-if="activeTab === 'cromos'" class="space-y-8 animate-fade-in">
-  <div class="text-center border-b border-[#bc85ab]/20 pb-4">
-    <h3 class="text-[#f5cbdd] text-xs font-black tracking-[0.3em] uppercase">Diari d'Exploració</h3>
-    <p class="text-[10px] text-gray-500 mt-1">
-      {{ user?.inventari_cromos?.length || 0 }} de 50 llocs descoberts
-    </p>
-  </div>
+
 
   <DiariExploracio :cromos="user?.inventari_cromos || []" />
 </div>

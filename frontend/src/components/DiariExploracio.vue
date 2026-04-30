@@ -1,10 +1,6 @@
 <template>
   <div class="album-stage">
-    <!-- Immersive Background - Cleaner ancient texture -->
-    <div class="background-environment">
-      <div class="ancient-desk"></div>
-      <div class="ambient-vignette"></div>
-    </div>
+    <!-- ELIMINADO: background-environment - causaba el espacio gris -->
 
     <!-- Main Container - Pushed up -->
     <div class="book-workspace">
@@ -23,19 +19,8 @@
       <div ref="pagesContainer">
         <!-- FRONT COVER -->
         <div class="page cover front" data-density="hard">
-          <div class="cover-skin">
-            <div class="leather-overlay"></div>
-            <div class="gold-frame"></div>
-            <div class="cover-data">
-              <div class="emblem-gold">🛡️</div>
-              <h1 class="book-title">DIARI<br>D'EXPEDICIÓ</h1>
-              <div class="book-divider"></div>
-              <p class="book-author">Cromos Descoberts</p>
-            </div>
-            <div class="metal-decoration tl"></div>
-            <div class="metal-decoration tr"></div>
-            <div class="metal-decoration bl"></div>
-            <div class="metal-decoration br"></div>
+          <div class="cover-skin" :style="{ backgroundImage: `url(${API_URL}/portada.png)` }">
+            <!-- Removed overlays to show the full portada image -->
           </div>
         </div>
 
@@ -46,56 +31,44 @@
           class="page parchment"
           data-density="soft"
         >
-          <div class="paper-grain"></div>
-          <div class="inner-shadow"></div>
+          <img 
+            :src="`${API_URL}/${idx % 2 === 0 ? 'hoja2.png' : 'hoja.png'}`" 
+            class="page-base-image"
+          />
+          <div class="inner-shadow" :class="idx % 2 === 0 ? 'shadow-left-page' : 'shadow-right-page'"></div>
           
           <div class="content-box">
             <template v-if="!cromo._blank">
-              <div class="sticker-set" :style="{ transform: `rotate(${idx % 2 === 0 ? 0.8 : -0.8}deg)` }">
-                <div class="tape-strip tape-a"></div>
-                <div class="tape-strip tape-b"></div>
-                
-                <div class="polaroid-vibe" :class="{ 'is-empty': !cromo.descobert }">
-                  <div class="img-box">
-                    <template v-if="cromo.descobert">
-                      <img :src="imatgeCromo(cromo.imatge_cromo || cromo.imatge_usuari)" class="actual-img" />
-                      <div class="dust-texture"></div>
-                    </template>
-                    <div v-else class="locked-placeholder">?</div>
-                  </div>
-                  <div class="img-caption">
-                    <p class="loc-name">{{ cromo.descobert ? (cromo.nom_lloc || 'Lloc d\'Interès') : '???' }}</p>
-                    <p v-if="cromo.descobert && cromo.data_obtencio" class="loc-date">{{ formatDate(cromo.data_obtencio) }}</p>
-                  </div>
+              <div class="cromo-container" :style="{ transform: `rotate(${idx % 2 === 0 ? 1.5 : -1.5}deg)` }">
+                <div class="photo-only" :class="{ 'is-locked': !cromo.descobert }">
+                  <template v-if="cromo.descobert">
+                    <img :src="imatgeCromo(cromo.imatge_cromo || cromo.imatge_usuari)" class="actual-img" />
+                    <div class="photo-sheen"></div>
+                  </template>
+                  <div v-else class="locked-placeholder">?</div>
+                </div>
+
+                <!-- Ubicació i Data a la part inferior -->
+                <div v-if="cromo.descobert" class="location-tag-bottom">
+                  <div class="tag-name">{{ cromo.nom_lloc }}</div>
+                  <div class="tag-date">{{ formatDate(cromo.data_obtencio) }}</div>
                 </div>
               </div>
             </template>
             <template v-else>
-              <div class="empty-field">
-                <div class="journal-lines">
-                  <div v-for="n in 12" :key="n" class="j-line"></div>
-                </div>
-              </div>
+              <!-- Blank page with just texture -->
             </template>
           </div>
-
-          <div class="page-count">{{ idx + 1 }}</div>
         </div>
 
         <!-- BACK COVER -->
         <div class="page cover back" data-density="hard">
-          <div class="cover-skin">
-            <div class="leather-overlay"></div>
-            <div class="back-emblem">🏺</div>
-          </div>
+          <div class="cover-skin"></div>
         </div>
       </div>
     </div>
 
-    <!-- Instructions -->
-    <div class="interaction-notice" v-if="!isFlipping">
-      Toca les cantonades per passar pàgina
-    </div>
+    
   </div>
 </template>
 
@@ -114,6 +87,8 @@ const currentPage = ref(0);
 const totalPages = ref(0);
 const isFlipping = ref(false);
 let pageFlipInstance = null;
+let openTimeout = null;
+let initTimeout = null;
 
 const allPages = computed(() => {
   const p = props.cromos.map(c => ({ ...c, descobert: true, _blank: false }));
@@ -140,13 +115,46 @@ function formatDate(d) {
   return new Date(d).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' });
 }
 
-function initPageFlip() {
-  if (!bookElement.value || !pagesContainer.value) return;
-
+function destroyInstance() {
+  if (openTimeout) {
+    clearTimeout(openTimeout);
+    openTimeout = null;
+  }
+  if (initTimeout) {
+    clearTimeout(initTimeout);
+    initTimeout = null;
+  }
   if (pageFlipInstance) {
-    pageFlipInstance.destroy();
+    try {
+      if (pageFlipInstance.ui || pageFlipInstance._ui) {
+        pageFlipInstance.destroy();
+      }
+    } catch (err) {
+      // Silence
+    }
     pageFlipInstance = null;
   }
+}
+
+function triggerInit(delay = 150) {
+  if (initTimeout) clearTimeout(initTimeout);
+  initTimeout = setTimeout(initPageFlip, delay);
+}
+
+async function initPageFlip() {
+  if (!bookElement.value || !pagesContainer.value) return;
+
+  // Wait for Vue to render the hidden pages from the props
+  await nextTick();
+
+  const pages = Array.from(pagesContainer.value.children);
+  if (pages.length === 0) {
+    // If no pages yet, try again in a moment
+    triggerInit(100);
+    return;
+  }
+
+  destroyInstance();
 
   bookElement.value.innerHTML = '';
 
@@ -156,14 +164,21 @@ function initPageFlip() {
   let pW, pH;
 
   if (vW < 600) {
+    // Mobile: mantener el comportamiento actual
     pW = Math.floor(vW * 0.44);
     pH = Math.floor(pW * 1.35);
   } else {
-    const targetH = vH * 0.7; // slightly smaller to allow more top space
-    pH = Math.floor(Math.min(targetH, 600));
+    // Desktop: hacer el libro más compacto
+    const maxWidth = vW * 0.6; // Máximo ancho disponible
+    const maxHeight = vH * 0.65; // Máximo alto disponible
+    
+    // Calcular basándose en el ratio
+    pH = Math.min(maxHeight, 500); // Altura máxima
     pW = Math.floor(pH / 1.35);
-    if (pW * 2 > vW * 0.85) {
-      pW = Math.floor(vW * 0.4);
+    
+    // Si es muy ancho, ajustar
+    if (pW * 2 > maxWidth) {
+      pW = Math.floor(maxWidth / 2.2); // Dejar margen
       pH = Math.floor(pW * 1.35);
     }
   }
@@ -182,7 +197,6 @@ function initPageFlip() {
       startPage: 0
     });
 
-    const pages = Array.from(pagesContainer.value.children);
     if (pages.length > 0) {
       totalPages.value = pages.length;
       pageFlipInstance.loadFromHTML(pages);
@@ -193,33 +207,41 @@ function initPageFlip() {
       pageFlipInstance.on('changeState', (e) => {
         isFlipping.value = e.data === 'flipping';
       });
+
+      // Automatic opening effect
+      openTimeout = setTimeout(() => {
+        if (pageFlipInstance && currentPage.value === 0) {
+          try {
+            pageFlipInstance.flip(1);
+          } catch (e) {
+            console.warn("Initial flip failed:", e);
+          }
+        }
+      }, 1200);
     }
   } catch (err) {
     console.warn("PageFlip reset:", err);
   }
 }
 
-let resizeTimeout = null;
 const handleResize = () => {
-  clearTimeout(resizeTimeout);
-  resizeTimeout = setTimeout(initPageFlip, 200);
+  triggerInit(250);
 };
 
 onMounted(() => {
   nextTick(() => {
-    setTimeout(initPageFlip, 150);
+    triggerInit(200);
     window.addEventListener('resize', handleResize);
   });
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize);
-  clearTimeout(resizeTimeout);
-  if (pageFlipInstance) pageFlipInstance.destroy();
+  destroyInstance();
 });
 
 watch(() => props.cromos, () => {
-  nextTick(() => setTimeout(initPageFlip, 50));
+  triggerInit(100);
 }, { deep: true });
 </script>
 
@@ -229,36 +251,14 @@ watch(() => props.cromos, () => {
 .album-stage {
   position: relative;
   width: 100%;
-  height: 100vh;
+  min-height: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start; /* Align to top */
+  justify-content: center;
   overflow: hidden;
-  background-color: #080808;
-  padding-top: 5vh; /* Push book towards top */
-}
-
-/* BACKGROUND */
-.background-environment {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-}
-
-.ancient-desk {
-  position: absolute;
-  inset: 0;
-  /* Smoother texture without harsh vertical lines */
-  background-image: url('https://www.transparenttextures.com/patterns/black-paper.png'), 
-                    linear-gradient(to bottom, #16120e, #0a0a0a);
-  opacity: 0.9;
-}
-
-.ambient-vignette {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.95) 100%);
+  background: transparent;
+  padding: 2rem 0;
 }
 
 /* WORKSPACE */
@@ -269,6 +269,7 @@ watch(() => props.cromos, () => {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .book-wrapper {
@@ -291,7 +292,7 @@ watch(() => props.cromos, () => {
 
 /* COVER */
 .cover {
-  background-color: #3d251d;
+  background-color: #03162c;
 }
 
 .cover-skin {
@@ -303,6 +304,9 @@ watch(() => props.cromos, () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .leather-overlay {
@@ -368,23 +372,35 @@ watch(() => props.cromos, () => {
 
 /* PARCHMENT */
 .parchment {
-  background-color: #f1e8d4;
-  background-image: url('https://www.transparenttextures.com/patterns/handmade-paper.png');
+  background-color: transparent;
+  box-shadow: none;
 }
 
-.paper-grain {
+.page-base-image {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.06) 100%);
-  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  z-index: 1;
 }
 
 .inner-shadow {
   position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 45px;
-  background: linear-gradient(to right, rgba(0,0,0,0.15), transparent);
+  top: 0; bottom: 0;
+  width: 40px;
   z-index: 5;
+  pointer-events: none;
+}
+
+.shadow-left-page {
+  right: 0;
+  background: linear-gradient(to left, rgba(0,0,0,0.2), transparent);
+}
+
+.shadow-right-page {
+  left: 0;
+  background: linear-gradient(to right, rgba(0,0,0,0.2), transparent);
 }
 
 .content-box {
@@ -395,44 +411,39 @@ watch(() => props.cromos, () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8%;
+  padding: 12%;
 }
 
-.sticker-set {
+.cromo-container {
   position: relative;
-}
-
-.tape-strip {
-  position: absolute;
-  width: 50px;
-  height: 14px;
-  background-color: rgba(210, 180, 140, 0.3);
-  backdrop-filter: blur(1px);
-  z-index: 20;
-}
-.tape-a { top: -5px; left: -15px; transform: rotate(-25deg); }
-.tape-b { top: -5px; right: -15px; transform: rotate(25deg); }
-
-.polaroid-vibe {
-  background: #fff;
-  padding: 8px 8px 30px 8px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-  width: clamp(140px, 35vw, 220px);
-}
-
-.img-box {
   width: 100%;
-  aspect-ratio: 1;
-  background: #202020;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.photo-only {
   position: relative;
-  overflow: hidden;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
 }
 
 .actual-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  filter: sepia(0.2) contrast(1.1) brightness(0.95);
+  object-fit: contain;
+  filter: sepia(0.2) contrast(1.1);
+  display: block;
+}
+
+.photo-sheen {
+  display: none; /* Removed to keep photo pure as requested */
 }
 
 .dust-texture {
@@ -443,14 +454,15 @@ watch(() => props.cromos, () => {
 }
 
 .locked-placeholder {
-  width: 100%;
-  height: 100%;
+  width: 120px;
+  height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 45px;
-  color: #333;
+  font-size: 60px;
+  color: rgba(139, 69, 19, 0.15);
   font-family: 'Uncial Antiqua', cursive;
+  border: 1px dashed rgba(139, 69, 19, 0.2);
 }
 
 .img-caption {
@@ -463,6 +475,28 @@ watch(() => props.cromos, () => {
   font-size: clamp(14px, 3.5vw, 20px);
   margin: 0;
   color: #2a2118;
+}
+
+.location-tag-bottom {
+  font-family: 'EB Garamond', serif;
+  color: #2a2118;
+  text-align: center;
+  width: 100%;
+  margin-top: 6px;
+  line-height: 1.2;
+}
+
+.tag-name {
+  font-size: clamp(10px, 3vw, 13px);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.tag-date {
+  font-size: clamp(9px, 2.8vw, 11px);
+  opacity: 0.6;
+  font-style: italic;
+  margin-top: 1px;
 }
 
 .loc-date {
@@ -518,7 +552,7 @@ watch(() => props.cromos, () => {
 }
 
 @media (max-width: 600px) {
-  .album-stage { padding-top: 2vh; }
+  .album-stage { padding: 1rem 0; }
   .polaroid-vibe { padding-bottom: 25px; }
   .book-title { font-size: 18px; }
 }

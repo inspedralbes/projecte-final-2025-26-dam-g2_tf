@@ -1,5 +1,5 @@
 <template>
-  <div v-if="visible" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#402749]/80 backdrop-blur-sm">
+  <div v-if="visible" class="fixed inset-0 z-[20000] flex items-center justify-center p-4 bg-[#402749]/80 backdrop-blur-sm">
     
     <div class="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-[#d9a6c2] animate-in fade-in zoom-in duration-300">
       <div class="p-8 space-y-6">
@@ -53,6 +53,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 
+const emit = defineEmits(['acceptat']);
+
 // Estat per controlar la visibilitat del modal
 const visible = ref(true);
 
@@ -62,6 +64,7 @@ const visible = ref(true);
 const acceptar = () => {
   localStorage.setItem('disclaimer_acceptat', 'true');
   visible.value = false;
+  emit('acceptat');
 };
 
 /**
@@ -71,7 +74,10 @@ onMounted(() => {
   const acceptat = localStorage.getItem('disclaimer_acceptat');
   
   // Si no existeix la clau al navegador, mostrem el modal obligatori
-  if (!acceptat) {
+  if (acceptat) {
+    visible.value = false;
+    emit('acceptat');
+  } else {
     visible.value = true;
   }
 });

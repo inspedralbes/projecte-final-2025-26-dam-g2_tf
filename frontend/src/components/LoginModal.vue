@@ -221,7 +221,7 @@
 
 
 <script setup>
-import { ref, nextTick, onUnmounted, onMounted } from 'vue';
+import { ref, nextTick, onUnmounted, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import { useLoginModal } from '../composables/useLoginModal';
@@ -233,6 +233,13 @@ const { obert, missatgePersonalitzat, rutaIntencio, tancarModal } = useLoginModa
 
 const router = useRouter();
 const { login } = useAuth();
+
+// Lògica del Disclaimer a l'obrir
+watch(obert, (isObert) => {
+  if (isObert && !localStorage.getItem('disclaimer_acceptat')) {
+    mostrarDisclaimer.value = true;
+  }
+});
 
 // Estat del formulari
 const esRegistre = ref(false);
@@ -326,10 +333,6 @@ async function registrarFinal(esMajor, imatge) {
 
 function continuarDiferit() {
   mostrarDisclaimer.value = false;
-  pasVerificacio.value = true;
-  iniciarCamera().catch(err => {
-    error.value = err.message;
-  });
 }
 
 /**
@@ -337,7 +340,7 @@ function continuarDiferit() {
  */
 async function executarAccio() {
   // 1. Control del Disclaimer
-  if (esRegistre.value && !pasVerificacio.value && !localStorage.getItem('disclaimer_acceptat')) {
+  if (!localStorage.getItem('disclaimer_acceptat')) {
     mostrarDisclaimer.value = true;
     return; 
   }

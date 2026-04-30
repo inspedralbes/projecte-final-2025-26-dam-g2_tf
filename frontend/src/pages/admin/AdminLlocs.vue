@@ -104,7 +104,7 @@ const resetForm = () => ({
   imatge_referencia: '', foto_mapa: '', tags: [], punts_missio: [],
   control_horari: { actiu: false, hora_inici: 22, hora_fi: 7 },
   lat: 41.3879, lng: 2.1699, adreca_inici: '',
-  cromo_imatge: ''
+  cromo_imatge: '', fotos_historiques: []
 });
 
 const form = ref(resetForm());
