@@ -62,7 +62,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue';
+import { ref, onMounted, nextTick, watch, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import { useLoginModal } from '../composables/useLoginModal';
@@ -105,6 +105,17 @@ onMounted(() => {
     form.value.id_usuari = usuari.value._id;
   }
   nextTick(() => { initMap(); });
+});
+
+onUnmounted(() => {
+  if (map) {
+    try {
+      map.remove();
+    } catch (e) {
+      console.warn("Error removing peticions map:", e);
+    }
+    map = null;
+  }
 });
 
 watch(usuari, (nou) => {

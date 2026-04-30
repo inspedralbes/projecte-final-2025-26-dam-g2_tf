@@ -55,13 +55,17 @@ onMounted(async () => {
       const { latitude, longitude } = pos.coords;
       laMevaPosicio.value = [latitude, longitude];
       
-      if (mapa) {
-        mapa.setView([latitude, longitude], 15);
-        L.circleMarker([latitude, longitude], { 
-          color: '#3b82f6', 
-          radius: 10,
-          fillOpacity: 0.8 
-        }).addTo(mapa).bindPopup("<b>Ets aquí</b>");
+      if (mapa && typeof mapa.remove === 'function') {
+        try {
+          mapa.setView([latitude, longitude], 15);
+          L.circleMarker([latitude, longitude], { 
+            color: '#3b82f6', 
+            radius: 10,
+            fillOpacity: 0.8 
+          }).addTo(mapa).bindPopup("<b>Ets aquí</b>");
+        } catch (e) {
+          console.warn("Leaflet error in geolocation callback (safe to ignore):", e);
+        }
       }
       cargando.value = false; 
     },
@@ -74,7 +78,14 @@ onMounted(async () => {
 
 onUnmounted(() => {
   delete window.anarADetall;
-  if (mapa) mapa.remove(); 
+  if (mapa) {
+    try {
+      mapa.remove();
+    } catch (e) {
+      console.warn("Error removing map:", e);
+    }
+    mapa = null;
+  }
 });
 
 async function iniciarMapa(lat, lng) {

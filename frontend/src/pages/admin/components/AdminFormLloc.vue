@@ -298,7 +298,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch, computed } from 'vue';
+import { ref, onMounted, nextTick, watch, computed, onUnmounted } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -478,6 +478,17 @@ async function carregarPersonatges() {
     console.error('Error carregant personatges:', err);
   }
 }
+
+onUnmounted(function() {
+  if (map) {
+    try {
+      map.remove();
+    } catch (e) {
+      console.warn("Error removing admin map:", e);
+    }
+    map = null;
+  }
+});
 
 onMounted(function() {
   initMapa();
