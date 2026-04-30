@@ -87,6 +87,8 @@ const currentPage = ref(0);
 const totalPages = ref(0);
 const isFlipping = ref(false);
 let pageFlipInstance = null;
+let openTimeout = null;
+let initTimeout = null;
 
 const allPages = computed(() => {
   const p = props.cromos.map(c => ({ ...c, descobert: true, _blank: false }));
@@ -113,13 +115,46 @@ function formatDate(d) {
   return new Date(d).toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' });
 }
 
-function initPageFlip() {
-  if (!bookElement.value || !pagesContainer.value) return;
-
+function destroyInstance() {
+  if (openTimeout) {
+    clearTimeout(openTimeout);
+    openTimeout = null;
+  }
+  if (initTimeout) {
+    clearTimeout(initTimeout);
+    initTimeout = null;
+  }
   if (pageFlipInstance) {
-    pageFlipInstance.destroy();
+    try {
+      if (pageFlipInstance.ui || pageFlipInstance._ui) {
+        pageFlipInstance.destroy();
+      }
+    } catch (err) {
+      // Silence
+    }
     pageFlipInstance = null;
   }
+}
+
+function triggerInit(delay = 150) {
+  if (initTimeout) clearTimeout(initTimeout);
+  initTimeout = setTimeout(initPageFlip, delay);
+}
+
+async function initPageFlip() {
+  if (!bookElement.value || !pagesContainer.value) return;
+
+  // Wait for Vue to render the hidden pages from the props
+  await nextTick();
+
+  const pages = Array.from(pagesContainer.value.children);
+  if (pages.length === 0) {
+    // If no pages yet, try again in a moment
+    triggerInit(100);
+    return;
+  }
+
+  destroyInstance();
 
   bookElement.value.innerHTML = '';
 
@@ -162,7 +197,6 @@ function initPageFlip() {
       startPage: 0
     });
 
-    const pages = Array.from(pagesContainer.value.children);
     if (pages.length > 0) {
       totalPages.value = pages.length;
       pageFlipInstance.loadFromHTML(pages);
@@ -175,9 +209,13 @@ function initPageFlip() {
       });
 
       // Automatic opening effect
-      setTimeout(() => {
+      openTimeout = setTimeout(() => {
         if (pageFlipInstance && currentPage.value === 0) {
-          pageFlipInstance.flip(1);
+          try {
+            pageFlipInstance.flip(1);
+          } catch (e) {
+            console.warn("Initial flip failed:", e);
+          }
         }
       }, 1200);
     }
@@ -186,27 +224,24 @@ function initPageFlip() {
   }
 }
 
-let resizeTimeout = null;
 const handleResize = () => {
-  clearTimeout(resizeTimeout);
-  resizeTimeout = setTimeout(initPageFlip, 200);
+  triggerInit(250);
 };
 
 onMounted(() => {
   nextTick(() => {
-    setTimeout(initPageFlip, 150);
+    triggerInit(200);
     window.addEventListener('resize', handleResize);
   });
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize);
-  clearTimeout(resizeTimeout);
-  if (pageFlipInstance) pageFlipInstance.destroy();
+  destroyInstance();
 });
 
 watch(() => props.cromos, () => {
-  nextTick(() => setTimeout(initPageFlip, 50));
+  triggerInit(100);
 }, { deep: true });
 </script>
 
