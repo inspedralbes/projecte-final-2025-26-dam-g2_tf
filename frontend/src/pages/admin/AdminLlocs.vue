@@ -78,9 +78,11 @@ import { ref, onMounted, computed } from 'vue';
 import AdminNav from './components/AdminNav.vue';
 import AdminFormLloc from './components/AdminFormLloc.vue';
 import ConfirmModal from './components/ConfirmModal.vue';
+import { useCustomModal } from '../../composables/useCustomModal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 const PATH = `${API_URL}/api/mapa/punts`;
+const { mostrarModal } = useCustomModal();
 
 const llista = ref([]);
 const mostrarForm = ref(false);
@@ -158,7 +160,7 @@ const guardarLloc = async (datos) => {
       cargarDatos();
     }
   } catch (error) {
-    alert("Error al guardar");
+    await mostrarModal({ isAlert: true, message: "Error al guardar" });
   }
 };
 
@@ -184,7 +186,7 @@ const confirmarEliminar = async () => {
     pasConfirmacio.value = 1;
     cargarDatos();
   } catch (error) {
-    alert("Error al eliminar");
+    await mostrarModal({ isAlert: true, message: "Error al eliminar" });
   }
 };
 

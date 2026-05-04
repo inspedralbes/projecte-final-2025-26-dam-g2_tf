@@ -8,6 +8,17 @@
 
     <LoginModal />
     
+    <ModalPersonalitzat 
+      :show="modalVisible"
+      :is-alert="modalProps.isAlert"
+      :icon="modalProps.icon"
+      :title="modalProps.title"
+      :message="modalProps.message"
+      :confirm-text="modalProps.confirmText"
+      :cancel-text="modalProps.cancelText"
+      @confirm="handleModalConfirm"
+      @cancel="handleModalCancel"
+    />
   </div>
 </template>
 
@@ -16,8 +27,11 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import NavBar from './components/navBar.vue';
 import LoginModal from './components/LoginModal.vue';
+import ModalPersonalitzat from './components/ModalPersonalitzat.vue';
+import { useCustomModal } from './composables/useCustomModal';
 
 const route = useRoute();
+const { modalVisible, modalProps, handleModalConfirm, handleModalCancel } = useCustomModal();
 
 const mostrarNavBar = computed(() => {
   if (!route.path) return false;

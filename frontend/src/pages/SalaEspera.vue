@@ -113,10 +113,12 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { io } from 'socket.io-client';
+import { useCustomModal } from '../composables/useCustomModal';
 
 const route = useRoute();
 const router = useRouter();
 const socket = ref(null);
+const { mostrarModal } = useCustomModal();
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
@@ -145,7 +147,7 @@ const durationOptions = [
     { label: '90 min', value: 90, desc: 'Fàcil' }
 ];
 
-function compartirInvitacio() {
+async function compartirInvitacio() {
     const url = `${window.location.origin}/join/${roomCode.value}`;
     if (navigator.share) {
         navigator.share({
@@ -156,7 +158,7 @@ function compartirInvitacio() {
     } else {
         // Fallback: copiar al porta-retalls
         navigator.clipboard.writeText(url);
-        alert("Enllaç copiat al porta-retalls!");
+        await mostrarModal({ isAlert: true, icon: 'success', title: 'Enllaç copiat', message: 'Enllaç copiat al porta-retalls!' });
     }
 }
 
@@ -232,9 +234,9 @@ function generarGrups() {
     return groups;
 }
 
-function confirmarModeIComencar() {
+async function confirmarModeIComencar() {
     if (!selectedDuration.value) {
-        alert("Si us plau, selecciona una durada per a la partida.");
+        await mostrarModal({ isAlert: true, message: 'Si us plau, selecciona una durada per a la partida.' });
         return;
     }
     if (socket.value && roomCode.value) {

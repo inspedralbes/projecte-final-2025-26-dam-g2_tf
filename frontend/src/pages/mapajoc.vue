@@ -161,9 +161,14 @@
 <script>
 import { io } from 'socket.io-client';
 import PantallaDerrota from './PantallaDerrota.vue';
+import { useCustomModal } from '../composables/useCustomModal';
 
 export default {
   components: { PantallaDerrota },
+  setup() {
+    const { mostrarModal } = useCustomModal();
+    return { mostrarModal };
+  },
   data() {
     return {
       idLloc: this.$route.params.id, 
@@ -509,7 +514,12 @@ export default {
     async demanarPista() {
       if (!this.sessioId || this.pistes_gastades >= 3 || !this.puntSeleccionat || this.demanantPista) return;
       
-      const confirmacio = confirm("Vols gastar una de les teves 3 pistes per aquest punt?");
+      const confirmacio = await this.mostrarModal({
+        isAlert: false,
+        title: 'Confirmació',
+        message: "Vols gastar una de les teves 3 pistes per aquest punt?",
+        confirmText: 'Demanar'
+      });
       if (!confirmacio) return;
 
       this.demanantPista = true;
@@ -533,11 +543,11 @@ export default {
             this.iniciarTemporitzador(dades.nou_temps_limit);
           }
         } else {
-          alert(dades.missatge || "Error al demanar la pista");
+          await this.mostrarModal({ isAlert: true, message: dades.missatge || "Error al demanar la pista" });
         }
       } catch (err) {
         console.error("Error demanant pista:", err);
-        alert("Error de connexió amb el servidor");
+        await this.mostrarModal({ isAlert: true, message: "Error de connexió amb el servidor" });
       } finally {
         this.demanantPista = false;
       }
