@@ -139,6 +139,7 @@ const selectedMode = ref('Individual');
 const selectedDuration = ref(null);
 
 const durationOptions = [
+    { label: '30 seg', value: 0.5, desc: 'PROVA' },
     { label: '45 min', value: 45, desc: 'Difícil' },
     { label: '1 hora', value: 60, desc: 'Normal' },
     { label: '90 min', value: 90, desc: 'Fàcil' }

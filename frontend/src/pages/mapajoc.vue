@@ -99,30 +99,12 @@
       </div>
     </Transition>
 
-    <!--MODAL GAME OVER (un altre jugador ha guanyat o temps esgotat) -->
-    <!-- FASE 1: CARTA GRAN DEL POLICIA -->
-    <Transition name="fade">
-      <div
-        v-if="faseDerrota === 1"
-        class="min-h-screen bg-[#402749] flex flex-col items-center justify-center p-8 overflow-y-auto overflow-x-hidden"
-        style="position: fixed; inset: 0; z-index: 300;"
-      >
-        <div class="relative z-10 w-full max-w-sm flex flex-col items-center justify-center min-h-full py-12">
-          <div 
-            class="perspective-1000 w-full max-w-[350px] aspect-[2/3] min-h-[525px] mb-10 shadow-none cursor-pointer"
-            @click="girarCartaDefeat"
-          >
-            <div class="w-full h-full flex items-center justify-center overflow-hidden bg-[#402749] shadow-none">
-              <img 
-                :src="baseApi + '/personatges/El%20policia.jpg'"  
-                alt="Carta El Policia" 
-                class="w-full h-full object-contain shadow-none scale-105" 
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </Transition>
+    <!-- DERROTA: Pantalla calabozo (component separat) -->
+    <PantallaDerrota
+      :visible="faseDerrota === 1"
+      :base-api="baseApi"
+      @tornar-inici="anarAHome"
+    />
 
     <!--MODAL GAME OVER (un altre jugador ha guanyat o temps esgotat) -->
     <Transition name="fade">
@@ -178,8 +160,10 @@
 
 <script>
 import { io } from 'socket.io-client';
+import PantallaDerrota from './PantallaDerrota.vue';
 
 export default {
+  components: { PantallaDerrota },
   data() {
     return {
       idLloc: this.$route.params.id, 
