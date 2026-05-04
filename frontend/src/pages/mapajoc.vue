@@ -288,7 +288,9 @@ export default {
         const respSessio = await fetch(this.baseApi + '/api/sessionsJoc/' + this.idLloc);
         if (respSessio.ok) {
           sessio = await respSessio.json();
-          idRealMonument = sessio.id_lloc_desti;
+          // id_lloc_desti pot ser un objecte populat { _id, carta_lore, nom } o un string ID simple
+          const desti = sessio.id_lloc_desti;
+          idRealMonument = (desti && typeof desti === 'object') ? desti._id : desti;
         }
       } catch (e) {
         console.warn("No s'ha pogut verificar la sessió, intentant carregar com a lloc directament.");

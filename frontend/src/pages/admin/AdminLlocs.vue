@@ -106,7 +106,7 @@ const resetForm = () => ({
   imatge_referencia: '', foto_mapa: '', tags: [], punts_missio: [],
   control_horari: { actiu: false, hora_inici: 22, hora_fi: 7 },
   lat: 41.3879, lng: 2.1699, adreca_inici: '',
-  cromo_imatge: '', fotos_historiques: []
+  cromo_imatge: '', fotos_historiques: [], carta_lore: ''
 });
 
 const form = ref(resetForm());
@@ -137,7 +137,8 @@ const prepararEdicion = (item) => {
     lng: item.ubicacio?.coordinates[0] || 2.1699,
     adreca_inici: item.adreca_inici || '',
     control_horari: item.control_horari || { actiu: false, hora_inici: 22, hora_fi: 7 },
-    cromo_imatge: item.cromo_imatge || ''
+    cromo_imatge: item.cromo_imatge || '',
+    carta_lore: item.carta_lore || ''
   };
   mostrarForm.value = true;
 };

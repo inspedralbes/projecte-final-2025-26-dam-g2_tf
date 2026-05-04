@@ -75,6 +75,21 @@
             <input v-model="form.cromo_imatge" placeholder="URL Cromo (ex: /Cromos/SagradaFamilia_historica.jpg)" class="w-full border-2 border-gray-50 p-3 rounded-2xl bg-gray-50 text-xs shadow-sm">
           </div>
 
+          <!-- SECCIÓ LORE -->
+          <div class="bg-amber-50 border-2 border-amber-100 rounded-2xl p-4 mt-2">
+            <h3 class="text-[11px] font-black text-amber-600 uppercase tracking-widest mb-3">📜 Carta de Lore</h3>
+            <p class="text-[10px] text-amber-500 mb-3">Escull la carta que apareixerà a l'sobre quan els jugadors comencin la partida en aquesta ruta.</p>
+            <select v-model="form.carta_lore" class="w-full border-2 border-amber-100 p-2.5 rounded-xl text-sm outline-none bg-white">
+              <option value="">-- Sense carta de lore --</option>
+              <option v-for="carta in cartesLoreDisponibles" :key="carta.path" :value="carta.path">
+                {{ carta.nom }}
+              </option>
+            </select>
+            <div v-if="form.carta_lore" class="mt-3 rounded-xl overflow-hidden border-2 border-amber-200 shadow-sm">
+              <img :src="baseApi + form.carta_lore" class="w-full max-h-48 object-contain bg-amber-50" alt="Previsualització carta de lore" />
+            </div>
+          </div>
+
           <div id="mapaInput" class="h-64 rounded-3xl border-4 border-gray-50 overflow-hidden shadow-inner relative z-10"></div>
 
           <div class="flex flex-col items-center gap-2">
@@ -319,6 +334,7 @@ const puntPendent = ref(null);
 const fotosDisponibles = ref([]);
 const fotosHistoriquesDisponibles = ref([]);
 const personatgesDisponibles = ref([]);
+const cartesLoreDisponibles = ref([]);
 const puntPendentEsPersonatge = ref(false);
 
 const props = defineProps({
@@ -479,6 +495,17 @@ async function carregarPersonatges() {
   }
 }
 
+async function carregarCartesLore() {
+  try {
+    var resposta = await fetch(baseApi + '/api/carta-lore/totes');
+    if (!resposta.ok) return;
+    var dades = await resposta.json();
+    cartesLoreDisponibles.value = dades.cartes || [];
+  } catch (err) {
+    console.error('Error carregant cartes de lore:', err);
+  }
+}
+
 onUnmounted(function() {
   if (map) {
     try {
@@ -495,5 +522,6 @@ onMounted(function() {
   carregarFotos();
   carregarFotosHistoriques();
   carregarPersonatges();
+  carregarCartesLore();
 });
 </script>

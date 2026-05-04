@@ -327,7 +327,7 @@ onMounted(() => {
     console.log("[SalaEspera] Joc començat redactat:", dades);
     // Tots els jugadors marxen cap a la carta de personatge abans d'anar al mapa
     if (dades.sessioId) {
-      router.push('/carta-personatge/' + dades.sessioId);
+      router.push('/sobre-lore/' + dades.sessioId);
     } else {
       console.error("[SalaEspera] No s'ha rebut sessioId!", dades);
       if (dades.idLloc) {
