@@ -17,6 +17,7 @@ import elmeulogin from '../components/elmeulogin.vue';
 import LeaderboardFinal from '../pages/LeaderboardFinal.vue'
 import camara from '../pages/camara.vue'
 import CartaPersonatge from '../pages/CartaPersonatge.vue'
+import SobreLore from '../pages/SobreLore.vue'
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/AdminDashboard.vue'
@@ -149,6 +150,11 @@ const routes = [
     path: '/carta-personatge/:sessioId',
     name: 'carta-personatge',
     component: CartaPersonatge
+  },
+  {
+    path: '/sobre-lore/:sessioId',
+    name: 'sobre-lore',
+    component: SobreLore
   },
   {
     path: '/join/:id',
