@@ -169,9 +169,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import AdminNav from './components/AdminNav.vue';
+import { useCustomModal } from '../../composables/useCustomModal';
 
 // URL del backend: usa la variable d'entorn si existeix, si no usa localhost per desenvolupament
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const { mostrarModal } = useCustomModal();
 
 const personatges = ref([]);
 const estaCarregant = ref(false);
@@ -307,13 +309,14 @@ function editarPersonatge(p) {
 
 // Elimina un personatge
 async function eliminarPersonatge(p) {
-  if (!confirm('Segur que vols eliminar "' + p.nom + '"?')) return;
+  const isConfirmed = await mostrarModal({ isAlert: false, title: 'Confirmació', message: 'Segur que vols eliminar "' + p.nom + '"?' });
+  if (!isConfirmed) return;
   try {
     var res = await fetch(API_URL + '/api/personatges/' + p._id, { method: 'DELETE' });
     if (res.ok) {
       await carregarPersonatges();
     } else {
-      alert('Error en eliminar el personatge.');
+      await mostrarModal({ isAlert: true, message: 'Error en eliminar el personatge.' });
     }
   } catch (err) {
     console.error('[AdminPersonatges] Error en eliminar:', err);

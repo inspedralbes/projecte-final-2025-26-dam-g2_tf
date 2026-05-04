@@ -72,9 +72,11 @@
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
+import { useCustomModal as useAlertModal } from '../composables/useCustomModal'
 
 const router = useRouter()
 const route = useRoute()
+const { mostrarModal: showCustomModal } = useAlertModal()
 
 // Variables reactives per guardar l'estat
 const codigoSala = ref('')
@@ -114,7 +116,7 @@ async function irAlJuego() {
     });
 
     if (!perfilId) {
-        alert("Sessió caducada. Torna a fer login.");
+        await showCustomModal({ isAlert: true, message: "Sessió caducada. Torna a fer login." });
         return router.push('/login');
     }
 
@@ -143,7 +145,7 @@ async function irAlJuego() {
 
   } catch (error) {
     console.error("Error a la petició:", error);
-    alert("Error de xarxa o de codi: " + error.message);
+    await showCustomModal({ isAlert: true, message: "Error de xarxa o de codi: " + error.message });
   }
 }
 </script>

@@ -3,10 +3,12 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router'; 
 import { useAuth } from '../composables/useAuth';
 import { io } from 'socket.io-client';
+import { useCustomModal } from '../composables/useCustomModal';
 
 const route = useRoute();
 const router = useRouter(); 
 const { usuari } = useAuth();
+const { mostrarModal: showCustomModal } = useCustomModal();
 const idLloc = route.params.id;
 const idPuntParam = route.query.idPunt || null;
 
@@ -116,7 +118,7 @@ onMounted(async () => {
       videoRef.value.srcObject = stream;
     }
   } catch (error) {
-    alert("No s'ha pogut accedir a la càmera: " + error.message);
+    await showCustomModal({ isAlert: true, message: "No s'ha pogut accedir a la càmera: " + error.message });
   }
 
   // Connectem el socket i escoltem l'event 'game-over'
@@ -251,10 +253,10 @@ async function enviarDadesAlBackend(imatgeEnText) {
   console.log("DADES QUE ESTEM A PUNT D'ENVIAR:", { idLloc, perfilId, codi_sala, idPunt });
 
   // Validació prèvia al frontend
-  if (!imatgeEnText) return alert("Error: No s'ha capturat la imatge.");
-  if (!idLloc) return alert("Error: Falta l'ID del Lloc a la URL.");
-  if (!perfilId) return alert("Error: No s'ha trobat el perfil de l'usuari (estàs loguejat?).");
-  if (!codi_sala) return alert("Error: No s'ha trobat el codi de la sala a la URL.");
+  if (!imatgeEnText) { await showCustomModal({ isAlert: true, message: "Error: No s'ha capturat la imatge." }); return; }
+  if (!idLloc) { await showCustomModal({ isAlert: true, message: "Error: Falta l'ID del Lloc a la URL." }); return; }
+  if (!perfilId) { await showCustomModal({ isAlert: true, message: "Error: No s'ha trobat el perfil de l'usuari (estàs loguejat?)." }); return; }
+  if (!codi_sala) { await showCustomModal({ isAlert: true, message: "Error: No s'ha trobat el codi de la sala a la URL." }); return; }
 
   carregant.value = true;
   try {
@@ -295,11 +297,11 @@ async function enviarDadesAlBackend(imatgeEnText) {
         setTimeout(() => { cardGirada.value = true; }, 600);
       }
     } else {
-      alert(' ' + (dades.missatge || 'Error en validar'));
+      await showCustomModal({ isAlert: true, message: ' ' + (dades.missatge || 'Error en validar') });
     }
   } catch (error) {
     console.error("ERROR REAL:", error); 
-    alert('Error de connexió amb el servidor.');
+    await showCustomModal({ isAlert: true, message: 'Error de connexió amb el servidor.' });
   } finally {
     carregant.value = false;
   }

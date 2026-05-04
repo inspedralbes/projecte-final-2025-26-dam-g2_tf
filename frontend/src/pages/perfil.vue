@@ -125,6 +125,13 @@
     </button>
 
     </main>
+
+    <ModalPersonalitzat 
+      :show="modalVisible"
+      v-bind="modalProps"
+      @confirm="handleModalConfirm"
+      @cancel="handleModalCancel"
+    />
   </div>
 </template>
 
@@ -133,6 +140,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import DiariExploracio from '../components/DiariExploracio.vue';
+import ModalPersonalitzat from '../components/ModalPersonalitzat.vue';
 
 const router = useRouter();
 const { usuari: authUsuari, logout } = useAuth();
@@ -140,6 +148,35 @@ const { usuari: authUsuari, logout } = useAuth();
 const user = ref(null);
 const editantBio = ref(false);
 const tempBio = ref('');
+
+const modalVisible = ref(false);
+const modalProps = ref({
+  isAlert: false,
+  icon: 'warning',
+  title: '',
+  message: '',
+  confirmText: 'D\'ACORD',
+  cancelText: 'CANCEL·LAR'
+});
+let modalResolve = null;
+
+const mostrarModal = (options) => {
+  return new Promise((resolve) => {
+    modalProps.value = { ...modalProps.value, ...options };
+    modalVisible.value = true;
+    modalResolve = resolve;
+  });
+};
+
+const handleModalConfirm = () => {
+  modalVisible.value = false;
+  if (modalResolve) modalResolve(true);
+};
+
+const handleModalCancel = () => {
+  modalVisible.value = false;
+  if (modalResolve) modalResolve(false);
+};
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
@@ -209,13 +246,25 @@ async function guardarBio() {
       editantBio.value = false;
     }
   } catch (err) {
-    alert("No s'ha pogut guardar la biografia");
+    await mostrarModal({
+      isAlert: true,
+      icon: 'warning',
+      title: 'Error',
+      message: "No s'ha pogut guardar la biografia"
+    });
   }
 }
 
 // 3. ELIMINAR POST
 async function eliminarPost(postId) {
-  if (!confirm('Eliminar post?')) return;
+  const isConfirmed = await mostrarModal({
+    isAlert: false,
+    icon: 'trash',
+    title: 'Eliminar Post?',
+    message: 'Estàs segur que vols eliminar aquesta publicació? Aquesta acció no es pot desfer.',
+    confirmText: 'ELIMINAR'
+  });
+  if (!isConfirmed) return;
   try {
     await fetch(`${API_URL}/api/social/posts/${postId}`, { method: 'DELETE' });
     carregarMisPosts();
@@ -239,7 +288,12 @@ async function acceptarAmic(solicitud) {
       const actualitzat = await res.json();
       user.value = actualitzat.user;
       localStorage.setItem('usuari', JSON.stringify(user.value));
-      alert("Ara sou amics!");
+      await mostrarModal({
+        isAlert: true,
+        icon: 'success',
+        title: 'Fantàstic!',
+        message: "Ara sou amics!"
+      });
     } else {
       const errorData = await res.json();
       console.error("Error del servidor:", errorData.message);
