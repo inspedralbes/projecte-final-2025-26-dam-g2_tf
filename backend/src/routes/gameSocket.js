@@ -219,7 +219,12 @@ function configureSocket(server) {
                     const jugadorDB = jugadorsDB[idx];
 
                     if (playerInfo && playerInfo.id && assignat) {
-                        // Enviem el camí relatiu, el frontend ja farà servir netejarUrl() per afegir el prefix correcte
+                        // En mode grup/grups, només enviem la carta als capitanys
+                        const esCapita = jugadorDB ? jugadorDB.capita : true;
+                        if (mode.toLowerCase() !== 'individual' && !esCapita) {
+                            continue; // No enviem carta als acompanyants
+                        }
+
                         const imatgeUrl = assignat.imatge || '';
 
                         io.to(playerInfo.id).emit('carta-personatge', {
@@ -253,6 +258,7 @@ function configureSocket(server) {
                 io.to(roomCode).emit('game-started', {
                     sessioId: novaSessio._id,
                     mode: mode,
+                    groups: groupsConfig,
                     tempsLimit: tempsLimit
                 });
 

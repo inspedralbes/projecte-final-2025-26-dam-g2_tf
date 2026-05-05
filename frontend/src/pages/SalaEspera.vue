@@ -175,25 +175,30 @@ function obrirGoogleMaps() {
 
 function generarGrups() {
     let list = [...players.value];
-    // Shuffle the list for random captains and random teams
+    
+    // Si és mode 'Individual', no cal fer res amb grups
+    if (selectedMode.value === 'Individual') return [];
+
+    // Si és mode 'Grup' (un sol mòbil), el creador ha de ser el capità
+    if (selectedMode.value === 'Grup') {
+        const creator = list.find(p => p.id === socket.value.id) || list[0];
+        return [{
+            grup_id: 1,
+            capita_id: creator.perfilId,
+            capita_nom: creator.nom,
+            members: list.map(p => p.perfilId),
+            members_nom: list.map(p => p.nom)
+        }];
+    }
+
+    // Per al mode 'Grups' (minigrups), barregem per fer equips aleatoris
     for (let i = list.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [list[i], list[j]] = [list[j], list[i]];
     }
 
     let groups = [];
-    if (selectedMode.value === 'Individual') {
-        return [];
-    } else if (selectedMode.value === 'Grup') {
-        if (list.length === 0) return [];
-        groups.push({
-            grup_id: 1,
-            capita_id: list[0].perfilId,
-            capita_nom: list[0].nom,
-            members: list.map(p => p.perfilId),
-            members_nom: list.map(p => p.nom)
-        });
-    } else if (selectedMode.value === 'Grups') {
+    if (selectedMode.value === 'Grups') {
         const n = list.length;
         if (n <= 3) {
             groups.push({
@@ -237,6 +242,11 @@ function generarGrups() {
 async function confirmarModeIComencar() {
     if (!selectedDuration.value) {
         await mostrarModal({ isAlert: true, message: 'Si us plau, selecciona una durada per a la partida.' });
+        return;
+    }
+    // Validació de límit de jugadors per al mode grup (màxim 5)
+    if (selectedMode.value === 'Grup' && players.value.length > 5) {
+        await mostrarModal({ isAlert: true, message: 'El mode grup (un sol mòbil) només permet un màxim de 5 jugadors.' });
         return;
     }
     if (socket.value && roomCode.value) {
@@ -325,15 +335,32 @@ onMounted(() => {
   });
 
   socket.value.on('game-started', function(dades) {
-    console.log("[SalaEspera] Joc començat redactat:", dades);
-    // Tots els jugadors marxen cap a la carta de personatge abans d'anar al mapa
-    if (dades.sessioId) {
-      router.push('/sobre-lore/' + dades.sessioId);
+    console.log("[SalaEspera] Joc començat:", dades);
+    if (!dades.sessioId) return;
+
+    // Lògica de navegació segons el mode
+    const mode = dades.mode || 'individual';
+    
+    if (mode.toLowerCase() === 'individual') {
+        // En individual, tothom navega
+        router.push('/sobre-lore/' + dades.sessioId);
     } else {
-      console.error("[SalaEspera] No s'ha rebut sessioId!", dades);
-      if (dades.idLloc) {
-          router.push('/mapa/' + dades.idLloc);
-      }
+        // En modes de grup, només naveguen els captains
+        // Comprovem si l'usuari actual és capità d'algun grup
+        const userStr = localStorage.getItem('usuari');
+        const userObj = userStr ? JSON.parse(userStr) : {};
+        const perfilId = userObj._id;
+
+        const isUserCapita = dades.groups && dades.groups.some(g => g.capita_id === perfilId);
+
+        if (isUserCapita) {
+            router.push('/sobre-lore/' + dades.sessioId);
+        } else {
+            // Els acompanyants es queden a la sala d'espera amb un missatge
+            loading.value = false;
+            showModeSelection.value = false;
+            error.value = "Partida en curs. Mira el mòbil del teu capità!";
+        }
     }
   });
 

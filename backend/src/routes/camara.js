@@ -276,26 +276,55 @@ router.post('/', async function (req, res) {
                     }
                     medalla = guanyadors === 1 ? "Or" : guanyadors === 2 ? "Plata" : "Bronze";
 
-                    // GUARDAR CROMO AL PERFIL — NOMÉS AL GUANYADOR (primer en completar)
+                    // GUARDAR CROMO AL PERFIL
                     if (esElGuanyador) {
+                        // Per defecte recollim el perfil de qui fa la crida (guanyador real) per a la notificació
                         perfil = await Perfil.findById(perfilId);
-                        if (perfil) {
-                            const jaTeCromo = perfil.inventari_cromos.some(c => c.id_lloc && c.id_lloc.toString() === sessio.id_lloc_desti.toString());
 
-                            if (!jaTeCromo) {
-                                perfil.inventari_cromos.push({
-                                    id_lloc: sessio.id_lloc_desti,
-                                    nom_lloc: lloc.nom,
-                                    rango: medalla,
-                                    imatge_usuari: "/fotos_partides_usuaris/" + nomFitxer,
-                                    imatge_cromo: lloc.cromo_imatge || '',
-                                    data_obtencio: new Date()
-                                });
-                                await perfil.save();
-                                cromo_nou = true;
-                                console.log(`[Càmera] Cromo guardat al perfil del guanyador: "${lloc.nom}" amb imatge: ${lloc.cromo_imatge}`);
-                            } else {
-                                console.log(`[Càmera] El guanyador ja té el cromo de "${lloc.nom}". No es duplica.`);
+                        // Lògica segons el tipus de partida
+                        if (sessio.tipus_partida === 'individual') {
+                            // MODE INDIVIDUAL: Només al guanyador
+                            if (perfil) {
+                                const jaTeCromo = perfil.inventari_cromos.some(c => c.id_lloc && c.id_lloc.toString() === sessio.id_lloc_desti.toString());
+                                if (!jaTeCromo) {
+                                    perfil.inventari_cromos.push({
+                                        id_lloc: sessio.id_lloc_desti,
+                                        nom_lloc: lloc.nom,
+                                        rango: medalla,
+                                        imatge_usuari: "/fotos_partides_usuaris/" + nomFitxer,
+                                        imatge_cromo: lloc.cromo_imatge || '',
+                                        data_obtencio: new Date()
+                                    });
+                                    await perfil.save();
+                                    cromo_nou = true;
+                                }
+                            }
+                        } else if (sessio.tipus_partida === 'grup' || sessio.tipus_partida === 'grups') {
+                            // MODE GRUP o GRUPS: Repartim a tots els que toqui
+                            const guanyadorGrupId = jugador.grup_id;
+
+                            for (let i = 0; i < sessio.jugadors.length; i++) {
+                                const j = sessio.jugadors[i];
+
+                                // En mode 'grup' tothom guanya. En mode 'grups', només els del mateix equip.
+                                if (sessio.tipus_partida === 'grup' || j.grup_id === guanyadorGrupId) {
+                                    const pMembre = await Perfil.findById(j.id_usuari);
+                                    if (pMembre) {
+                                        const jaTeCromo = pMembre.inventari_cromos.some(c => c.id_lloc && c.id_lloc.toString() === sessio.id_lloc_desti.toString());
+                                        if (!jaTeCromo) {
+                                            pMembre.inventari_cromos.push({
+                                                id_lloc: sessio.id_lloc_desti,
+                                                nom_lloc: lloc.nom,
+                                                rango: medalla,
+                                                imatge_usuari: "/fotos_partides_usuaris/" + nomFitxer,
+                                                imatge_cromo: lloc.cromo_imatge || '',
+                                                data_obtencio: new Date()
+                                            });
+                                            await pMembre.save();
+                                            if (j.id_usuari.toString() === perfilId.toString()) cromo_nou = true;
+                                        }
+                                    }
+                                }
                             }
                         }
                     } else {
