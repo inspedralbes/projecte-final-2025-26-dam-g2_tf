@@ -14,7 +14,7 @@
         <div class="text-4xl mb-2">{{ emojiRol }}</div>
 
         <div class="w-24 h-24 rounded-full bg-[#bc85ab] mx-auto mb-4 flex items-center justify-center text-3xl font-black text-[#1a0a1f] overflow-hidden">
-          <img v-if="user?.avatar" :src="user.avatar" class="w-full h-full object-cover" />
+          <img v-if="user?.avatar" :src="netejarUrl(user.avatar)" class="w-full h-full object-cover" />
           <span v-else>{{ user?.nom_usuari?.charAt(0).toUpperCase() || '?' }}</span>
         </div>
         
@@ -139,6 +139,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
+import { netejarUrl } from '../utils/url';
 import DiariExploracio from '../components/DiariExploracio.vue';
 import ModalPersonalitzat from '../components/ModalPersonalitzat.vue';
 
@@ -308,11 +309,9 @@ function tancarSessio() {
   logout(); 
   window.location.href = '/'; 
 }
-// Retorna la URL completa de la imatge del cromo (afegeix API_URL si és una ruta relativa)
+// Retorna la URL completa de la imatge del cromo
 function imatgeCromo(src) {
-  if (!src) return '';
-  if (src.startsWith('http://') || src.startsWith('https://')) return src;
-  return API_URL + src;
+  return netejarUrl(src);
 }
 
 // INICI

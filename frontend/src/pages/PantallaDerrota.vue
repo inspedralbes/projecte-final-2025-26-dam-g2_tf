@@ -58,7 +58,7 @@ export default {
     },
     baseApi: {
       type: String,
-      default: 'https://north.dam.inspedralbes.cat'
+      default: import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat'
     }
   },
   emits: ['tornar-inici'],

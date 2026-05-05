@@ -14,13 +14,13 @@
         <div class="sobre-container" :class="{ 'obert': sobreObert }" @click="obrirSobre">
           <img
             v-if="!sobreObert"
-            :src="baseUrl + '/assets/Sobre/Sobre%20Tancat.png'"
+            :src="netejarUrl(baseUrl + '/assets/Sobre/Sobre Tancat.png')"
             alt="Sobre tancat"
             class="sobre-imatge sobre-tancat"
           />
           <img
             v-else
-            :src="baseUrl + '/assets/Sobre/Sobre_Obert.png'"
+            :src="netejarUrl(baseUrl + '/assets/Sobre/Sobre_Obert.png')"
             alt="Sobre obert"
             class="sobre-imatge sobre-obert"
           />
@@ -59,6 +59,8 @@
 </template>
 
 <script>
+import { netejarUrl } from '../utils/url';
+
 export default {
   name: 'SobreLore',
   data() {
@@ -88,7 +90,7 @@ export default {
         // id_lloc_desti ve populat amb carta_lore (gràcies al populate que hem afegit)
         const cartaLore = sessio.id_lloc_desti?.carta_lore || '';
         if (cartaLore) {
-          this.cartaLoreUrl = this.baseUrl + cartaLore;
+          this.cartaLoreUrl = netejarUrl(this.baseUrl + cartaLore);
         }
       } catch (e) {
         console.error('[SobreLore] Error carregant carta de lore:', e);
@@ -107,7 +109,8 @@ export default {
       setTimeout(() => {
         this.$router.push('/carta-personatge/' + this.sessioId);
       }, 500);
-    }
+    },
+    netejarUrl
   }
 };
 </script>

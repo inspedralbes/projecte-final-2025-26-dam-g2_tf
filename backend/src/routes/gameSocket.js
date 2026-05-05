@@ -210,10 +210,8 @@ function configureSocket(server) {
                     const jugadorDB = jugadorsDB[idx];
 
                     if (playerInfo && playerInfo.id && assignat) {
-                        const baseUrl = process.env.VITE_API_URL || 'http://localhost:8088';
-                        const imatgeUrl = assignat.imatge
-                            ? (assignat.imatge.startsWith('http') ? assignat.imatge : baseUrl + assignat.imatge)
-                            : '';
+                        // Enviem el camí relatiu, el frontend ja farà servir netejarUrl() per afegir el prefix correcte
+                        const imatgeUrl = assignat.imatge || '';
 
                         io.to(playerInfo.id).emit('carta-personatge', {
                             sessioId: novaSessio._id.toString(),

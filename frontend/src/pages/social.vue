@@ -42,7 +42,7 @@
         <div v-if="usuari" class="bg-white p-6 rounded-[40px] shadow-sm border border-white">
           <div class="flex gap-4 mb-4">
             <div class="w-12 h-12 rounded-2xl bg-[#f5cbdd] flex items-center justify-center font-black text-[#5d3962] overflow-hidden shrink-0 shadow-sm border-2 border-white">
-                <img v-if="usuari.avatar" :src="usuari.avatar" class="w-full h-full object-cover">
+                <img v-if="usuari.avatar" :src="netejarUrl(usuari.avatar)" class="w-full h-full object-cover">
                 <span v-else>{{ usuari.nom_usuari?.charAt(0) }}</span>
             </div>
             <div class="flex-1 space-y-3">
@@ -103,7 +103,7 @@
           <div v-for="post in posts" :key="post._id" class="bg-white rounded-[35px] shadow-sm border border-white overflow-hidden transition-all hover:shadow-md relative">
             <div class="p-5 flex items-center gap-4">
               <div @click="visitarPerfil(post)" class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#bc85ab] to-[#f5cbdd] flex items-center justify-center font-black text-[#402749] shadow-sm overflow-hidden border-2 border-white cursor-pointer hover:scale-105 transition-transform">
-                <img v-if="post.avatar_usuari" :src="post.avatar_usuari" class="w-full h-full object-cover">
+                <img v-if="post.avatar_usuari" :src="netejarUrl(post.avatar_usuari)" class="w-full h-full object-cover">
                 <span v-else>{{ post.nom_usuari?.charAt(0) }}</span>
               </div>
               <div class="flex-1">
@@ -135,11 +135,11 @@
 
               <div v-if="post.imatges_post && post.imatges_post.length > 0" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mb-4">
                 <div v-for="(img, idx) in post.imatges_post" :key="idx" class="min-w-[80%] rounded-[25px] overflow-hidden border border-gray-50 shadow-sm">
-                  <img :src="img" class="w-full h-64 object-cover">
+                  <img :src="netejarUrl(img)" class="w-full h-64 object-cover">
                 </div>
               </div>
               <div v-else-if="post.imatge_post" class="rounded-[25px] overflow-hidden border border-gray-50 shadow-sm mb-4">
-                <img :src="post.imatge_post" class="w-full h-auto max-h-[400px] object-cover">
+                <img :src="netejarUrl(post.imatge_post)" class="w-full h-auto max-h-[400px] object-cover">
               </div>
 
               <div class="flex flex-wrap gap-2">
@@ -171,7 +171,7 @@
               <div v-if="post.comentaris && post.comentaris.length > 0">
                 <div v-for="com in post.comentaris" :key="com.id_comentari || com._id" class="flex gap-3 mb-4 last:mb-0">
                   <div class="w-8 h-8 rounded-xl bg-white flex items-center justify-center border overflow-hidden shrink-0">
-                    <img v-if="com.avatar_usuari" :src="com.avatar_usuari" class="w-full h-full object-cover">
+                    <img v-if="com.avatar_usuari" :src="netejarUrl(com.avatar_usuari)" class="w-full h-full object-cover">
                     <span v-else class="font-black text-[#5d3962] text-[10px]">{{ com.nom_usuari?.charAt(0) }}</span>
                   </div>
                   <div class="bg-white px-4 py-2 rounded-2xl border border-gray-100 flex-1 shadow-sm relative group">
@@ -232,7 +232,7 @@
                   {{ index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '#' + (index + 1) }}
                 </div>
                 <div class="w-10 h-10 rounded-xl bg-[#bc85ab] flex items-center justify-center text-white font-bold shadow-sm overflow-hidden border-2 border-white">
-                  <img v-if="user.avatar" :src="user.avatar" class="w-full h-full object-cover">
+                  <img v-if="user.avatar" :src="netejarUrl(user.avatar)" class="w-full h-full object-cover">
                   <span v-else>{{ user.nom_usuari.charAt(0).toUpperCase() }}</span>
                 </div>
                 <div>
@@ -279,7 +279,7 @@
             
             <div class="flex items-center gap-3 overflow-hidden">
               <div class="w-11 h-11 rounded-2xl bg-[#bc85ab] border-2 border-white/20 shadow-sm overflow-hidden shrink-0">
-                <img v-if="resUser.avatar" :src="resUser.avatar" class="w-full h-full object-cover">
+                <img v-if="resUser.avatar" :src="netejarUrl(resUser.avatar)" class="w-full h-full object-cover">
                 <span v-else class="flex items-center justify-center h-full text-white font-black text-lg">{{ resUser.nom_usuari?.charAt(0).toUpperCase() }}</span>
               </div>
               
@@ -326,7 +326,7 @@
               <div class="flex items-center gap-4 flex-1">
                 <div @click="router.push(`/perfil-visita/${amic._id}`)" class="relative cursor-pointer">
                   <div class="w-14 h-14 rounded-[22px] bg-[#f5cbdd] border-2 border-white/20 overflow-hidden shadow-md group-hover:scale-105 transition-transform">
-                    <img v-if="amic.avatar" :src="amic.avatar" class="w-full h-full object-cover">
+                    <img v-if="amic.avatar" :src="netejarUrl(amic.avatar)" class="w-full h-full object-cover">
                     <span v-else class="flex items-center justify-center h-full text-[#402749] font-black text-xl">
                       {{ amic.nom_usuari?.charAt(0).toUpperCase() }}
                     </span>
@@ -415,6 +415,7 @@ import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import { useLoginModal } from '../composables/useLoginModal';
 import BotonPerfil from '../components/BotonPerfil.vue';
+import { netejarUrl } from '../utils/url';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
 const router = useRouter();
