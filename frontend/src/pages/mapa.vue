@@ -20,6 +20,7 @@
 <script setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { netejarUrl } from '../utils/url';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -109,7 +110,7 @@ async function carregarPuntsDeLaBD() {
       const popupContent = `
         <div class="custom-popup p-1">
           <img 
-            src="${lloc.imatge_referencia || 'https://via.placeholder.com/150'}" 
+            src="${netejarUrl(lloc.imatge_referencia) || 'https://via.placeholder.com/150'}" 
             class="w-full h-24 object-cover rounded-md mb-2" 
           />
           <h3 class="text-base font-bold text-[#402749] mb-1">${lloc.nom}</h3>
