@@ -25,12 +25,12 @@
           </div>
 
           <!-- CARA DARRERE (Personatge) -->
-          <div class="card-back w-full h-full flex items-center justify-center overflow-hidden shadow-none" style="background: linear-gradient(160deg, #2a1030 0%, #402749 60%, #1a0820 100%); border: 2px solid rgba(255,255,255,0.1);">
+          <div class="card-back w-full h-full flex items-center justify-center overflow-hidden bg-[#402749] shadow-none">
             <img 
               v-if="personatge.imatge" 
               :src="personatge.imatge" 
               :alt="personatge.nom"
-              class="w-full h-full object-cover shadow-none"
+              class="w-full h-full object-contain shadow-none"
             />
             <div v-else class="w-full h-full flex items-center justify-center bg-[#402749] text-indigo-300 shadow-none">
               <span class="text-6xl shadow-none">👤</span>
