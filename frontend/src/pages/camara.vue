@@ -422,7 +422,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
 
             <!-- CARA DARRERE: foto històrica + text -->
             <div class="card-cara card-darrere rounded-2xl overflow-hidden shadow-2xl"
-              style="border: 2px solid #f59e0b;">
+              style="border: 2px solid #f59e0b; background: #2a1030;">
               <div class="relative w-full h-full">
                 <img
                   :src="netejarUrl(modalDades.foto_historica)"
