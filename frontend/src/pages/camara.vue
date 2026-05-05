@@ -49,6 +49,7 @@ const isTimeout = ref(false);
 const cardDefeatFlipped = ref(false);
 const faseDerrota = ref(0);
 const cardDefeatFlippedBig = ref(false);
+const notificacioPunt = ref(null);
 
 // Temporitzador
 const tempsRestant = ref(null);
@@ -144,6 +145,17 @@ onMounted(async () => {
         mostrarNotificacioGuanyador.value = true;
       }
       if (intervalTimer) clearInterval(intervalTimer);
+    });
+
+    socketJoc.on('punt-aconseguit', (dades) => {
+      console.log('[Càmera] punt-aconseguit rebut:', dades);
+      notificacioPunt.value = dades;
+      // Amaguem al cap de 5 segons
+      setTimeout(() => {
+        if (notificacioPunt.value === dades) {
+          notificacioPunt.value = null;
+        }
+      }, 5000);
     });
   }
 });
@@ -540,6 +552,17 @@ async function enviarDadesAlBackend(imatgeEnText) {
       </div>
     </Transition>
 
+    <!-- NOTIFICACIÓ DE PUNTS EN TEMPS REAL -->
+    <Transition name="slide-fade">
+      <div v-if="notificacioPunt" class="notificacio-punt">
+          <div class="notificacio-icon">🚀</div>
+          <div class="notificacio-text">
+            <strong>{{ notificacioPunt.nomUsuari }}</strong> ha aconseguit el punt: 
+            <span class="punto-nom">{{ notificacioPunt.nomPunt }}</span>
+          </div>
+      </div>
+    </Transition>
+
   </div>
 </template>
 
@@ -578,5 +601,56 @@ async function enviarDadesAlBackend(imatgeEnText) {
 }
 .card-darrere {
   transform: rotateY(180deg);
+}
+
+/* Notificació de punts */
+.notificacio-punt {
+  position: fixed;
+  bottom: 120px; /* Pujat una mica perquè no el tapi el botó de fer foto */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(26, 8, 32, 0.9);
+  backdrop-filter: blur(10px);
+  border: 2px solid #d9a6c2;
+  padding: 12px 24px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 300;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  min-width: 280px;
+  max-width: 90%;
+}
+
+.notificacio-icon {
+  font-size: 1.6rem;
+}
+
+.notificacio-text {
+  color: white;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.punto-nom {
+  color: #d9a6c2;
+  font-weight: 800;
+}
+
+/* Transició slide-fade */
+.slide-fade-enter-active {
+  transition: all 0.4s ease-out;
+}
+.slide-fade-leave-active {
+  transition: all 0.6s cubic-bezier(1, 0.5, 0.8, 1);
+}
+.slide-fade-enter-from {
+  transform: translate(-50%, 40px);
+  opacity: 0;
+}
+.slide-fade-leave-to {
+  transform: translate(-50%, -20px);
+  opacity: 0;
 }
 </style>
