@@ -21,6 +21,7 @@ app.use('/foto_mapa', express.static(path.join(__dirname, 'public/foto_mapa')));
 app.use('/fotos_actuals', express.static(path.join(__dirname, 'public/fotos_actuals')));
 app.use('/fotos_historiques', express.static(path.join(__dirname, 'public/fotos_historiques')));
 app.use('/personatges', express.static(path.join(__dirname, 'public/personatges')));
+app.use('/assets', express.static(path.join(__dirname, 'public/assets')));
 // missatge de prova
 async function startServer() {
     try {
@@ -47,6 +48,7 @@ async function startServer() {
         app.use('/api/sessionsJoc', comprovarToqueDeQueda, require('./src/routes/sessionsJoc'));
         app.use('/api/personatges', require('./src/routes/personatges'));
         app.use('/api/verificacio', require('./src/routes/verificacio'));
+        app.use('/api/carta-lore', require('./src/routes/carta_lore'));
 
         // Configurar Socket.io
         const http = require('http');

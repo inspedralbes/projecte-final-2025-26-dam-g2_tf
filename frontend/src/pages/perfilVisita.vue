@@ -84,10 +84,12 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { useAuth } from '../composables/useAuth'; 
+import { useAuth } from '../composables/useAuth';
+import { useCustomModal } from '../composables/useCustomModal';
 
 const route = useRoute();
 const { usuari: usuariLoguejat } = useAuth();
+const { mostrarModal } = useCustomModal();
 const user = ref(null);
 const estatAmistat = ref('cap'); 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
@@ -150,14 +152,14 @@ async function gestionarAmistat() {
 
     if (res.ok) {
       estatAmistat.value = 'pendent';
-      alert("Sol·licitud enviada!");
+      await mostrarModal({ isAlert: true, icon: 'success', title: 'Sol·licitud enviada!' });
     } else {
       const errorData = await res.json();
-      alert(errorData.message || "Error en la sol·licitud");
+      await mostrarModal({ isAlert: true, message: errorData.message || "Error en la sol·licitud" });
     }
   } catch (err) {
     console.error("Error enviant la sol·licitud:", err);
-    alert("Error de connexió amb el servidor");
+    await mostrarModal({ isAlert: true, message: "Error de connexió amb el servidor" });
   }
 }
 watch(() => route.params.id, async (newId) => { 

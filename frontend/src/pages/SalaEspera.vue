@@ -113,10 +113,12 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { io } from 'socket.io-client';
+import { useCustomModal } from '../composables/useCustomModal';
 
 const route = useRoute();
 const router = useRouter();
 const socket = ref(null);
+const { mostrarModal } = useCustomModal();
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
@@ -139,12 +141,13 @@ const selectedMode = ref('Individual');
 const selectedDuration = ref(null);
 
 const durationOptions = [
+    { label: '30 seg', value: 0.5, desc: 'PROVA' },
     { label: '45 min', value: 45, desc: 'Difícil' },
     { label: '1 hora', value: 60, desc: 'Normal' },
     { label: '90 min', value: 90, desc: 'Fàcil' }
 ];
 
-function compartirInvitacio() {
+async function compartirInvitacio() {
     const url = `${window.location.origin}/join/${roomCode.value}`;
     if (navigator.share) {
         navigator.share({
@@ -155,7 +158,7 @@ function compartirInvitacio() {
     } else {
         // Fallback: copiar al porta-retalls
         navigator.clipboard.writeText(url);
-        alert("Enllaç copiat al porta-retalls!");
+        await mostrarModal({ isAlert: true, icon: 'success', title: 'Enllaç copiat', message: 'Enllaç copiat al porta-retalls!' });
     }
 }
 
@@ -231,9 +234,9 @@ function generarGrups() {
     return groups;
 }
 
-function confirmarModeIComencar() {
+async function confirmarModeIComencar() {
     if (!selectedDuration.value) {
-        alert("Si us plau, selecciona una durada per a la partida.");
+        await mostrarModal({ isAlert: true, message: 'Si us plau, selecciona una durada per a la partida.' });
         return;
     }
     if (socket.value && roomCode.value) {
@@ -325,7 +328,7 @@ onMounted(() => {
     console.log("[SalaEspera] Joc començat redactat:", dades);
     // Tots els jugadors marxen cap a la carta de personatge abans d'anar al mapa
     if (dades.sessioId) {
-      router.push('/carta-personatge/' + dades.sessioId);
+      router.push('/sobre-lore/' + dades.sessioId);
     } else {
       console.error("[SalaEspera] No s'ha rebut sessioId!", dades);
       if (dades.idLloc) {

@@ -283,8 +283,10 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import AdminNav from './components/AdminNav.vue';
+import { useCustomModal } from '../../composables/useCustomModal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088'; 
+const { mostrarModal } = useCustomModal();
 const tabActual = ref('posts');
 const notificacio = ref('');
 const confirmacioPendents = ref(null);
@@ -468,7 +470,8 @@ const decidirIdentitat = (userId, estat) => {
 };
 
 const eliminarRessenya = async (resObj) => {
-  if (!confirm("Eliminar ressenya?")) return;
+  const isConfirmed = await mostrarModal({ isAlert: false, title: 'Confirmació', message: 'Eliminar ressenya?' });
+  if (!isConfirmed) return;
   try {
     const response = await fetch(`${API_URL}/api/social/ressenyes/${resObj._id}`, { method: 'DELETE' });
     if (response.ok) {

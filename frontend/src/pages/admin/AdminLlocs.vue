@@ -78,9 +78,11 @@ import { ref, onMounted, computed } from 'vue';
 import AdminNav from './components/AdminNav.vue';
 import AdminFormLloc from './components/AdminFormLloc.vue';
 import ConfirmModal from './components/ConfirmModal.vue';
+import { useCustomModal } from '../../composables/useCustomModal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 const PATH = `${API_URL}/api/mapa/punts`;
+const { mostrarModal } = useCustomModal();
 
 const llista = ref([]);
 const mostrarForm = ref(false);
@@ -104,7 +106,7 @@ const resetForm = () => ({
   imatge_referencia: '', foto_mapa: '', tags: [], punts_missio: [],
   control_horari: { actiu: false, hora_inici: 22, hora_fi: 7 },
   lat: 41.3879, lng: 2.1699, adreca_inici: '',
-  cromo_imatge: '', fotos_historiques: []
+  cromo_imatge: '', fotos_historiques: [], carta_lore: ''
 });
 
 const form = ref(resetForm());
@@ -135,7 +137,8 @@ const prepararEdicion = (item) => {
     lng: item.ubicacio?.coordinates[0] || 2.1699,
     adreca_inici: item.adreca_inici || '',
     control_horari: item.control_horari || { actiu: false, hora_inici: 22, hora_fi: 7 },
-    cromo_imatge: item.cromo_imatge || ''
+    cromo_imatge: item.cromo_imatge || '',
+    carta_lore: item.carta_lore || ''
   };
   mostrarForm.value = true;
 };
@@ -157,7 +160,7 @@ const guardarLloc = async (datos) => {
       cargarDatos();
     }
   } catch (error) {
-    alert("Error al guardar");
+    await mostrarModal({ isAlert: true, message: "Error al guardar" });
   }
 };
 
@@ -183,7 +186,7 @@ const confirmarEliminar = async () => {
     pasConfirmacio.value = 1;
     cargarDatos();
   } catch (error) {
-    alert("Error al eliminar");
+    await mostrarModal({ isAlert: true, message: "Error al eliminar" });
   }
 };
 

@@ -106,7 +106,9 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import AdminNav from './components/AdminNav.vue';
+import { useCustomModal } from '../../composables/useCustomModal';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const { mostrarModal } = useCustomModal();
 
 const peticions = ref([]);
 const peticionSeleccionada = ref(null);
@@ -130,11 +132,12 @@ const votar = async (peticion, nouEstat) => {
 
   if (!id) {
     console.error("Dades de la petició:", peticion);
-    alert("Error: No s'ha pogut trobar l'ID en l'objecte.");
+    await mostrarModal({ isAlert: true, message: "Error: No s'ha pogut trobar l'ID en l'objecte." });
     return;
   }
 
-  if (!confirm(`Vols marcar aquesta petició com a ${nouEstat}?`)) return;
+  const isConfirmed = await mostrarModal({ isAlert: false, title: 'Confirmació', message: `Vols marcar aquesta petició com a ${nouEstat}?` });
+  if (!isConfirmed) return;
   
   try {
     const res = await fetch(`${API_URL}/api/admin/peticions/${id}`, {
@@ -147,11 +150,11 @@ const votar = async (peticion, nouEstat) => {
       peticionSeleccionada.value = null; 
       await cargarPeticiones(); 
     } else {
-      alert("Error en el servidor al actualitzar l'estat.");
+      await mostrarModal({ isAlert: true, message: "Error en el servidor al actualitzar l'estat." });
     }
   } catch (err) {
     console.error("Error al votar:", err);
-    alert("Error de connexió.");
+    await mostrarModal({ isAlert: true, message: "Error de connexió." });
   }
 };
 

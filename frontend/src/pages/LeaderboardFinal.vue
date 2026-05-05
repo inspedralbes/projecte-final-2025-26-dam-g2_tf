@@ -54,9 +54,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useCustomModal } from '../composables/useCustomModal';
 
 const router = useRouter();
 const route = useRoute();
+const { mostrarModal } = useCustomModal();
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
 
 const resultatsSessio = ref([]);
@@ -89,9 +91,9 @@ async function carregarResultats() {
   }
 }
 
-function enviarRessenya() {
+async function enviarRessenya() {
   if (puntuacio.value === 0) {
-    alert("Si us plau, posa una estrella abans de marxar!");
+    await mostrarModal({ isAlert: true, message: "Si us plau, posa una estrella abans de marxar!" });
     return;
   }
   router.push('/mapa');

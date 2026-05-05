@@ -99,30 +99,12 @@
       </div>
     </Transition>
 
-    <!--MODAL GAME OVER (un altre jugador ha guanyat o temps esgotat) -->
-    <!-- FASE 1: CARTA GRAN DEL POLICIA -->
-    <Transition name="fade">
-      <div
-        v-if="faseDerrota === 1"
-        class="min-h-screen bg-[#402749] flex flex-col items-center justify-center p-8 overflow-y-auto overflow-x-hidden"
-        style="position: fixed; inset: 0; z-index: 300;"
-      >
-        <div class="relative z-10 w-full max-w-sm flex flex-col items-center justify-center min-h-full py-12">
-          <div 
-            class="perspective-1000 w-full max-w-[350px] aspect-[2/3] min-h-[525px] mb-10 shadow-none cursor-pointer"
-            @click="girarCartaDefeat"
-          >
-            <div class="w-full h-full flex items-center justify-center overflow-hidden bg-[#402749] shadow-none">
-              <img 
-                :src="baseApi + '/personatges/El%20policia.jpg'"  
-                alt="Carta El Policia" 
-                class="w-full h-full object-contain shadow-none scale-105" 
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </Transition>
+    <!-- DERROTA: Pantalla calabozo (component separat) -->
+    <PantallaDerrota
+      :visible="faseDerrota === 1"
+      :base-api="baseApi"
+      @tornar-inici="anarAHome"
+    />
 
     <!--MODAL GAME OVER (un altre jugador ha guanyat o temps esgotat) -->
     <Transition name="fade">
@@ -178,8 +160,15 @@
 
 <script>
 import { io } from 'socket.io-client';
+import PantallaDerrota from './PantallaDerrota.vue';
+import { useCustomModal } from '../composables/useCustomModal';
 
 export default {
+  components: { PantallaDerrota },
+  setup() {
+    const { mostrarModal } = useCustomModal();
+    return { mostrarModal };
+  },
   data() {
     return {
       idLloc: this.$route.params.id, 
@@ -283,7 +272,9 @@ export default {
         const respSessio = await fetch(this.baseApi + '/api/sessionsJoc/' + this.idLloc);
         if (respSessio.ok) {
           sessio = await respSessio.json();
-          idRealMonument = sessio.id_lloc_desti;
+          // id_lloc_desti pot ser un objecte populat { _id, carta_lore, nom } o un string ID simple
+          const desti = sessio.id_lloc_desti;
+          idRealMonument = (desti && typeof desti === 'object') ? desti._id : desti;
         }
       } catch (e) {
         console.warn("No s'ha pogut verificar la sessió, intentant carregar com a lloc directament.");
@@ -523,7 +514,12 @@ export default {
     async demanarPista() {
       if (!this.sessioId || this.pistes_gastades >= 3 || !this.puntSeleccionat || this.demanantPista) return;
       
-      const confirmacio = confirm("Vols gastar una de les teves 3 pistes per aquest punt?");
+      const confirmacio = await this.mostrarModal({
+        isAlert: false,
+        title: 'Confirmació',
+        message: "Vols gastar una de les teves 3 pistes per aquest punt?",
+        confirmText: 'Demanar'
+      });
       if (!confirmacio) return;
 
       this.demanantPista = true;
@@ -547,11 +543,11 @@ export default {
             this.iniciarTemporitzador(dades.nou_temps_limit);
           }
         } else {
-          alert(dades.missatge || "Error al demanar la pista");
+          await this.mostrarModal({ isAlert: true, message: dades.missatge || "Error al demanar la pista" });
         }
       } catch (err) {
         console.error("Error demanant pista:", err);
-        alert("Error de connexió amb el servidor");
+        await this.mostrarModal({ isAlert: true, message: "Error de connexió amb el servidor" });
       } finally {
         this.demanantPista = false;
       }

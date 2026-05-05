@@ -178,7 +178,9 @@ router.get('/:id', async function (req, res) {
         }
 
         const sessio = await SessioJoc.findOne(query)
-            .populate('jugadors.id_usuari', 'nom_usuari');
+            .populate('jugadors.id_usuari', 'nom_usuari')
+            .populate('jugadors.personatge_id')
+            .populate('id_lloc_desti', 'carta_lore nom');
 
         if (!sessio) {
             console.warn("[SessionsJoc] Sessió no trobada per:", idOrCodi);
