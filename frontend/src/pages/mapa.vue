@@ -102,7 +102,8 @@ async function iniciarMapa(lat, lng) {
 async function carregarPuntsDeLaBD() {
   try {
     const resposta = await fetch(`${API_URL}/api/mapa/punts`);
-    const llocs = await resposta.json();
+    let llocs = await resposta.json();
+    llocs = llocs.filter(lloc => lloc.control_horari?.actiu === true);
     
     llocs.forEach(lloc => {
       const [lng, lat] = lloc.ubicacio.coordinates;
