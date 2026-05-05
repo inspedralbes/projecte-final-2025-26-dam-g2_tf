@@ -324,13 +324,10 @@ async function enviarDadesAlBackend(imatgeEnText) {
        <span class="text-white font-mono font-bold" :class="{'text-red-400 animate-pulse': tempsRestant < 60}">{{ formatarTemps(tempsRestant) }}</span>
     </div>
 
-    <!-- VISOR 4:3 AMB MARGES NEGRES (LETTERBOXING) -->
-    <div class="absolute inset-0 z-10 flex flex-col pointer-events-none">
-      <!-- Marge superior -->
-      <div class="flex-1 bg-black/50 backdrop-blur-[2px]"></div>
-      
-      <!-- Àrea activa 4:3 -->
-      <div class="w-full relative border-y border-white/30" style="aspect-ratio: 4 / 3;">
+    <!-- VISOR 3:4 VERTICAL AMB MÀSCARA -->
+    <div class="absolute inset-0 z-10 flex items-center justify-center pointer-events-none overflow-hidden">
+      <!-- Aquest div és el visor vertical (3 d'ample per 4 d'alt) -->
+      <div class="relative w-[75%] border-2 border-white/40 shadow-[0_0_0_1000px_rgba(0,0,0,0.6)]" style="aspect-ratio: 3 / 4;">
         
         <!-- Imatge de referència -->
         <img 
@@ -344,19 +341,17 @@ async function enviarDadesAlBackend(imatgeEnText) {
           class="w-full h-full object-cover opacity-40" 
         />
 
-        <!-- Quadrícula de guia (estrictament dins del 4:3) -->
+        <!-- Quadrícula de guia (3x3 dins del marc vertical) -->
         <div class="absolute inset-0 flex flex-col justify-evenly">
-          <div class="w-full h-[1px] bg-white/40"></div>
-          <div class="w-full h-[1px] bg-white/40"></div>
+          <div class="w-full h-[1px] bg-white/30"></div>
+          <div class="w-full h-[1px] bg-white/30"></div>
         </div>
         <div class="absolute inset-0 flex justify-evenly">
-          <div class="h-full w-[1px] bg-white/40"></div>
-          <div class="h-full w-[1px] bg-white/40"></div>
+          <div class="h-full w-[1px] bg-white/30"></div>
+          <div class="h-full w-[1px] bg-white/30"></div>
         </div>
-      </div>
 
-      <!-- Marge inferior -->
-      <div class="flex-1 bg-black/50 backdrop-blur-[2px]"></div>
+      </div>
     </div>
 
     <div v-if="!imatgePunt && fotosActuals.length > 1" class="absolute top-4 right-4 z-30 flex items-center gap-2">
@@ -398,7 +393,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
                 <p class="text-pink-300 text-xs mt-1 text-center">{{ modalDades.nom_lloc }}</p>
               </div>
               <div class="w-full px-5 pb-4">
-                <div class="w-full rounded-xl overflow-hidden" style="border: 2px solid #d9a6c2; aspect-ratio: 4/3;">
+                <div class="w-full rounded-xl overflow-hidden" style="border: 2px solid #d9a6c2; aspect-ratio: 3/4;">
                   <img v-if="modalDades.imatge_punt"
                     :src="netejarUrl(modalDades.imatge_punt)"
                     class="w-full h-full object-cover" alt="Foto del punt" />
@@ -457,7 +452,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
           </div>
 
           <div v-if="modalDades.exit" class="w-full px-6 pb-3">
-            <div class="w-full rounded-xl overflow-hidden shadow-lg" style="border: 2px solid #d9a6c2; aspect-ratio: 4/3;">
+            <div class="w-full rounded-xl overflow-hidden shadow-lg" style="border: 2px solid #d9a6c2; aspect-ratio: 3/4;">
               <img v-if="modalDades.imatge_punt"
                 :src="netejarUrl(modalDades.imatge_punt)"
                 class="w-full h-full object-cover" alt="Foto del punt" />
