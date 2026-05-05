@@ -178,7 +178,7 @@ const handleModalCancel = () => {
   if (modalResolve) modalResolve(false);
 };
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
 
 const percentatgeProgres = computed(() => {
   const count = user.value?.inventari_cromos?.length || 0;

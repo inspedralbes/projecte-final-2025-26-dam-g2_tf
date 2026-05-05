@@ -24,7 +24,7 @@
         :class="activeIndex === index ? 'scale-110 z-20 opacity-100' : 'scale-90 z-10 opacity-40'"
       >
         <img 
-          :src="lloc.imatge_referencia" 
+          :src="netejarUrl(lloc.imatge_referencia)" 
           class="absolute inset-0 w-full h-full object-cover rounded-3xl transition-transform duration-700"
           :class="activeIndex === index ? 'scale-100' : 'scale-110'"
         />
@@ -66,6 +66,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import BotonPerfil from '../components/BotonPerfil.vue';
+import { netejarUrl } from '../utils/url';
 
 
 const llistaLlocs = ref([]);
@@ -89,7 +90,7 @@ const esBloqueig = (lloc) => {
   return minutsActuals >= minutsInici && minutsActuals < minutsFi;
 };
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
 
 onMounted(async () => {
   try {

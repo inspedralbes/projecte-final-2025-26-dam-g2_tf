@@ -41,7 +41,7 @@ const laMevaPosicio = ref(BCN_CENTRE);
 const cargando = ref(true); 
 let mapa = null;
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
 
 onMounted(async () => {
   window.anarADetall = (id) => router.push(`/lloc/${id}`);

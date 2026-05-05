@@ -328,7 +328,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const baseApi = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const baseApi = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
 const imatgeMapaRef = ref(null);
 const puntPendent = ref(null);
 const fotosDisponibles = ref([]);

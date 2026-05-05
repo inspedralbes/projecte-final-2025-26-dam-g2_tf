@@ -1,7 +1,7 @@
 import { ref, nextTick } from 'vue';
 
 // Patró del projecte per a la URL de l'API (útil si hostegem models o fem crides)
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
 
 /**
  * Composable per gestionar la detecció facial amb face-api.js

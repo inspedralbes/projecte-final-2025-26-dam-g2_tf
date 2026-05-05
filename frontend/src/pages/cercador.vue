@@ -147,7 +147,7 @@ import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import BotonPerfil from '../components/BotonPerfil.vue';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
 const router = useRouter();
 const { login } = useAuth();
 

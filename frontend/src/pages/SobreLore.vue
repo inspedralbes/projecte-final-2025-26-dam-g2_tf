@@ -14,7 +14,7 @@
         <div class="sobre-container" :class="{ 'obert': sobreObert }" @click="obrirSobre">
           <img
             v-if="!sobreObert"
-            :src="baseUrl + '/assets/Sobre/Sobre Tancat.png'"
+            :src="baseUrl + '/assets/Sobre/Sobre%20Tancat.png'"
             alt="Sobre tancat"
             class="sobre-imatge sobre-tancat"
           />
@@ -64,7 +64,7 @@ export default {
   data() {
     return {
       sessioId: this.$route.params.sessioId,
-      baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8088',
+      baseUrl: import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat',
       cartaLoreUrl: '',
       sobreObert: false,
       cartaVisible: false,

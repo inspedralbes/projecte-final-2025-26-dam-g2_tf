@@ -59,7 +59,7 @@ import { useCustomModal } from '../composables/useCustomModal';
 const router = useRouter();
 const route = useRoute();
 const { mostrarModal } = useCustomModal();
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
 
 const resultatsSessio = ref([]);
 const puntuacio = ref(0);

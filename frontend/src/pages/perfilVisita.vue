@@ -92,7 +92,7 @@ const { usuari: usuariLoguejat } = useAuth();
 const { mostrarModal } = useCustomModal();
 const user = ref(null);
 const estatAmistat = ref('cap'); 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
 
 onMounted(async () => {
   const userIdVisita = route.params.id;

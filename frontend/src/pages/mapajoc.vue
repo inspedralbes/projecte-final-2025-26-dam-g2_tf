@@ -178,7 +178,7 @@ export default {
       modalVisible: false,
       puntSeleccionat: null,
       fotoActual: null,
-      baseApi: import.meta.env.VITE_API_URL || 'http://localhost:8088',
+      baseApi: import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat',
       // Game-over
       mostrarGameOver: false,
       faseDerrota: 0,
