@@ -9,7 +9,7 @@ function formatNameForCromo(name) {
     return name
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "") // remove accents
-        .replace(/[^a-zA-Z0-0]/g, ""); // remove non-alphanumeric
+        .replace(/[^a-zA-Z0-9]/g, ""); // remove non-alphanumeric (fixed 0-9)
 }
 
 async function migrarTotsCromos() {
