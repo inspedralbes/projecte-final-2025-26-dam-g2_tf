@@ -24,6 +24,7 @@ services:
     volumes:
       - ./backend/public/foto_mapa:/app/public/foto_mapa
       - ./backend/public/fotos_partides_usuaris:/app/public/fotos_partides_usuaris
+      - ./.env:/app/.env:ro
 
   proxy:
     image: nginx:stable
