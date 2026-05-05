@@ -145,8 +145,9 @@ export default {
   position: relative;
   width: 100%;
   height: 100%;
-  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   transform-style: preserve-3d;
+  will-change: transform;
   cursor: pointer;
   box-shadow: none !important;
   outline: none !important;
@@ -165,6 +166,7 @@ export default {
   height: 100%;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  transform: translateZ(0); /* Force GPU */
   box-shadow: none !important;
   border: none !important;
 }
@@ -175,7 +177,7 @@ export default {
 
 /* Animacions de transició */
 .fade-up-enter-active, .fade-up-leave-active {
-  transition: all 0.6s ease-out;
+  transition: transform 0.5s ease-out, opacity 0.5s ease-out;
 }
 .fade-up-enter-from {
   opacity: 0;
