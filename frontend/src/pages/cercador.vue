@@ -135,6 +135,7 @@
           <!-- Puntuació Media -->
           <div class="flex-1 flex flex-col items-center justify-center px-2">
             <template v-if="lloc.mitjana_estrelles">
+              <span class="block font-bold text-gray-900 text-sm mb-1">Valoració</span>
               <svg style="width: 0; height: 0; position: absolute;">
                 <defs>
                   <linearGradient id="halfStarGrad" x1="0" x2="100%" y1="0" y2="0">
@@ -158,7 +159,6 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
                 </svg>
               </div>
-              <span class="text-[9px] text-gray-500 font-bold tracking-widest uppercase mt-1">{{ lloc.mitjana_estrelles }} / 5</span>
             </template>
           </div>
 

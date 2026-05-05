@@ -68,6 +68,40 @@
       >
         RUTA NO DISPONIBLE
       </button>
+
+      <!-- Valoraciones -->
+      <div class="mt-10">
+        <h3 class="font-bold text-gray-300 uppercase text-[10px] tracking-[0.2em] mb-4">Valoracions dels usuaris</h3>
+        
+        <div v-if="ressenyes.length > 0" class="space-y-4">
+          <div v-for="ressenya in ressenyes" :key="ressenya._id" class="bg-gray-50 p-4 rounded-2xl shadow-sm border border-gray-100">
+            <div class="flex items-center gap-3 mb-2">
+              <div class="w-8 h-8 rounded-full bg-purple-200 overflow-hidden">
+                <img v-if="ressenya.id_usuari?.avatar" :src="netejarUrl(ressenya.id_usuari.avatar)" class="w-full h-full object-cover" />
+                <div v-else class="w-full h-full flex items-center justify-center text-purple-600 font-bold text-xs">
+                  {{ ressenya.id_usuari?.nom_usuari ? ressenya.id_usuari.nom_usuari.charAt(0).toUpperCase() : 'U' }}
+                </div>
+              </div>
+              <div class="flex-1">
+                <p class="font-bold text-sm text-gray-800">{{ ressenya.id_usuari?.nom_usuari || 'Usuari' }}</p>
+                <div class="flex text-[#f59e0b] text-xs">
+                  <svg v-for="star in 5" :key="star"
+                       xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                       :class="star <= ressenya.estrelles ? 'fill-current' : 'fill-transparent stroke-current'"
+                       class="w-3 h-3" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <p class="text-gray-600 text-sm italic">"{{ ressenya.comentari }}"</p>
+          </div>
+        </div>
+
+        <div v-else class="text-center py-6 bg-gray-50 rounded-2xl border border-gray-100">
+          <p class="text-gray-400 text-sm italic">Encara no hi ha valoracions per aquest lloc.</p>
+        </div>
+      </div>
       
     </div>
   </div>
@@ -83,11 +117,12 @@ import { netejarUrl } from '../utils/url';
 const route = useRoute()
 const router = useRouter() 
 const lloc = ref(null)
+const ressenyes = ref([])
 
 const { usuari } = useAuth();
 const { obrirModal } = useLoginModal();
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
 
 // Comprova si la ruta està bloquejada en funció de l'hora actual
 const esBloqueig = computed(() => {
@@ -149,6 +184,12 @@ onMounted(async () => {
     const response = await fetch(`${API_URL}/api/mapa/punts`);
     const dades = await response.json();
     lloc.value = dades.find(item => item._id === route.params.id);
+    
+    // Carregar ressenyes
+    const resRessenyes = await fetch(`${API_URL}/api/mapa/punts/${route.params.id}/ressenyes`);
+    if (resRessenyes.ok) {
+      ressenyes.value = await resRessenyes.json();
+    }
   } catch (err) {
     console.error("Error carregant el detall:", err);
   }

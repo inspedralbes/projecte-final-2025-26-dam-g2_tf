@@ -81,4 +81,18 @@ router.delete('/punts/:id', async (req, res) => {
     }
 });
 
+// 6. Obtenir ressenyes d'un lloc
+router.get('/punts/:id/ressenyes', async (req, res) => {
+    try {
+        const { Ressenya } = require('../models/index');
+        const ressenyes = await Ressenya.find({ id_lloc: req.params.id })
+            .populate('id_usuari', 'nom_usuari avatar')
+            .sort({ data: -1 });
+        res.json(ressenyes);
+    } catch (error) {
+        console.error("Error al carregar ressenyes:", error);
+        res.status(500).json({ error: "Error al carregar les ressenyes" });
+    }
+});
+
 module.exports = router;
