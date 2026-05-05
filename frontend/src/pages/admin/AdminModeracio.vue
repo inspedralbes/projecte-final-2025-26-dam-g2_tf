@@ -76,11 +76,11 @@
       </div>
 
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <div class="flex gap-2 p-1 bg-gray-200/50 w-fit rounded-2xl border border-gray-200 shadow-inner overflow-x-auto">
-          <button @click="tabActual = 'ressenyes'" :class="tabActual === 'ressenyes' ? 'bg-[#402749] text-white shadow-md' : 'text-gray-500 hover:bg-white'" class="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300">Ressenyes</button>
-          <button @click="tabActual = 'posts'" :class="tabActual === 'posts' ? 'bg-[#402749] text-white shadow-md' : 'text-gray-500 hover:bg-white'" class="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300">Posts Socials</button>
-          <button @click="tabActual = 'identitats'" :class="tabActual === 'identitats' ? 'bg-[#402749] text-white shadow-md' : 'text-gray-500 hover:bg-white'" class="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300">Verificació d'Edat</button>
-          <button @click="tabActual = 'eliminats'" :class="tabActual === 'eliminats' ? 'bg-red-600 text-white shadow-md' : 'text-red-500 hover:bg-red-50'" class="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border border-transparent hover:border-red-200">Historial Eliminats</button>
+        <div class="flex gap-2 p-1 bg-gray-200/50 w-full md:w-fit max-w-full rounded-2xl border border-gray-200 shadow-inner overflow-x-auto custom-scrollbar">
+          <button @click="tabActual = 'ressenyes'" :class="tabActual === 'ressenyes' ? 'bg-[#402749] text-white shadow-md' : 'text-gray-500 hover:bg-white'" class="whitespace-nowrap flex-shrink-0 px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300">Ressenyes</button>
+          <button @click="tabActual = 'posts'" :class="tabActual === 'posts' ? 'bg-[#402749] text-white shadow-md' : 'text-gray-500 hover:bg-white'" class="whitespace-nowrap flex-shrink-0 px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300">Posts Socials</button>
+          <button @click="tabActual = 'identitats'" :class="tabActual === 'identitats' ? 'bg-[#402749] text-white shadow-md' : 'text-gray-500 hover:bg-white'" class="whitespace-nowrap flex-shrink-0 px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300">Verificació d'Edat</button>
+          <button @click="tabActual = 'eliminats'" :class="tabActual === 'eliminats' ? 'bg-red-600 text-white shadow-md' : 'text-red-500 hover:bg-red-50'" class="whitespace-nowrap flex-shrink-0 px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border border-transparent hover:border-red-200">Historial Eliminats</button>
         </div>
 
         <button 
