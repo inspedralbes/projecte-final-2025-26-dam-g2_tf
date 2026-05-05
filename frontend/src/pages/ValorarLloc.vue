@@ -5,8 +5,8 @@
          style="background: linear-gradient(160deg, #2a1030 0%, #402749 60%, #1a0820 100%); border: 2px solid #d9a6c2;">
          
       <!-- Decorative elements -->
-      <div class="absolute top-4 left-4 text-[#d9a6c2] opacity-50 text-xl">🔍</div>
-      <div class="absolute top-4 right-4 text-[#d9a6c2] opacity-50 text-xl">🕵️‍♂️</div>
+      <div class="absolute top-4 left-4 text-[#d9a6c2] opacity-50 text-xl font-bold italic">N</div>
+      <div class="absolute top-4 right-4 text-[#d9a6c2] opacity-50 text-xl font-bold italic">W</div>
       
       <h1 class="font-black text-2xl mb-2 text-pink-300 uppercase tracking-widest mt-6">Ruta Finalizada</h1>
       <p class="text-sm text-indigo-200 mb-6 font-medium">
@@ -145,7 +145,7 @@ async function enviarValoracio() {
     });
 
     if (resposta.ok) {
-      await mostrarModal({ isAlert: true, title: "¡Gracias!", message: "Tu valoración se ha enviado correctamente." });
+      await mostrarModal({ isAlert: true, icon: 'none', title: "¡Gracias!", message: "Tu valoración se ha enviado correctamente." });
       router.push({ name: 'home' });
     } else {
       await mostrarModal({ isAlert: true, message: "Ha ocurrido un error al enviar la valoración." });
