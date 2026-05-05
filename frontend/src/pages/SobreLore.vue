@@ -169,6 +169,7 @@ export default {
   flex-direction: column;
   align-items: center;
   transition: transform 0.3s ease;
+  will-change: transform;
 }
 
 .sobre-container:not(.obert):hover {
@@ -187,9 +188,10 @@ export default {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(15, 8, 28, 0.82);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background: rgba(15, 8, 28, 0.9); /* Un peu més opac per dependre menys del blur */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  will-change: opacity, backdrop-filter;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,6 +215,7 @@ export default {
   border-radius: 10px;
   box-shadow: 0 20px 64px rgba(0, 0, 0, 0.7);
   object-fit: contain;
+  will-change: transform, opacity;
 }
 
 .carta-sense-imatge {
@@ -254,14 +257,14 @@ export default {
 
 /* ── Transicions Vue ── */
 .fade-out-leave-active {
-  transition: opacity 0.5s ease;
+  transition: opacity 0.4s ease;
 }
 .fade-out-leave-to {
   opacity: 0;
 }
 
 .slide-down-enter-active {
-  transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
 }
 .slide-down-enter-from {
   opacity: 0;
@@ -269,7 +272,7 @@ export default {
 }
 
 .fade-up-enter-active {
-  transition: all 0.5s ease-out;
+  transition: transform 0.5s ease-out, opacity 0.5s ease-out;
 }
 .fade-up-enter-from {
   opacity: 0;
@@ -277,7 +280,7 @@ export default {
 }
 
 .carta-surt-enter-active {
-  transition: all 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.6s ease-out;
 }
 .carta-surt-enter-from {
   opacity: 0;

@@ -307,6 +307,11 @@ onMounted(() => {
                   if (lloc.ubicacio && lloc.ubicacio.coordinates) {
                       locationCoords.value = lloc.ubicacio.coordinates;
                   }
+                  // Precarrega la carta de lore del lloc
+                  if (lloc.carta_lore) {
+                      const img = new Image();
+                      img.src = `${API_URL}${lloc.carta_lore}`;
+                  }
               }
           } catch (e) {
               console.error("Error obtenint ubicació", e);
@@ -332,6 +337,12 @@ onMounted(() => {
     console.log('Carta de personatge rebuda:', dades);
     // Guardem la info al localStorage per a la següent pàgina
     localStorage.setItem('carta_personatge_actual', JSON.stringify(dades));
+
+    // Precarrega la imatge del personatge
+    if (dades.personatge && dades.personatge.imatge) {
+        const img = new Image();
+        img.src = dades.personatge.imatge;
+    }
   });
 
   socket.value.on('game-started', function(dades) {
@@ -362,6 +373,19 @@ onMounted(() => {
             error.value = "Partida en curs. Mira el mòbil del teu capità!";
         }
     }
+  });
+
+  // PRECARREGA D'IMATGES CRÍTIQUES
+  // Mentre els jugadors esperen, descarreguem les imatges pesades per a que no hi hagi lag després
+  const imatgesAPrecarregar = [
+    `${API_URL}/assets/Sobre/Sobre Tancat.png`,
+    `${API_URL}/assets/Sobre/Sobre_Obert.png`,
+    `${API_URL}/personatges/ContraCarta.png`
+  ];
+
+  imatgesAPrecarregar.forEach(url => {
+    const img = new Image();
+    img.src = url;
   });
 
 });
