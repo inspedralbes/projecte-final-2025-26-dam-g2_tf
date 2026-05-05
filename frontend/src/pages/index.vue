@@ -101,7 +101,8 @@ onMounted(async () => {
       throw new Error("El servidor no ha enviat JSON (comprova Nginx)");
     }
 
-    llistaLlocs.value = await resposta.json();
+    const dades = await resposta.json();
+    llistaLlocs.value = dades.filter(lloc => lloc.control_horari?.actiu === true);
   } catch (err) {
     console.error("Error cargando rutas:", err);
     // Inicializamos como array vacío para que el v-for no explote
