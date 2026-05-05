@@ -475,7 +475,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
           <div class="w-full flex flex-col items-center pt-6 pb-3 px-6">
             <span class="text-3xl mb-1">{{ !modalDades.exit ? '' : modalDades.completat_tot ? (modalDades.cromo_nou ? '' : '🏁') : '' }}</span>
             <h2 class="text-white font-bold text-lg text-center leading-tight">
-              {{ !modalDades.exit ? 'Imatge errònia!' : modalDades.completat_tot ? (modalDades.cromo_nou ? 'Cromo adquirit!' : 'Partida Finalitzada!') : 'Punt trobat!' }}
+              {{ !modalDades.exit ? 'Imatge errònia!' : modalDades.completat_tot ? (modalDades.cromo_nou ? 'Enhorabona per guanyar la partida! Has desbloquejat un cromo nou.' : 'Enhorabona per guanyar la partida! Pots veure el teu cromo al teu perfil.') : 'Punt trobat!' }}
             </h2>
             <p class="text-pink-300 text-sm mt-1 text-center">
               {{ !modalDades.exit ? 'Torna a provar, la foto no s\'assembla prou' : modalDades.nom_lloc }}
@@ -544,8 +544,6 @@ async function enviarDadesAlBackend(imatgeEnText) {
           class="relative flex flex-col items-center rounded-2xl overflow-hidden shadow-2xl mx-6 text-center"
           style="background: linear-gradient(160deg, #2a1030 0%, #402749 60%, #1a0820 100%); border: 2px solid #d9a6c2; max-width: 340px; width: 100%; padding: 2rem 1.5rem;"
         >
-          <span v-if="isTimeout" class="text-5xl mb-3">⌛</span>
-          <span v-else class="text-5xl mb-3"></span>
           <h2 class="text-white font-black text-xl mb-1">{{ isTimeout ? "S'ha acabat el temps!" : "La partida ha acabat!" }}</h2>
           
           <template v-if="isTimeout">
