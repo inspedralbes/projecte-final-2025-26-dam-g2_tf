@@ -324,9 +324,13 @@ async function enviarDadesAlBackend(imatgeEnText) {
        <span class="text-white font-mono font-bold" :class="{'text-red-400 animate-pulse': tempsRestant < 60}">{{ formatarTemps(tempsRestant) }}</span>
     </div>
 
-    <!-- CONTENIDOR 4:3 PER A REFERÈNCIA I QUADRÍCULA -->
-    <div class="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-      <div class="w-full aspect-[4/3] relative border-y border-white/10">
+    <!-- VISOR 4:3 AMB MARGES NEGRES (LETTERBOXING) -->
+    <div class="absolute inset-0 z-10 flex flex-col pointer-events-none">
+      <!-- Marge superior -->
+      <div class="flex-1 bg-black/50 backdrop-blur-[2px]"></div>
+      
+      <!-- Àrea activa 4:3 -->
+      <div class="w-full relative border-y border-white/30" style="aspect-ratio: 4 / 3;">
         
         <!-- Imatge de referència -->
         <img 
@@ -340,7 +344,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
           class="w-full h-full object-cover opacity-40" 
         />
 
-        <!-- Quadrícula de guia (ara dins del marc 4:3) -->
+        <!-- Quadrícula de guia (estrictament dins del 4:3) -->
         <div class="absolute inset-0 flex flex-col justify-evenly">
           <div class="w-full h-[1px] bg-white/40"></div>
           <div class="w-full h-[1px] bg-white/40"></div>
@@ -349,8 +353,10 @@ async function enviarDadesAlBackend(imatgeEnText) {
           <div class="h-full w-[1px] bg-white/40"></div>
           <div class="h-full w-[1px] bg-white/40"></div>
         </div>
-
       </div>
+
+      <!-- Marge inferior -->
+      <div class="flex-1 bg-black/50 backdrop-blur-[2px]"></div>
     </div>
 
     <div v-if="!imatgePunt && fotosActuals.length > 1" class="absolute top-4 right-4 z-30 flex items-center gap-2">
