@@ -326,8 +326,8 @@ async function enviarDadesAlBackend(imatgeEnText) {
 
     <!-- VISOR 3:4 VERTICAL AMB MÀSCARA -->
     <div class="absolute inset-0 z-10 flex items-center justify-center pointer-events-none overflow-hidden">
-      <!-- Aquest div és el visor vertical (3 d'ample per 4 d'alt) -->
-      <div class="relative w-[75%] border-2 border-white/40 shadow-[0_0_0_1000px_rgba(0,0,0,0.6)]" style="aspect-ratio: 3 / 4;">
+      <!-- Aquest div és el visor vertical (3 d'ample per 4 d'alt) ocupant tota l'amplada -->
+      <div class="relative w-full border-y-2 border-white/40 shadow-[0_0_0_1000px_rgba(0,0,0,0.6)]" style="aspect-ratio: 3 / 4;">
         
         <!-- Imatge de referència -->
         <img 
