@@ -101,10 +101,27 @@
         </p>
       </div>
 
-      <div v-if="error" class="mt-4 p-4 bg-red-100 text-red-700 rounded-lg">
+      <div v-if="error && !gameStarted" class="mt-4 p-4 bg-red-100 text-red-700 rounded-lg">
         {{ error }}
         <button @click="$router.push('/joc/inici')" class="underline ml-2">Tornar</button>
       </div>
+
+      <!-- PANTALLA D'ESPERA PER ACOMPANYANTS (MODE GRUP) -->
+      <Transition name="fade">
+        <div v-if="gameStarted" class="mt-6 p-6 bg-[#402749]/5 rounded-3xl border-2 border-[#402749]/10 animate-pulse">
+            <div class="text-5xl mb-4">🕵️‍♂️</div>
+            <h2 class="text-2xl font-black text-[#402749] mb-2 uppercase tracking-tight">Segueixin al Detectiu</h2>
+            <p class="text-gray-600 leading-relaxed">
+                La partida està en curs al mòbil del capità. <br>
+                Ajudeu-lo a trobar tots els racons secrets de la ciutat!
+            </p>
+            <div class="mt-6 flex justify-center gap-2">
+                <div class="w-2 h-2 bg-[#402749] rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                <div class="w-2 h-2 bg-[#402749] rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                <div class="w-2 h-2 bg-[#402749] rounded-full animate-bounce" style="animation-delay: 0.3s"></div>
+            </div>
+        </div>
+      </Transition>
     </div>
   </div>
 </template>
@@ -139,6 +156,9 @@ const nomUsuari = user.nom_usuari || 'Invitado';
 const showModeSelection = ref(false);
 const selectedMode = ref('Individual');
 const selectedDuration = ref(null);
+const gameStarted = ref(false);
+const tipusPartida = ref('');
+const currentIdLloc = ref(null);
 
 const durationOptions = [
     { label: '30 seg', value: 0.5, desc: 'PROVA' },
@@ -297,6 +317,7 @@ onMounted(() => {
 
   socket.value.on('room-info', async (data) => {
       if (data && data.idLloc) {
+          currentIdLloc.value = data.idLloc;
           try {
               const res = await fetch(`${API_URL}/api/mapa/punts/${data.idLloc}`);
               const lloc = await res.json();
@@ -349,29 +370,32 @@ onMounted(() => {
     console.log("[SalaEspera] Joc començat:", dades);
     if (!dades.sessioId) return;
 
-    // Lògica de navegació segons el mode
     const mode = dades.mode || 'individual';
+    tipusPartida.value = mode.toLowerCase();
     
-    if (mode.toLowerCase() === 'individual') {
-        // En individual, tothom navega
+    const userStr = localStorage.getItem('usuari');
+    const userObj = userStr ? JSON.parse(userStr) : {};
+    const perfilId = userObj._id;
+    const isUserCapita = dades.groups && dades.groups.some(g => g.capita_id === perfilId);
+
+    if (mode.toLowerCase() === 'individual' || isUserCapita) {
         router.push('/sobre-lore/' + dades.sessioId);
     } else {
-        // En modes de grup, només naveguen els captains
-        // Comprovem si l'usuari actual és capità d'algun grup
-        const userStr = localStorage.getItem('usuari');
-        const userObj = userStr ? JSON.parse(userStr) : {};
-        const perfilId = userObj._id;
+        // Els acompanyants es queden a la sala d'espera amb el missatge especial
+        gameStarted.value = true;
+        loading.value = false;
+        showModeSelection.value = false;
+        error.value = ""; // Netejem possibles errors previs
+    }
+  });
 
-        const isUserCapita = dades.groups && dades.groups.some(g => g.capita_id === perfilId);
-
-        if (isUserCapita) {
-            router.push('/sobre-lore/' + dades.sessioId);
-        } else {
-            // Els acompanyants es queden a la sala d'espera amb un missatge
-            loading.value = false;
-            showModeSelection.value = false;
-            error.value = "Partida en curs. Mira el mòbil del teu capità!";
-        }
+  socket.value.on('game-over', function(dades) {
+    console.log("[SalaEspera] Joc finalitzat:", dades);
+    // Redirigim a tots els que s'han quedat a la sala d'espera a valorar el lloc
+    if (currentIdLloc.value) {
+        router.push('/valorar-lloc/' + currentIdLloc.value);
+    } else {
+        router.push('/leaderboard/' + roomCode.value);
     }
   });
 

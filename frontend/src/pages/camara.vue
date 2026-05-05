@@ -50,6 +50,7 @@ const cardDefeatFlipped = ref(false);
 const faseDerrota = ref(0);
 const cardDefeatFlippedBig = ref(false);
 const notificacioPunt = ref(null);
+const tipusPartida = ref(''); // 'individual', 'grup', 'grups'
 
 // Temporitzador
 const tempsRestant = ref(null);
@@ -120,6 +121,20 @@ onMounted(async () => {
     await showCustomModal({ isAlert: true, message: "No s'ha pogut accedir a la càmera: " + error.message });
   }
 
+  // Carreguem la sessió per saber el mode de joc i així filtrar notificacions
+  if (codi_sala) {
+    try {
+        const resSessio = await fetch(`${API_URL}/api/sessionsJoc/${codi_sala}`);
+        if (resSessio.ok) {
+            const sessio = await resSessio.json();
+            tipusPartida.value = sessio.tipus_partida || 'individual';
+            console.log("[Càmera] Mode de partida detectat:", tipusPartida.value);
+        }
+    } catch (e) {
+        console.error("[Càmera] Error recuperant dades de la sessió:", e);
+    }
+  }
+
   // Connectem el socket i escoltem l'event 'game-over'
   // Emetem 'join-game-room' perquè el backend ens uneixi a la room correcta
   if (codi_sala) {
@@ -148,6 +163,10 @@ onMounted(async () => {
     });
 
     socketJoc.on('punt-aconseguit', (dades) => {
+      // En el mode 'grup' (tots junts amb un mòbil), no mostrem la notificació
+      // perquè tothom està mirant la mateixa pantalla i ja veu el que passa.
+      if (tipusPartida.value === 'grup') return;
+
       console.log('[Càmera] punt-aconseguit rebut:', dades);
       notificacioPunt.value = dades;
       // Amaguem al cap de 5 segons
