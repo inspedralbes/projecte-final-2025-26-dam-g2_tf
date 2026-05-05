@@ -16,6 +16,8 @@ services:
     restart: always
     expose:
       - "8088"
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
       - PORT=8088
