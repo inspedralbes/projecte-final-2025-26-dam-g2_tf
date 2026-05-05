@@ -14,13 +14,29 @@
           </button>
         </div>
       </h1>
-      
+
+      <!-- PANTALLA D'ESPERA PER ACOMPANYANTS (MODE GRUP) -->
+      <Transition name="fade">
+        <div v-if="gameStarted" class="fixed inset-0 z-[100] bg-[#1a0820] flex flex-col items-center justify-center p-8 text-center">
+            <h2 class="text-4xl font-black text-white mb-4 uppercase tracking-tighter">Segueixin al Detectiu</h2>
+            <p class="text-pink-200/70 text-lg leading-relaxed max-w-md">
+                La partida està en curs al mòbil del capità. <br>
+                Ajudeu-lo a trobar tots els racons secrets de la ciutat!
+            </p>
+            <div class="mt-12 flex justify-center gap-3">
+                <div class="w-3 h-3 bg-pink-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                <div class="w-3 h-3 bg-pink-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                <div class="w-3 h-3 bg-pink-500 rounded-full animate-bounce" style="animation-delay: 0.3s"></div>
+            </div>
+        </div>
+      </Transition>
+
       <div v-if="loading" class="text-gray-500 py-8">
         <div class="animate-spin inline-block w-8 h-8 border-4 border-[#402749]/20 border-t-[#402749] rounded-full mb-4"></div>
         <p>Carregant la sala...</p>
       </div>
 
-      <div v-else>
+      <div v-else-if="!gameStarted">
 
         <div v-if="!showModeSelection" class="mb-8">
           <h2 class="text-xl font-bold text-gray-800 mb-4">Jugadors Connectats</h2>
@@ -96,7 +112,7 @@
                 Cancel·lar
             </button>
         </div>
-        <p v-else class="text-sm text-gray-500 animate-pulse">
+        <p v-else-if="!isCreator" class="text-sm text-gray-500 animate-pulse">
           Esperant que el creador iniciï la partida...
         </p>
       </div>
@@ -105,23 +121,6 @@
         {{ error }}
         <button @click="$router.push('/joc/inici')" class="underline ml-2">Tornar</button>
       </div>
-
-      <!-- PANTALLA D'ESPERA PER ACOMPANYANTS (MODE GRUP) -->
-      <Transition name="fade">
-        <div v-if="gameStarted" class="mt-6 p-6 bg-[#402749]/5 rounded-3xl border-2 border-[#402749]/10 animate-pulse">
-            <div class="text-5xl mb-4">🕵️‍♂️</div>
-            <h2 class="text-2xl font-black text-[#402749] mb-2 uppercase tracking-tight">Segueixin al Detectiu</h2>
-            <p class="text-gray-600 leading-relaxed">
-                La partida està en curs al mòbil del capità. <br>
-                Ajudeu-lo a trobar tots els racons secrets de la ciutat!
-            </p>
-            <div class="mt-6 flex justify-center gap-2">
-                <div class="w-2 h-2 bg-[#402749] rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
-                <div class="w-2 h-2 bg-[#402749] rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
-                <div class="w-2 h-2 bg-[#402749] rounded-full animate-bounce" style="animation-delay: 0.3s"></div>
-            </div>
-        </div>
-      </Transition>
     </div>
   </div>
 </template>
