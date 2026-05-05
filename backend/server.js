@@ -6,8 +6,18 @@ const { connectDB } = require('./src/config/db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const allowedOrigins = [process.env.ORIGIN_URL, 'http://localhost:5173', 'http://localhost:3000'].filter(Boolean);
+
 const corsOptions = {
-    origin: process.env.ORIGIN_URL || 'http://localhost:5173',
+    origin: function (origin, callback) {
+        // Permetre peticions sense origen (com apps mòbils o curl)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost:')) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 };

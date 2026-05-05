@@ -43,19 +43,28 @@ function notifyGameOver(sessioId, sessio, guanyadorId, nomGuanyador) {
 /**
  * Emet l'event 'punt-aconseguit' quan un jugador fa la foto bé.
  */
-function notifyPointAchieved(sessio, nomUsuari, nomPunt) {
+function notifyPointAchieved(sessio, nomUsuari, nomPunt, idPunt) {
     if (!ioInstance || !sessio.codi_sala) return;
     console.log(`[Socket] Notificant punt aconseguit a sala ${sessio.codi_sala}: ${nomUsuari} -> ${nomPunt}`);
     ioInstance.to(sessio.codi_sala).emit('punt-aconseguit', {
         nomUsuari,
-        nomPunt
+        nomPunt,
+        idPunt: idPunt ? idPunt.toString() : null
     });
 }
 
 function configureSocket(server) {
+    const allowedOrigins = [process.env.ORIGIN_URL, 'http://localhost:5173', 'http://localhost:3000'].filter(Boolean);
+
     const io = new Server(server, {
         cors: {
-            origin: process.env.ORIGIN_URL || 'http://localhost:5173',
+            origin: function (origin, callback) {
+                if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost:')) {
+                    callback(null, true);
+                } else {
+                    callback(new Error('Not allowed by CORS'));
+                }
+            },
             methods: ["GET", "POST"]
         }
     });

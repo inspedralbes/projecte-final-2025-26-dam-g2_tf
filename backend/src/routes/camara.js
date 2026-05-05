@@ -227,7 +227,7 @@ router.post('/', async function (req, res) {
                     // Notifiquem a tota la sala (WebSockets)
                     const perfilInfo = await Perfil.findById(perfilId).select('nom_usuari');
                     const nomUsuari = perfilInfo ? perfilInfo.nom_usuari : 'Un jugador';
-                    notifyPointAchieved(sessio, nomUsuari, nomPunt);
+                    notifyPointAchieved(sessio, nomUsuari, nomPunt, puntAMarcar);
 
                     // Calculem el temps total en segons des de l'inici
                     const segons = Math.floor((new Date() - sessio.temps_inici) / 1000);
@@ -243,7 +243,11 @@ router.post('/', async function (req, res) {
                 // Comprovem si ha completat tota la llista.
                 // Usem sessio.id_puntos_de_la_partida.length com a total autoritzat (definit al crear la partida).
                 // Si per algun motiu és 0 (sessió molt antiga), fem fallback a lloc.punts_missio.length.
-                const totalPuntsPartida = sessio.id_puntos_de_la_partida.length || lloc.punts_missio.length;
+                // totalPuntsPartida ha de ser la quantitat de punts ASSIGNATS al jugador si n'hi ha,
+                // sinó fem servir el total de la partida o del lloc.
+                const totalPuntsPartida = (jugador.punts_assignats && jugador.punts_assignats.length > 0)
+                    ? jugador.punts_assignats.length
+                    : (sessio.id_puntos_de_la_partida.length || lloc.punts_missio.length);
                 const haAcabatLaLlista = jugador.punts_completats.length >= totalPuntsPartida;
 
                 console.log(`[Càmera] Total punts partida: ${totalPuntsPartida} | Completats: ${jugador.punts_completats.length} | Acabat: ${haAcabatLaLlista}`);
