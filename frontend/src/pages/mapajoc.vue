@@ -39,11 +39,13 @@
           v-for="(punt, index) in puntsFiltrats"
           :key="index"
           class="marcador"
+          :class="{ 'completat': puntsCompletatsIds.includes(punt._id?.toString()) }"
           :style="{ left: punt.posicio_x + '%', top: punt.posicio_y + '%' }"
           @click="obrirModal(punt)"
           :title="punt.nom_punt"
         >
-          <span class="marcador-numero">{{ index + 1 }}</span>
+          <span v-if="puntsCompletatsIds.includes(punt._id?.toString())" class="marcador-ok">✓</span>
+          <span v-else class="marcador-numero">{{ index + 1 }}</span>
         </button>
       </div>
     </div>
@@ -206,7 +208,8 @@ export default {
       notificacioPunt: null,
 
       personatgeIdUsuari: null, // Per filtrar els punts del mapa segons el personatge (fallback)
-      puntsAssignatsIds: []     // IDs de punts pre-assignats pel backend
+      puntsAssignatsIds: [],     // IDs de punts pre-assignats pel backend
+      puntsCompletatsIds: []     // IDs de punts ja fets pel jugador
     };
   },
 
@@ -321,6 +324,15 @@ export default {
                   this.pistes_gastades = myPlayer.pistes_gastades || 0;
                   this.personatgeIdUsuari = myPlayer.personatge_id || null;
                   this.puntsAssignatsIds = myPlayer.punts_assignats || [];
+                  this.puntsCompletatsIds = (myPlayer.punts_completats || []).map(id => id.toString());
+
+                  // Si ja ha completat tots els seus punts, redirigim directament
+                  const totalMeusPunts = this.puntsAssignatsIds.length > 0 ? this.puntsAssignatsIds.length : (sessio.id_puntos_de_la_partida.length || this.puntsMissio.length);
+                  if (this.puntsCompletatsIds.length >= totalMeusPunts && totalMeusPunts > 0) {
+                      console.log("[Mapa] Partida ja completada per l'usuari. Redirigint...");
+                      this.anarAHome();
+                      return;
+                  }
                   
                   if (myPlayer.pistes_revelades) {
                       myPlayer.pistes_revelades.forEach(id => this.pistesRevelades.add(id.toString()));
@@ -395,7 +407,25 @@ export default {
       this._socket.on('punt-aconseguit', (dades) => {
         console.log('[Mapa] punt-aconseguit rebut:', dades);
         this.notificacioPunt = dades;
-        // Amaguem al cap de 5 segons
+
+        // Actualitzem visualment el marcador si el punt és nostre
+        if (dades.idPunt) {
+          const userStr = localStorage.getItem('usuari');
+          const user = userStr ? JSON.parse(userStr) : {};
+          if (dades.nomUsuari === user.nom_usuari) {
+            if (!this.puntsCompletatsIds.includes(dades.idPunt)) {
+              this.puntsCompletatsIds.push(dades.idPunt);
+              
+              // Comprovem si ha acabat tots els punts ara mateix
+              const totalMeusPunts = this.puntsAssignatsIds.length > 0 ? this.puntsAssignatsIds.length : this.puntsMissio.length;
+              if (this.puntsCompletatsIds.length >= totalMeusPunts && totalMeusPunts > 0) {
+                setTimeout(() => this.anarAHome(), 2000); // Donem temps a veure la notificació
+              }
+            }
+          }
+        }
+
+        // Amaguem la notificació al cap de 5 segons
         setTimeout(() => {
           if (this.notificacioPunt === dades) {
             this.notificacioPunt = null;
@@ -427,6 +457,13 @@ export default {
     },
 
     async obrirModal(punt) {
+      if (this.puntsCompletatsIds.includes(punt._id?.toString())) {
+        await this.mostrarModal({
+          isAlert: true,
+          message: "Ja has completat aquest punt! Busca els altres que encara falten."
+        });
+        return;
+      }
       this.puntSeleccionat = punt;
       this.fotoActual = null;
       this.modalVisible = true;
@@ -665,6 +702,19 @@ export default {
 @keyframes pols {
   0%, 100% { box-shadow: 0 0 0 0 rgba(217, 166, 194, 0.6); }
   50%       { box-shadow: 0 0 0 10px rgba(217, 166, 194, 0); }
+}
+
+.marcador.completat {
+  background-color: #4ade80; /* Verd clar */
+  border-color: #166534;    /* Verd fosc */
+  animation: none;
+  opacity: 0.9;
+}
+
+.marcador-ok {
+  color: #166534;
+  font-weight: 900;
+  font-size: 18px;
 }
 
 .boto-continuar {

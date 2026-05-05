@@ -43,12 +43,13 @@ function notifyGameOver(sessioId, sessio, guanyadorId, nomGuanyador) {
 /**
  * Emet l'event 'punt-aconseguit' quan un jugador fa la foto bé.
  */
-function notifyPointAchieved(sessio, nomUsuari, nomPunt) {
+function notifyPointAchieved(sessio, nomUsuari, nomPunt, idPunt) {
     if (!ioInstance || !sessio.codi_sala) return;
     console.log(`[Socket] Notificant punt aconseguit a sala ${sessio.codi_sala}: ${nomUsuari} -> ${nomPunt}`);
     ioInstance.to(sessio.codi_sala).emit('punt-aconseguit', {
         nomUsuari,
-        nomPunt
+        nomPunt,
+        idPunt: idPunt ? idPunt.toString() : null
     });
 }
 
