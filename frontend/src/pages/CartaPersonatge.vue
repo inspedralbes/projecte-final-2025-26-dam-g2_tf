@@ -12,7 +12,7 @@
           @click="isFlipped = true"
         >
           <!-- CARA DAVANT (ContraCarta) -->
-          <div class="card-front w-full h-full flex items-center justify-center overflow-hidden bg-[#402749] shadow-none rounded-2xl">
+          <div class="card-front w-full h-full flex items-center justify-center overflow-hidden bg-transparent shadow-none">
             <img 
               :src="contraCartaUrl" 
               alt="Contra Carta"
@@ -25,14 +25,14 @@
           </div>
 
           <!-- CARA DARRERE (Personatge) -->
-          <div class="card-back w-full h-full flex items-center justify-center overflow-hidden bg-white shadow-none rounded-2xl">
+          <div class="card-back w-full h-full flex items-center justify-center overflow-hidden bg-transparent shadow-none">
             <img 
               v-if="personatge.imatge" 
               :src="personatge.imatge" 
               :alt="personatge.nom"
               class="w-full h-full object-contain shadow-none"
             />
-            <div v-else class="w-full h-full flex items-center justify-center bg-white text-indigo-300 shadow-none">
+            <div v-else class="w-full h-full flex items-center justify-center bg-transparent text-indigo-300 shadow-none">
               <span class="text-6xl shadow-none">👤</span>
             </div>
           </div>
