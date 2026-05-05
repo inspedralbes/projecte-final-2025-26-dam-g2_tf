@@ -53,9 +53,17 @@ function notifyPointAchieved(sessio, nomUsuari, nomPunt) {
 }
 
 function configureSocket(server) {
+    const allowedOrigins = [process.env.ORIGIN_URL, 'http://localhost:5173', 'http://localhost:3000'].filter(Boolean);
+
     const io = new Server(server, {
         cors: {
-            origin: process.env.ORIGIN_URL || 'http://localhost:5173',
+            origin: function (origin, callback) {
+                if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost:')) {
+                    callback(null, true);
+                } else {
+                    callback(new Error('Not allowed by CORS'));
+                }
+            },
             methods: ["GET", "POST"]
         }
     });
