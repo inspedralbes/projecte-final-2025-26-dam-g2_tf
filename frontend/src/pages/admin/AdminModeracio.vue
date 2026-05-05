@@ -230,6 +230,7 @@
             <thead class="bg-gray-50">
               <tr>
                 <th class="p-4 text-[10px] font-black uppercase text-gray-400">Usuari</th>
+                <th class="p-4 text-[10px] font-black uppercase text-gray-400">Estrelles</th>
                 <th class="p-4 text-[10px] font-black uppercase text-gray-400">Comentari</th>
                 <th class="p-4 text-[10px] font-black uppercase text-gray-400 text-right">Accions</th>
               </tr>
@@ -237,13 +238,20 @@
             <tbody>
               <tr v-for="res in ressenyesFiltrades" :key="res._id" class="border-t border-gray-50 hover:bg-gray-50/50 transition-colors">
                 <td class="p-4 font-bold text-sm text-[#402749]">{{ res.id_usuari?.nom_usuari || 'Anònim' }}</td>
+                <td class="p-4">
+                  <div class="flex text-amber-500">
+                    <svg v-for="i in 5" :key="i" class="w-4 h-4" :class="i <= res.estrelles ? 'fill-current' : 'text-gray-300 fill-current'" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                  </div>
+                </td>
                 <td class="p-4 text-xs text-gray-600">{{ res.comentari }}</td>
                 <td class="p-4 text-right">
                   <button @click="eliminarRessenya(res)" class="text-red-400 hover:text-red-600 font-bold text-[10px] uppercase">Eliminar</button>
                 </td>
               </tr>
               <tr v-if="ressenyesFiltrades.length === 0">
-                <td colspan="3" class="p-10 text-center text-gray-400 italic text-sm">No s'han trobat ressenyes.</td>
+                <td colspan="4" class="p-10 text-center text-gray-400 italic text-sm">No s'han trobat ressenyes.</td>
               </tr>
             </tbody>
           </table>
@@ -472,11 +480,16 @@ const decidirIdentitat = (userId, estat) => {
 const eliminarRessenya = async (resObj) => {
   const isConfirmed = await mostrarModal({ isAlert: false, title: 'Confirmació', message: 'Eliminar ressenya?' });
   if (!isConfirmed) return;
+  const idToErase = resObj._id || resObj.id;
+  if (!idToErase) {
+    console.error("No se encontró el ID de la ressenya", resObj);
+    return;
+  }
   try {
-    const response = await fetch(`${API_URL}/api/social/ressenyes/${resObj._id}`, { method: 'DELETE' });
+    const response = await fetch(`${API_URL}/api/social/admin/ressenyes/${idToErase}`, { method: 'DELETE' });
     if (response.ok) {
       historialEliminats.value.unshift({ tipus: 'ressenya', usuari: resObj.id_usuari?.nom_usuari || 'Anònim', text: resObj.comentari, dataAccio: new Date().toLocaleTimeString() });
-      ressenyes.value = ressenyes.value.filter(r => r._id !== resObj._id);
+      ressenyes.value = ressenyes.value.filter(r => (r._id || r.id) !== idToErase);
     }
   } catch (err) { console.error(err); }
 };

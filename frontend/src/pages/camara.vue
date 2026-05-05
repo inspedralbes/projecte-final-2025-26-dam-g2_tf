@@ -151,7 +151,7 @@ onMounted(async () => {
 });
 
 function anarAHome() {
-  router.push({ name: 'home' });
+  router.push('/valorar-lloc/' + route.params.id);
 }
 
 onUnmounted(() => {
@@ -222,8 +222,8 @@ function tancarModal() {
   mostrarModal.value = false;
 
   if (modalDades.value.completat_tot) {
-    // La partida ha acabat → anem al Inici
-    router.push({ name: 'home' });
+    // La partida ha acabat → anem a valorar
+    router.push('/valorar-lloc/' + route.params.id);
   } else {
     // Si no ha acabat → tornem al mapa amb l'ID de la sessió
     router.push('/mapa/' + route.params.codi_sala);

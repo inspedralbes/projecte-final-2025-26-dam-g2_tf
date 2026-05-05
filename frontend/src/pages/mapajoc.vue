@@ -417,7 +417,8 @@ export default {
 
   methods: {
     anarAHome() {
-      this.$router.push({ name: 'home' });
+      // Usamos el ID del lloc para ir a valorar
+      this.$router.push('/valorar-lloc/' + this.llocRealId);
     },
 
     girarCartaDefeat() {
