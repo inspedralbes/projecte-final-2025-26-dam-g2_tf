@@ -326,26 +326,33 @@ async function enviarDadesAlBackend(imatgeEnText) {
        <span class="text-white font-mono font-bold" :class="{'text-red-400 animate-pulse': tempsRestant < 60}">{{ formatarTemps(tempsRestant) }}</span>
     </div>
 
-    <!-- Imatge de referència del punt específic (de la BD) o genèrica de fons -->
-    <img 
-      v-if="imatgePunt"
-      :src="imatgePunt" 
-      class="absolute inset-0 w-full h-full object-cover z-10 opacity-40 pointer-events-none" 
-    />
-    <img 
-      v-else-if="fotosActuals.length > 0"
-      :src="fotosActuals[indexFotoActual]" 
-      class="absolute inset-0 w-full h-full object-cover z-10 opacity-40 pointer-events-none" 
-    />
-    <!-- Controls nav (només per fotos genèriques múltiples) -->
+    <!-- CONTENIDOR 4:3 PER A REFERÈNCIA I QUADRÍCULA -->
+    <div class="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+      <div class="w-full aspect-[4/3] relative border-y border-white/10">
+        
+        <!-- Imatge de referència -->
+        <img 
+          v-if="imatgePunt"
+          :src="imatgePunt" 
+          class="w-full h-full object-cover opacity-40" 
+        />
+        <img 
+          v-else-if="fotosActuals.length > 0"
+          :src="fotosActuals[indexFotoActual]" 
+          class="w-full h-full object-cover opacity-40" 
+        />
 
-    <div class="absolute inset-0 z-15 pointer-events-none flex flex-col justify-evenly">
-      <div class="w-full h-[1px] bg-white/50"></div>
-      <div class="w-full h-[1px] bg-white/50"></div>
-    </div>
-    <div class="absolute inset-0 z-15 pointer-events-none flex justify-evenly">
-      <div class="h-full w-[1px] bg-white/50"></div>
-      <div class="h-full w-[1px] bg-white/50"></div>
+        <!-- Quadrícula de guia (ara dins del marc 4:3) -->
+        <div class="absolute inset-0 flex flex-col justify-evenly">
+          <div class="w-full h-[1px] bg-white/40"></div>
+          <div class="w-full h-[1px] bg-white/40"></div>
+        </div>
+        <div class="absolute inset-0 flex justify-evenly">
+          <div class="h-full w-[1px] bg-white/40"></div>
+          <div class="h-full w-[1px] bg-white/40"></div>
+        </div>
+
+      </div>
     </div>
 
     <div v-if="!imatgePunt && fotosActuals.length > 1" class="absolute top-4 right-4 z-30 flex items-center gap-2">
