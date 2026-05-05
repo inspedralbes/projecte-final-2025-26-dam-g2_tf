@@ -29,7 +29,6 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=8088
-
       # AFEGIM EL PROXY AMB UN PORT NO PRIVILEGIAT
   proxy:
     image: nginx:alpine
