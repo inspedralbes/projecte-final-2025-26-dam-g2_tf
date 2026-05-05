@@ -6,22 +6,25 @@ const { connectDB } = require('./src/config/db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
-
-app.use(cors({
+const corsOptions = {
     origin: process.env.ORIGIN_URL || 'http://localhost:5173',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
-}));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(cors());
+};
 
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '10mb' }));
+
+// Servir la carpeta public com a base per a tot
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Rutes específiques per a carpetes de fotos (opcional però ajuda a clarificar)
 app.use('/foto_mapa', express.static(path.join(__dirname, 'public/foto_mapa')));
 app.use('/fotos_actuals', express.static(path.join(__dirname, 'public/fotos_actuals')));
 app.use('/fotos_historiques', express.static(path.join(__dirname, 'public/fotos_historiques')));
 app.use('/personatges', express.static(path.join(__dirname, 'public/personatges')));
 app.use('/assets', express.static(path.join(__dirname, 'public/assets')));
+app.use('/Cromos', express.static(path.join(__dirname, 'public/Cromos')));
 // missatge de prova
 async function startServer() {
     try {
