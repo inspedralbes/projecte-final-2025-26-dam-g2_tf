@@ -18,7 +18,7 @@
         <!-- Carta del Policia -->
         <div class="derrota-carta-contenidor">
           <img
-            :src="baseApi + '/personatges/El%20policia.jpg'"
+            :src="netejarUrl(baseApi + '/personatges/El policia.jpg')"
             alt="El Policia"
             class="derrota-carta-img"
           />
@@ -47,6 +47,8 @@
 </template>
 
 <script>
+import { netejarUrl } from '../utils/url';
+
 export default {
   name: 'PantallaDerrota',
   props: {
@@ -56,10 +58,13 @@ export default {
     },
     baseApi: {
       type: String,
-      default: 'http://localhost:8088'
+      default: 'https://north.dam.inspedralbes.cat'
     }
   },
-  emits: ['tornar-inici']
+  emits: ['tornar-inici'],
+  methods: {
+    netejarUrl
+  }
 };
 </script>
 

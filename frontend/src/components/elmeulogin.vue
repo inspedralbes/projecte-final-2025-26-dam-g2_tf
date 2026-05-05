@@ -47,7 +47,7 @@ const correu = ref('');
 const contrasenya = ref('');
 const error = ref('');
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
 
 async function executarAccio() {
   const ruta = esRegistre.value ? '/registre' : '/login';

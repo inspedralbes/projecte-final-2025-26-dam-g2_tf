@@ -8,7 +8,7 @@
       >
         <span class="text-xl text-gray-800">←</span>
       </button>
-      <img :src="lloc.imatge_referencia" class="w-full h-full object-cover">
+      <img :src="netejarUrl(lloc.imatge_referencia)" class="w-full h-full object-cover">
     </div>
 
     <div class="relative bg-white -mt-8 rounded-t-[40px] p-8 flex-1 pb-32 z-10 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
@@ -78,6 +78,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router' 
 import { useAuth } from '../composables/useAuth';
 import { useLoginModal } from '../composables/useLoginModal';
+import { netejarUrl } from '../utils/url';
 
 const route = useRoute()
 const router = useRouter() 
@@ -86,7 +87,7 @@ const lloc = ref(null)
 const { usuari } = useAuth();
 const { obrirModal } = useLoginModal();
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
 
 // Comprova si la ruta està bloquejada en funció de l'hora actual
 const esBloqueig = computed(() => {

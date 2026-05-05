@@ -21,9 +21,17 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=8088
+      - ORIGIN_URL=https://north.dam.inspedralbes.cat
     volumes:
       - ./backend/public/foto_mapa:/app/public/foto_mapa
       - ./backend/public/fotos_partides_usuaris:/app/public/fotos_partides_usuaris
+      - ./backend/public/personatges:/app/public/personatges
+      - ./backend/public/Cromos:/app/public/Cromos
+      - ./backend/public/assets:/app/public/assets
+      - ./backend/public/fotos_actuals:/app/public/fotos_actuals
+      - ./backend/public/fotos_historiques:/app/public/fotos_historiques
+      - ./backend/public/verificacions:/app/public/verificacions
+      - ./.env:/app/.env:ro
 
   proxy:
     image: nginx:stable

@@ -80,7 +80,7 @@ import AdminFormLloc from './components/AdminFormLloc.vue';
 import ConfirmModal from './components/ConfirmModal.vue';
 import { useCustomModal } from '../../composables/useCustomModal';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
 const PATH = `${API_URL}/api/mapa/punts`;
 const { mostrarModal } = useCustomModal();
 

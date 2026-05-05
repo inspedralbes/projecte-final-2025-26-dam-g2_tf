@@ -293,7 +293,7 @@ import { ref, onMounted, computed } from 'vue';
 import AdminNav from './components/AdminNav.vue';
 import { useCustomModal } from '../../composables/useCustomModal';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088'; 
+const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat'; 
 const { mostrarModal } = useCustomModal();
 const tabActual = ref('posts');
 const notificacio = ref('');

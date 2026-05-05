@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import { io } from 'socket.io-client';
 import { useCustomModal } from '../composables/useCustomModal';
+import { netejarUrl } from '../utils/url';
 
 const route = useRoute();
 const router = useRouter(); 
@@ -12,7 +13,7 @@ const { mostrarModal: showCustomModal } = useCustomModal();
 const idLloc = route.params.id;
 const idPuntParam = route.query.idPunt || null;
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
 const videoRef = ref(null);
 const canvasRef = ref(null);
 const carregant = ref(false);
@@ -87,10 +88,7 @@ onMounted(async () => {
       if (respLloc.ok) {
         const lloc = await respLloc.json();
         const punt = (lloc.punts_missio || []).find(p => p._id === idPuntParam || p._id?.toString() === idPuntParam);
-        if (punt && punt.imatge_referencia) {
-          const ruta = punt.imatge_referencia;
-          imatgePunt.value = ruta.startsWith('http') ? ruta : API_URL + ruta;
-        }
+          imatgePunt.value = netejarUrl(punt.imatge_referencia);
       }
     } catch (err) {
       console.error('Error carregant la imatge del punt:', err);
@@ -103,7 +101,7 @@ onMounted(async () => {
       const resposta = await fetch(`${API_URL}/api/fotos-actuals`);
       const dades = await resposta.json();
       if (dades.fotos && dades.fotos.length > 0) {
-        fotosActuals.value = dades.fotos.map(f => `${API_URL}/fotos_actuals/${f}`);
+        fotosActuals.value = dades.fotos.map(f => netejarUrl(`/fotos_actuals/${f}`));
       }
     } catch (err) {
       console.error('Error carregant les fotos actuals:', err);
@@ -326,26 +324,39 @@ async function enviarDadesAlBackend(imatgeEnText) {
        <span class="text-white font-mono font-bold" :class="{'text-red-400 animate-pulse': tempsRestant < 60}">{{ formatarTemps(tempsRestant) }}</span>
     </div>
 
-    <!-- Imatge de referència del punt específic (de la BD) o genèrica de fons -->
-    <img 
-      v-if="imatgePunt"
-      :src="imatgePunt" 
-      class="absolute inset-0 w-full h-full object-cover z-10 opacity-40 pointer-events-none" 
-    />
-    <img 
-      v-else-if="fotosActuals.length > 0"
-      :src="fotosActuals[indexFotoActual]" 
-      class="absolute inset-0 w-full h-full object-cover z-10 opacity-40 pointer-events-none" 
-    />
-    <!-- Controls nav (només per fotos genèriques múltiples) -->
+    <!-- VISOR 4:3 AMB MARGES NEGRES (LETTERBOXING) -->
+    <div class="absolute inset-0 z-10 flex flex-col pointer-events-none">
+      <!-- Marge superior -->
+      <div class="flex-1 bg-black/50 backdrop-blur-[2px]"></div>
+      
+      <!-- Àrea activa 4:3 -->
+      <div class="w-full relative border-y border-white/30" style="aspect-ratio: 4 / 3;">
+        
+        <!-- Imatge de referència -->
+        <img 
+          v-if="imatgePunt"
+          :src="imatgePunt" 
+          class="w-full h-full object-cover opacity-40" 
+        />
+        <img 
+          v-else-if="fotosActuals.length > 0"
+          :src="fotosActuals[indexFotoActual]" 
+          class="w-full h-full object-cover opacity-40" 
+        />
 
-    <div class="absolute inset-0 z-15 pointer-events-none flex flex-col justify-evenly">
-      <div class="w-full h-[1px] bg-white/50"></div>
-      <div class="w-full h-[1px] bg-white/50"></div>
-    </div>
-    <div class="absolute inset-0 z-15 pointer-events-none flex justify-evenly">
-      <div class="h-full w-[1px] bg-white/50"></div>
-      <div class="h-full w-[1px] bg-white/50"></div>
+        <!-- Quadrícula de guia (estrictament dins del 4:3) -->
+        <div class="absolute inset-0 flex flex-col justify-evenly">
+          <div class="w-full h-[1px] bg-white/40"></div>
+          <div class="w-full h-[1px] bg-white/40"></div>
+        </div>
+        <div class="absolute inset-0 flex justify-evenly">
+          <div class="h-full w-[1px] bg-white/40"></div>
+          <div class="h-full w-[1px] bg-white/40"></div>
+        </div>
+      </div>
+
+      <!-- Marge inferior -->
+      <div class="flex-1 bg-black/50 backdrop-blur-[2px]"></div>
     </div>
 
     <div v-if="!imatgePunt && fotosActuals.length > 1" class="absolute top-4 right-4 z-30 flex items-center gap-2">
@@ -389,7 +400,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
               <div class="w-full px-5 pb-4">
                 <div class="w-full rounded-xl overflow-hidden" style="border: 2px solid #d9a6c2; aspect-ratio: 4/3;">
                   <img v-if="modalDades.imatge_punt"
-                    :src="modalDades.imatge_punt.startsWith('http') ? modalDades.imatge_punt : `${API_URL}${modalDades.imatge_punt}`"
+                    :src="netejarUrl(modalDades.imatge_punt)"
                     class="w-full h-full object-cover" alt="Foto del punt" />
                   <div v-else class="w-full h-full flex items-center justify-center bg-black/40">
                     <span class="text-white/50 text-sm">Sense imatge</span>
@@ -407,7 +418,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
               style="border: 2px solid #f59e0b;">
               <div class="relative w-full h-full">
                 <img
-                  :src="modalDades.foto_historica.startsWith('http') ? modalDades.foto_historica : `${API_URL}${modalDades.foto_historica}`"
+                  :src="netejarUrl(modalDades.foto_historica)"
                   class="w-full h-full object-cover"
                   alt="Foto històrica"
                 />
@@ -448,7 +459,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
           <div v-if="modalDades.exit" class="w-full px-6 pb-3">
             <div class="w-full rounded-xl overflow-hidden shadow-lg" style="border: 2px solid #d9a6c2; aspect-ratio: 4/3;">
               <img v-if="modalDades.imatge_punt"
-                :src="modalDades.imatge_punt.startsWith('http') ? modalDades.imatge_punt : `${API_URL}${modalDades.imatge_punt}`"
+                :src="netejarUrl(modalDades.imatge_punt)"
                 class="w-full h-full object-cover" alt="Foto del punt" />
               <div v-else class="w-full h-full flex items-center justify-center bg-black/40">
                 <span class="text-white/50 text-sm">Sense imatge</span>
@@ -486,7 +497,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
           >
             <div class="w-full h-full flex items-center justify-center overflow-hidden bg-[#402749] shadow-none">
               <img 
-                :src="API_URL + '/personatges/El%20policia.jpg'" 
+                :src="netejarUrl(API_URL + '/personatges/El policia.jpg')" 
                 alt="Carta El Policia" 
                 class="w-full h-full object-contain shadow-none scale-105" 
               />

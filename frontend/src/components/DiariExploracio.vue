@@ -19,7 +19,7 @@
       <div ref="pagesContainer">
         <!-- FRONT COVER -->
         <div class="page cover front" data-density="hard">
-          <div class="cover-skin" :style="{ backgroundImage: `url(${API_URL}/portada.png)` }">
+          <div class="cover-skin" :style="{ backgroundImage: `url(${netejarUrl(API_URL + '/portada.png')})` }">
             <!-- Removed overlays to show the full portada image -->
           </div>
         </div>
@@ -32,7 +32,7 @@
           data-density="soft"
         >
           <img 
-            :src="`${API_URL}/${idx % 2 === 0 ? 'hoja2.png' : 'hoja.png'}`" 
+            :src="netejarUrl(`${API_URL}/${idx % 2 === 0 ? 'hoja2.png' : 'hoja.png'}`)" 
             class="page-base-image"
           />
           <div class="inner-shadow" :class="idx % 2 === 0 ? 'shadow-left-page' : 'shadow-right-page'"></div>
@@ -75,12 +75,13 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { PageFlip } from 'page-flip';
+import { netejarUrl } from '../utils/url';
 
 const props = defineProps({
   cromos: { type: Array, default: () => [] }
 });
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
 const bookElement = ref(null);
 const pagesContainer = ref(null);
 const currentPage = ref(0);
@@ -107,8 +108,7 @@ const bookCenterStyle = computed(() => {
 });
 
 function imatgeCromo(src) {
-  if (!src) return '';
-  return src.startsWith('http') ? src : API_URL + src;
+  return netejarUrl(src);
 }
 
 function formatDate(d) {

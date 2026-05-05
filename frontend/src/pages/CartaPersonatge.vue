@@ -67,19 +67,21 @@
 </template>
 
 <script>
+import { netejarUrl } from '../utils/url';
+
 export default {
   data() {
     return {
       sessioId: this.$route.params.sessioId,
       personatge: null,
       isFlipped: false,
-      baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8088',
+      baseUrl: import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat',
       brandColor: '#402749'
     };
   },
   computed: {
     contraCartaUrl() {
-      return `${this.baseUrl}/personatges/ContraCarta.png`;
+      return netejarUrl(`${this.baseUrl}/personatges/ContraCarta.png`);
     }
   },
   async mounted() {
@@ -117,7 +119,7 @@ export default {
              this.personatge = {
                nom: p.nom,
                descripcio: p.descripcio || '',
-               imatge: p.imatge ? (p.imatge.startsWith('http') ? p.imatge : this.baseUrl + p.imatge) : ''
+               imatge: netejarUrl(p.imatge)
              };
           } else {
              console.error("[CartaPersonatge] No s'ha trobat jugador o personatge a la sessió");
