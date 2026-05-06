@@ -91,16 +91,22 @@
                 </label>
                 <label class="flex items-center space-x-3 p-3 rounded-lg border hover:bg-[#402749]/5 cursor-pointer" :class="{'border-[#402749] bg-[#402749]/5': selectedMode === 'Grup', 'border-gray-200': selectedMode !== 'Grup'}">
                     <input type="radio" v-model="selectedMode" value="Grup" class="text-[#402749] focus:ring-[#402749] w-5 h-5">
-                    <div>
-                        <span class="block font-bold text-gray-800">Grup</span>
-                        <span class="block text-sm text-gray-500">Tots jugueu junts amb un sol mòbil.</span>
+                    <div class="flex justify-between items-center w-full">
+                        <div>
+                            <span class="block font-bold text-gray-800">Grup</span>
+                            <span class="block text-sm text-gray-500">Tots jugueu junts amb un sol mòbil.</span>
+                        </div>
+                        <button v-if="selectedMode === 'Grup'" @click.stop.prevent="showGroupsModal = true" class="text-[10px] bg-[#402749] text-white px-3 py-1.5 rounded-lg font-black uppercase tracking-widest shadow-sm ml-2 active:scale-95 transition-all">VEURE</button>
                     </div>
                 </label>
                 <label class="flex items-center space-x-3 p-3 rounded-lg border hover:bg-[#402749]/5 cursor-pointer" :class="{'border-[#402749] bg-[#402749]/5': selectedMode === 'Grups', 'border-gray-200': selectedMode !== 'Grups'}">
                     <input type="radio" v-model="selectedMode" value="Grups" class="text-[#402749] focus:ring-[#402749] w-5 h-5">
-                    <div>
-                        <span class="block font-bold text-gray-800">Grups</span>
-                        <span class="block text-sm text-gray-500">Es formaran grups de forma aleatòria. Un mòbil per grup.</span>
+                    <div class="flex justify-between items-center w-full">
+                        <div>
+                            <span class="block font-bold text-gray-800">Grups</span>
+                            <span class="block text-sm text-gray-500">Es formaran grups de forma aleatòria. Un mòbil per grup.</span>
+                        </div>
+                        <button v-if="selectedMode === 'Grups'" @click.stop.prevent="showGroupsModal = true" class="text-[10px] bg-[#402749] text-white px-3 py-1.5 rounded-lg font-black uppercase tracking-widest shadow-sm ml-2 active:scale-95 transition-all">VEURE</button>
                     </div>
                 </label>
             </div>
@@ -112,6 +118,7 @@
                 Cancel·lar
             </button>
         </div>
+
         <p v-else-if="!isCreator" class="text-sm text-gray-500 animate-pulse">
           Esperant que el creador iniciï la partida...
         </p>
@@ -122,11 +129,54 @@
         <button @click="$router.push('/joc/inici')" class="underline ml-2">Tornar</button>
       </div>
     </div>
+
+    <!-- MODAL DE PREVIEW DE GRUPS -->
+    <Transition name="fade">
+      <div v-if="showGroupsModal" class="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl overflow-y-auto max-h-[80vh] border border-white/20 animate-fade-in">
+          <h2 class="text-2xl font-black text-[#402749] mb-6 uppercase tracking-tighter text-center italic text-shadow-sm">Equips Generats</h2>
+          
+          <div class="space-y-4">
+            <div v-for="grup in previewGroups" :key="grup.grup_id" class="bg-[#402749]/5 p-5 rounded-3xl border border-[#402749]/10 shadow-md">
+              <h3 class="text-[10px] font-black text-[#402749] uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
+                <span class="bg-[#402749] text-white w-6 h-6 rounded-lg flex items-center justify-center text-[10px] shadow-sm">
+                  {{ grup.grup_id }}
+                </span>
+                Equip {{ grup.grup_id }}
+              </h3>
+              
+              <div class="space-y-3">
+                <div v-for="(nom, idx) in grup.members_nom" :key="idx" class="flex items-center gap-3 bg-white/60 p-2 rounded-2xl border border-white shadow-sm">
+                  <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#bc85ab] to-[#f5cbdd] flex items-center justify-center text-xs font-black text-[#402749] shadow-sm">
+                    {{ nom.charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="flex-1 flex items-center justify-between">
+                    <span class="text-sm font-bold text-gray-800">
+                      {{ nom }}
+                    </span>
+                    <span v-if="nom === grup.capita_nom" class="text-[8px] bg-[#402749] text-white px-2 py-1 rounded-lg font-black uppercase tracking-widest shadow-sm">CAPITÀ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-8 flex gap-3">
+            <button @click="obrirPreviewGrups" class="flex-1 bg-gray-100 text-gray-600 font-bold py-4 rounded-2xl hover:bg-gray-200 transition-all text-[10px] uppercase tracking-widest">
+              RE-GENERAR
+            </button>
+            <button @click="showGroupsModal = false" class="flex-2 bg-[#402749] text-white font-bold py-4 px-8 rounded-2xl shadow-lg hover:bg-[#402749]/80 transition-all active:scale-95 uppercase tracking-widest text-[10px]">
+              D'ACORD
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { io } from 'socket.io-client';
 import { useCustomModal } from '../composables/useCustomModal';
@@ -159,6 +209,8 @@ const selectedDuration = ref(null);
 const gameStarted = ref(false);
 const tipusPartida = ref('');
 const currentIdLloc = ref(null);
+const showGroupsModal = ref(false);
+const previewGroups = ref([]);
 
 const durationOptions = [
     { label: '30 seg', value: 0.5, desc: 'PROVA' },
@@ -259,6 +311,23 @@ function generarGrups() {
     return groups;
 }
 
+function obrirPreviewGrups() {
+    if (players.value.length < 2 && selectedMode.value === 'Grups') {
+        mostrarModal({ isAlert: true, message: 'Es necessiten almenys 2 jugadors per formar grups.' });
+        return;
+    }
+    previewGroups.value = generarGrups();
+    showGroupsModal.value = true;
+}
+
+watch(selectedMode, (newMode) => {
+    if (newMode === 'Grups' || newMode === 'Grup') {
+        obrirPreviewGrups();
+    } else {
+        previewGroups.value = [];
+    }
+});
+
 async function confirmarModeIComencar() {
     if (!selectedDuration.value) {
         await mostrarModal({ isAlert: true, message: 'Si us plau, selecciona una durada per a la partida.' });
@@ -270,7 +339,7 @@ async function confirmarModeIComencar() {
         return;
     }
     if (socket.value && roomCode.value) {
-        const groups = generarGrups();
+        const groups = previewGroups.value.length > 0 ? previewGroups.value : generarGrups();
         const dades = {
             roomCode: roomCode.value,
             mode: selectedMode.value,
