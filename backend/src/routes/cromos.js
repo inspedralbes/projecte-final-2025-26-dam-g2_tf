@@ -14,8 +14,7 @@ router.get('/totes', function (req, res) {
     }
 
     if (!fs.existsSync(base)) {
-        console.error("Directori de cromos no trobat en cap variant (Cromos/cromos):", base);
-        return res.json({ cromos: [], error: "Directori no trobat", searchedPath: base });
+        return res.json({ cromos: [] });
     }
 
     const dirName = path.basename(base);
@@ -27,7 +26,6 @@ router.get('/totes', function (req, res) {
             path: `/${dirName}/` + f
         }));
 
-    console.log(`[Cromos] S'han trobat ${cromos.length} cromos.`);
     res.json({ cromos });
 });
 

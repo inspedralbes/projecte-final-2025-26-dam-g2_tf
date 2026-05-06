@@ -1,0 +1,122 @@
+# ─────────────────────────────────────────────────────────────
+# FITXER DE CI/CD: Tests automàtics en cada push
+# ─────────────────────────────────────────────────────────────
+# Aquest fitxer diu a GitHub que cada vegada que es faci un
+# "git push", ha d'executar tots els tests automàticament.
+# Si algún test falla → el push/merge queda BLOQUEJAT.
+# ─────────────────────────────────────────────────────────────
+
+name: "🧪 Tests Automàtics CI"
+
+# QUAN s'executa aquest workflow?
+on:
+  push:
+    # En qualsevol push a qualsevol branca
+    branches: ["**"]
+  pull_request:
+    # En qualsevol pull request cap a main o master
+    branches: [main, master]
+
+# ─────────────────────────────────────────────────────────────
+# JOBS: Les tasques que s'executaran
+# ─────────────────────────────────────────────────────────────
+jobs:
+
+  # ───────────────────────────────────────────────────────────
+  # JOB 1: Tests del Backend (Jest + Supertest)
+  # ───────────────────────────────────────────────────────────
+  backend-tests:
+    name: "🔧 Tests del Backend"
+    runs-on: ubuntu-latest  # Màquina virtual Linux gratuïta de GitHub
+
+    steps:
+      # Pas 1: Descarregar el codi del repositori
+      - name: "📥 Descarregar el codi"
+        uses: actions/checkout@v4
+
+      # Pas 2: Configurar Node.js versió 20
+      - name: "⚙️ Configurar Node.js 20"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      # Pas 3: Instal·lar les dependències del backend
+      - name: "📦 Instal·lar dependències del backend"
+        run: npm ci
+        working-directory: backend
+
+      # Pas 4: Executar els tests
+      - name: "🧪 Executar tests del backend"
+        run: npm test
+        working-directory: backend
+        env:
+          NODE_ENV: test
+          # No necessitem MONGODB_URI real perquè fem servir mongodb-memory-server
+
+  # ───────────────────────────────────────────────────────────
+  # JOB 2: Tests del Frontend (Vitest)
+  # ───────────────────────────────────────────────────────────
+  frontend-tests:
+    name: "🎨 Tests del Frontend"
+    runs-on: ubuntu-latest
+
+    steps:
+      # Pas 1: Descarregar el codi
+      - name: "📥 Descarregar el codi"
+        uses: actions/checkout@v4
+
+      # Pas 2: Configurar Node.js
+      - name: "⚙️ Configurar Node.js 20"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      # Pas 3: Instal·lar les dependències del frontend
+      - name: "📦 Instal·lar dependències del frontend"
+        run: npm ci
+        working-directory: frontend
+
+      # Pas 4: Executar els tests del frontend
+      - name: "🧪 Executar tests del frontend"
+        run: npm test
+        working-directory: frontend
+        env:
+          NODE_ENV: test
+          # Variables d'entorn necessàries per als tests
+          VITE_API_URL: "https://north.dam.inspedralbes.cat"
+
+  # ───────────────────────────────────────────────────────────
+  # JOB 3: Verificació del Build (comprova que el frontend compila)
+  # S'executa NOMÉS si els dos jobs anteriors han passat (needs)
+  # ───────────────────────────────────────────────────────────
+  build-check:
+    name: "🏗️ Verificació del Build"
+    runs-on: ubuntu-latest
+    # Espera que els tests de backend I frontend hagin passat primer
+    needs: [backend-tests, frontend-tests]
+
+    steps:
+      - name: "📥 Descarregar el codi"
+        uses: actions/checkout@v4
+
+      - name: "⚙️ Configurar Node.js 20"
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: "📦 Instal·lar dependències"
+        run: npm ci
+        working-directory: frontend
+
+      # Compilar el frontend per comprovar que no hi ha errors de codi
+      - name: "🏗️ Compilar el frontend"
+        run: npm run build
+        working-directory: frontend
+        env:
+          VITE_API_URL: "https://north.dam.inspedralbes.cat"

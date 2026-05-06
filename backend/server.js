@@ -10,7 +10,6 @@ const allowedOrigins = [process.env.ORIGIN_URL, 'http://localhost:5173', 'http:/
 
 const corsOptions = {
     origin: function (origin, callback) {
-        // Permetre peticions sense origen (com apps mòbils o curl)
         if (!origin) return callback(null, true);
         if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost:')) {
             callback(null, true);
@@ -35,36 +34,50 @@ app.use('/fotos_historiques', express.static(path.join(__dirname, 'public/fotos_
 app.use('/personatges', express.static(path.join(__dirname, 'public/personatges')));
 app.use('/assets', express.static(path.join(__dirname, 'public/assets')));
 app.use('/Cromos', express.static(path.join(__dirname, 'public/Cromos')));
-// missatge de prova
+
+
+// La separem del servidor per poder fer tests sense aixecar el servidor real
+function configurarRutes(middlewareHorari) {
+    // Rutes que NO necessiten control d'horari
+    app.use('/api/usuari', require('./src/routes/usuari'));
+    app.use('/api/social', require('./src/routes/social'));
+    app.use('/api/peticions', require('./src/routes/peticions'));
+    app.use('/api/admin', require('./src/routes/admin'));
+    app.use('/api/auth', require('./src/routes/auth'));
+    app.use('/api/fotos-actuals', require('./src/routes/fotos'));
+    app.use('/api/fotos-historiques', require('./src/routes/fotos_historiques'));
+    app.use('/api/personatges', require('./src/routes/personatges'));
+    app.use('/api/verificacio', require('./src/routes/verificacio'));
+    app.use('/api/carta-lore', require('./src/routes/carta_lore'));
+    app.use('/api/cromos', require('./src/routes/cromos'));
+
+   
+    if (middlewareHorari) {
+        app.use('/api/cercador', middlewareHorari, require('./src/routes/cercador'));
+        app.use('/api/mapa', middlewareHorari, require('./src/routes/mapa'));
+        app.use('/api/validar-foto', middlewareHorari, require('./src/routes/camara'));
+        app.use('/api/sessionsJoc', middlewareHorari, require('./src/routes/sessionsJoc'));
+    }
+}
+
+
+configurarRutes(null); 
+
 async function startServer() {
     try {
         await connectDB();
         console.log("MongoDB Connectat correctament");
 
-        // Iniciar tasques programades (Cron jobs)
         const { iniciarCronJobs } = require('./src/utils/cron');
         iniciarCronJobs();
 
         const { comprovarToqueDeQueda } = require('./src/utils/horari');
 
-        // Rutes
         app.use('/api/cercador', comprovarToqueDeQueda, require('./src/routes/cercador'));
-        app.use('/api/usuari', require('./src/routes/usuari'));
-        app.use('/api/social', require('./src/routes/social'));
         app.use('/api/mapa', comprovarToqueDeQueda, require('./src/routes/mapa'));
-        app.use('/api/peticions', require('./src/routes/peticions'));
-        app.use('/api/admin', require('./src/routes/admin'));
-        app.use('/api/auth', require('./src/routes/auth'));
         app.use('/api/validar-foto', comprovarToqueDeQueda, require('./src/routes/camara'));
-        app.use('/api/fotos-actuals', require('./src/routes/fotos'));
-        app.use('/api/fotos-historiques', require('./src/routes/fotos_historiques'));
         app.use('/api/sessionsJoc', comprovarToqueDeQueda, require('./src/routes/sessionsJoc'));
-        app.use('/api/personatges', require('./src/routes/personatges'));
-        app.use('/api/verificacio', require('./src/routes/verificacio'));
-        app.use('/api/carta-lore', require('./src/routes/carta_lore'));
-        app.use('/api/cromos', require('./src/routes/cromos'));
 
-        // Configurar Socket.io
         const http = require('http');
         const server = http.createServer(app);
 
@@ -81,4 +94,8 @@ async function startServer() {
     }
 }
 
-startServer();
+if (require.main === module) {
+    startServer();
+}
+
+module.exports = app;
