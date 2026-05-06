@@ -1,8 +1,12 @@
 @import "tailwindcss";
 
 /* Configuració base */
-html, body, #app, #app-container {
-  background-color: #402749 !important; /* Color fosc corporatiu del PDF */
+html,
+body,
+#app,
+#app-container {
+  background-color: #402749 !important;
+  /* Color fosc corporatiu del PDF */
   margin: 0;
   padding: 0;
   height: 100%;
@@ -24,6 +28,7 @@ html, body, #app, #app-container {
     transform: translateY(30px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -40,6 +45,7 @@ html, body, #app, #app-container {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;

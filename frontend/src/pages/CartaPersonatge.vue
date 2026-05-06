@@ -43,8 +43,8 @@
       <transition name="fade-up">
         <div v-if="isFlipped" class="w-full text-center space-y-10 shadow-none">
           
-          <div class="px-2 shadow-none">
-            <p class="text-white text-lg leading-relaxed font-medium shadow-none">
+          <div class="px-6 py-6 bg-black/20 rounded-lg border-l-4 border-white/30 backdrop-blur-sm shadow-none">
+            <p class="detective-font text-white text-base md:text-lg leading-relaxed shadow-none">
               {{ personatge.descripcio || 'No hi ha descripció disponible per a aquest personatge.' }}
             </p>
           </div>
@@ -138,6 +138,8 @@ export default {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&display=swap');
+
 .perspective-1000 {
   perspective: 1000px;
 }
@@ -172,6 +174,11 @@ export default {
 
 .card-back {
   transform: rotateY(180deg);
+}
+
+.detective-font {
+  font-family: 'Special Elite', 'Courier New', Courier, monospace;
+  opacity: 0.9;
 }
 
 /* Animacions de transició */
