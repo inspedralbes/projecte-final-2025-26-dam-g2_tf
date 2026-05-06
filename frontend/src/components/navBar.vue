@@ -3,11 +3,14 @@
 
     <div class="grid h-full max-w-lg grid-cols-5 mx-auto">
         
-        <button @click="irA('/social')" type="button" class="inline-flex flex-col items-center justify-center p-4 hover:bg-[#5d3962] group transition-colors">
+        <button @click="irA('/social')" type="button" class="relative inline-flex flex-col items-center justify-center p-4 hover:bg-[#5d3962] group transition-colors">
             <svg class="w-6 h-6 mb-1 text-white/70 group-hover:text-[#f5cbdd]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
             <span class="text-[10px] text-white/50 group-hover:text-white uppercase font-bold">Social</span>
+            <span v-if="peticionsPendentsCount > 0" class="absolute top-2 right-4 bg-red-500 text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full shadow-lg border border-[#402749]">
+              {{ peticionsPendentsCount }}
+            </span>
         </button>
 
         <button @click="irA('/cercador')" type="button" class="inline-flex flex-col items-center justify-center p-4 hover:bg-[#5d3962] group transition-colors">
@@ -44,8 +47,46 @@
 </template>
 
 <script setup>
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuth } from '../composables/useAuth';
+
 const router = useRouter();
+const { usuari } = useAuth();
+const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+
+const peticionsPendentsCount = ref(0);
+let intervalId = null;
+
+async function carregarPeticionsPendents() {
+  if (!usuari.value) {
+    peticionsPendentsCount.value = 0;
+    return;
+  }
+  try {
+    const res = await fetch(`${API_URL}/api/usuari/${usuari.value._id}`);
+    if (res.ok) {
+      const dades = await res.json();
+      peticionsPendentsCount.value = dades.sollicituds_pendents?.length || 0;
+    }
+  } catch (err) {
+    console.error("Error carregar peticions navBar:", err);
+  }
+}
+
+onMounted(() => {
+  carregarPeticionsPendents();
+  intervalId = setInterval(carregarPeticionsPendents, 15000);
+});
+
+onUnmounted(() => {
+  if (intervalId) clearInterval(intervalId);
+});
+
+watch(usuari, (nou) => {
+  if (nou) carregarPeticionsPendents();
+  else peticionsPendentsCount.value = 0;
+});
 
 function irA(ruta) {
   router.push(ruta);
