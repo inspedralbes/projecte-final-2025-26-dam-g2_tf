@@ -103,18 +103,21 @@ async function carregarPuntsDeLaBD() {
   try {
     const resposta = await fetch(`${API_URL}/api/mapa/punts`);
     let llocs = await resposta.json();
-    llocs = llocs.filter(lloc => lloc.control_horari?.actiu === true);
+    llocs = llocs.filter(lloc => lloc.estat !== 'desactivat');
     
     llocs.forEach(lloc => {
       const [lng, lat] = lloc.ubicacio.coordinates;
+      const esProperament = lloc.estat === 'properament';
+      const markerOptions = esProperament ? { opacity: 0.5 } : {};
       
       const popupContent = `
-        <div class="custom-popup p-1">
+        <div class="custom-popup p-1 ${esProperament ? 'opacity-50' : ''}">
           <img 
             src="${netejarUrl(lloc.imatge_referencia) || 'https://via.placeholder.com/150'}" 
-            class="w-full h-24 object-cover rounded-md mb-2" 
+            class="w-full h-24 object-cover rounded-md mb-2 ${esProperament ? 'grayscale' : ''}" 
           />
           <h3 class="text-base font-bold text-[#402749] mb-1">${lloc.nom}</h3>
+          ${esProperament ? '<p class="text-[#402749] font-black text-sm mb-1">PROPERAMENT</p>' : ''}
           
           <p class="text-[10px] font-bold text-[#9f6795] uppercase mb-1">
             ${lloc.tags ? lloc.tags.join(' • ') : ''}
@@ -124,15 +127,18 @@ async function carregarPuntsDeLaBD() {
             <span><b>Dificultat:</b> ${lloc.dificultat || 'N/A'}</span>
           </div>
 
-          <button 
-            onclick="anarADetall('${lloc._id}')" 
-            class="w-full bg-[#9f6795] text-white py-2 rounded-md font-bold text-sm hover:bg-[#8a5982] transition-colors"
-          >
-            Més info
-          </button>
+          ${esProperament ? 
+            '<button disabled class="w-full bg-gray-400 text-white py-2 rounded-md font-bold text-sm cursor-not-allowed opacity-60">Més info</button>' :
+            `<button 
+              onclick="anarADetall('${lloc._id}')" 
+              class="w-full bg-[#9f6795] text-white py-2 rounded-md font-bold text-sm hover:bg-[#8a5982] transition-colors"
+            >
+              Més info
+            </button>`
+          }
         </div>
       `;
-      L.marker([lat, lng]).addTo(mapa).bindPopup(popupContent);
+      L.marker([lat, lng], markerOptions).addTo(mapa).bindPopup(popupContent);
     });
   } catch (e) {
     console.error("Error BD:", e);

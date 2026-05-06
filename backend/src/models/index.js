@@ -75,7 +75,8 @@ const LlocSchema = new mongoose.Schema({
   fotos_historiques: [String],
   fotos_actuals: [String],
   cromo_imatge: { type: String, default: '' },  // ex: '/Cromos/SagradaFamilia_historica.jpg'
-  carta_lore: { type: String, default: '' }     // ex: '/assets/Carta_lore/Carta_SagradaFamilia.png'
+  carta_lore: { type: String, default: '' },     // ex: '/assets/Carta_lore/Carta_SagradaFamilia.png'
+  estat: { type: String, default: 'actiu' }       // actiu, desactivat, properament
 });
 
 // 4. SessioJoc (sessions)

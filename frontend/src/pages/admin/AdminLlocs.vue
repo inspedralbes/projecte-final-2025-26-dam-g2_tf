@@ -29,6 +29,7 @@
             <tr class="text-[11px] text-[#bc85ab] uppercase tracking-[0.2em] font-black">
               <th class="p-6">Lloc</th>
               <th class="p-6 text-center">Restricció Horària</th>
+              <th class="p-6 text-center">Estat</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
@@ -44,19 +45,31 @@
               </td>
               <td class="p-6 text-center" @click.stop>
                 <div class="flex flex-col items-center gap-1">
-   <button
-  @click="toggleRestricció(item)"
-  :class="item.control_horari?.actiu
-    ? 'bg-orange-100 text-orange-600 hover:bg-orange-200'
-    : 'bg-gray-100 text-gray-400 hover:bg-gray-200'"
-  class="flex items-center justify-center px-4 py-2 rounded-xl text-xs font-black uppercase transition-all min-w-[120px]"
+    <button
+   @click="toggleRestricció(item)"
+   :class="item.control_horari?.actiu
+     ? 'bg-orange-100 text-orange-600 hover:bg-orange-200'
+     : 'bg-gray-100 text-gray-400 hover:bg-gray-200'"
+   class="flex items-center justify-center px-4 py-2 rounded-xl text-xs font-black uppercase transition-all min-w-[120px]"
 >
-  <span>{{ item.control_horari?.actiu ? 'Activada' : 'Desactivada' }}</span>
-</button>
+   <span>{{ item.control_horari?.actiu ? 'Activada' : 'Desactivada' }}</span>
+ </button>
                   <span v-if="item.control_horari?.actiu" class="text-[9px] text-gray-400 font-semibold">
                     {{ String(item.control_horari?.hora_inici ?? 22).padStart(2,'0') }}:00 – {{ String(item.control_horari?.hora_fi ?? 7).padStart(2,'0') }}:00
                   </span>
                 </div>
+              </td>
+              <td class="p-6 text-center" @click.stop>
+                <select
+                  v-model="item.estat"
+                  @change="canviarEstat(item)"
+                  class="px-3 py-2 rounded-xl text-xs font-bold border-2 transition-all min-w-[130px]"
+                  :class="item.estat === 'desactivat' ? 'border-[#402749] bg-[#402749]/10 text-[#402749]' : item.estat === 'properament' ? 'border-[#d9a6c2] bg-[#d9a6c2]/10 text-[#402749]' : 'border-green-300 bg-green-50 text-green-700'"
+                >
+                  <option value="actiu">Actiu</option>
+                  <option value="desactivat">Desactivat</option>
+                  <option value="properament">Properament</option>
+                </select>
               </td>
             </tr>
           </tbody>
@@ -194,18 +207,33 @@ const toggleRestricció = async (item) => {
   const horariActual = item.control_horari || { actiu: false, hora_inici: 22, hora_fi: 7 };
   const nouActiu = !horariActual.actiu;
   try {
-    const res = await fetch(`${PATH}/${item._id}`, {
-      method: 'PUT',
+    const res = await fetch(`${API_URL}/api/admin/llocs/${item._id}/restriccio`, {
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        control_horari: { ...horariActual, actiu: nouActiu }
-      })
+      body: JSON.stringify({ actiu: nouActiu })
     });
     if (res.ok) {
       item.control_horari = { ...horariActual, actiu: nouActiu };
+    } else {
+      await mostrarModal({ isAlert: true, message: "Error de connexió amb el servidor" });
     }
   } catch (err) {
-    console.error('Error al canviar la restricció:', err);
+    await mostrarModal({ isAlert: true, message: "Error de connexió amb el servidor" });
+  }
+};
+
+const canviarEstat = async (item) => {
+  try {
+    const res = await fetch(`${API_URL}/api/admin/llocs/${item._id}/estat`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estat: item.estat })
+    });
+    if (!res.ok) {
+      await mostrarModal({ isAlert: true, message: "Error de connexió amb el servidor" });
+    }
+  } catch (err) {
+    await mostrarModal({ isAlert: true, message: "Error de connexió amb el servidor" });
   }
 };
 
