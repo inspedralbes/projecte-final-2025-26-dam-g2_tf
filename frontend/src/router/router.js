@@ -19,6 +19,7 @@ import camara from '../pages/camara.vue'
 import CartaPersonatge from '../pages/CartaPersonatge.vue'
 import SobreLore from '../pages/SobreLore.vue'
 import ValorarLloc from '../pages/ValorarLloc.vue'
+import RevelacioCromo from '../pages/RevelacioCromo.vue'
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/AdminDashboard.vue'
@@ -161,6 +162,11 @@ const routes = [
     path: '/valorar-lloc/:id',
     name: 'valorar-lloc',
     component: ValorarLloc
+  },
+  {
+    path: '/revelacio-cromo/:id',
+    name: 'revelacio-cromo',
+    component: RevelacioCromo
   },
   {
     path: '/join/:id',
