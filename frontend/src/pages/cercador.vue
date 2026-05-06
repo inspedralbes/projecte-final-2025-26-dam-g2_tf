@@ -5,9 +5,10 @@
         <h1 class="text-3xl font-black italic uppercase tracking-tighter text-white">Cercador</h1>
         <button @click="seleccionarDestiSorpresa" 
                 :disabled="animantSorpresa"
-                class="mt-1 flex items-center gap-1.5 text-purple-400 font-bold text-xs uppercase tracking-wider hover:text-purple-300 transition-colors disabled:opacity-50"
-                :class="{ 'animate-pulse scale-105 contrast-125': !animantSorpresa }">
-          <span>{{ animantSorpresa ? 'Triant el teu proper destí...' : '✨ Destí Sorpresa' }}</span>
+                class="mt-2 flex items-center gap-2 bg-[#bc85ab]/20 border border-[#bc85ab]/50 text-[#f5cbdd] font-bold text-xs uppercase tracking-wider py-2 px-4 rounded-full hover:bg-[#bc85ab]/40 transition-all active:scale-95 shadow-md backdrop-blur-sm disabled:opacity-50"
+                :class="{ 'animate-pulse scale-105 shadow-[0_0_15px_rgba(188,133,171,0.5)]': !animantSorpresa }">
+          <span class="text-sm leading-none">✨</span>
+          <span>{{ animantSorpresa ? 'Triant el teu proper destí...' : 'Destí Sorpresa' }}</span>
         </button>
       </div>
       <BotonPerfil @login="actualitzarUsuari" />
