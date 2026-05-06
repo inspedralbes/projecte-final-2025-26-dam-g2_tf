@@ -23,31 +23,43 @@
                md:w-[400px] md:h-[600px] lg:w-[500px]"
         :class="activeIndex === index ? 'scale-110 z-20 opacity-100' : 'scale-90 z-10 opacity-40'"
       >
-        <img 
-          :src="netejarUrl(lloc.imatge_referencia)" 
-          class="absolute inset-0 w-full h-full object-cover rounded-3xl transition-transform duration-700"
-          :class="activeIndex === index ? 'scale-100' : 'scale-110'"
-        />
+         <img 
+           :src="netejarUrl(lloc.imatge_referencia)" 
+           class="absolute inset-0 w-full h-full object-cover rounded-3xl transition-transform duration-700"
+           :class="activeIndex === index ? 'scale-100' : 'scale-110'"
+         />
+         <!-- Overlay PROPERAMENT Premium -->
+         <div v-if="lloc.estat === 'properament'" 
+              class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#402749]/60 backdrop-blur-[2px] rounded-3xl">
+           <span class="text-[#d9a6c2] font-bold tracking-[0.2em] text-sm uppercase">Properament</span>
+         </div>
         
         <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent p-6 flex flex-col justify-end rounded-3xl">
           <h2 class="text-xl md:text-3xl font-bold mb-2">{{ lloc.nom }}</h2>
           <p class="text-sm md:text-base text-gray-200 line-clamp-2">{{ lloc.descripcio }}</p>
           
-          <!-- Avís de ruta bloquejada -->
-          <div v-if="esBloqueig(lloc)" class="mt-3 flex items-center gap-2 bg-black/50 backdrop-blur-sm px-3 py-2 rounded-xl">
-            <span class="text-lg">🔒</span>
-            <span class="text-xs font-bold text-orange-300">
-              No disponible fins les {{ lloc.control_horari?.hora_fi ?? '07:00' }}
-            </span>
-          </div>
+           <!-- Avís de ruta bloquejada -->
+           <div v-if="esBloqueig(lloc)" class="mt-3 flex items-center gap-2 bg-black/50 backdrop-blur-sm px-3 py-2 rounded-xl">
+             <span class="text-lg">🔒</span>
+             <span class="text-xs font-bold text-orange-300">
+               No disponible fins les {{ lloc.control_horari?.hora_fi ?? '07:00' }}
+             </span>
+           </div>
 
-          <button 
-            v-if="activeIndex === index"
-            class="mt-4 bg-white text-purple-900 py-2 px-6 rounded-full font-bold self-start transform transition-all active:scale-95"
-            @click.stop="$router.push(`/lloc/${lloc._id}`)"
-          >
-            Explorar
-          </button>
+            <!-- Overlay PROPERAMENT -->
+            <div v-if="lloc.estat === 'properament'" class="absolute inset-0 bg-gradient-to-t from-[#402749]/90 to-transparent backdrop-blur-[2px] flex flex-col items-center justify-center z-20 rounded-3xl gap-2">
+              <span class="text-xl font-black uppercase text-[#d9a6c2] tracking-widest">PROPERAMENT</span>
+            </div>
+
+            <button 
+              v-if="activeIndex === index"
+              class="mt-4 bg-white text-purple-900 py-2 px-6 rounded-full font-bold self-start transform transition-all active:scale-95"
+              @click.stop="$router.push(`/lloc/${lloc._id}`)"
+              :disabled="lloc.estat === 'properament'"
+              :class="lloc.estat === 'properament' ? 'opacity-30 cursor-not-allowed' : ''"
+            >
+              {{ lloc.estat === 'properament' ? 'Properament' : 'Explorar' }}
+            </button>
         </div>
       </div> 
     <div class="flex-shrink-0 w-[40vw] h-10 pointer-events-none"></div>
@@ -103,7 +115,7 @@ onMounted(async () => {
     }
 
     const dades = await resposta.json();
-    llistaLlocs.value = dades.filter(lloc => lloc.control_horari?.actiu === true);
+    llistaLlocs.value = dades.filter(lloc => lloc.estat !== 'desactivat');
   } catch (err) {
     console.error("Error cargando rutas:", err);
     // Inicializamos como array vacío para que el v-for no explote

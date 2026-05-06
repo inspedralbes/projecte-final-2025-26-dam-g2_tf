@@ -6,7 +6,7 @@ const { Lloc, Ressenya } = require('../models');
 // Obtener todos los lugares
 router.get('/', async (req, res) => {
     try {
-        const llocs = await Lloc.find({ 'control_horari.actiu': true }).lean();
+        const llocs = await Lloc.find({ estat: { $ne: 'desactivat' } }).lean();
         
         // Calcular medias de ressenyes
         const ressenyesAgregades = await Ressenya.aggregate([
@@ -36,7 +36,7 @@ router.get('/', async (req, res) => {
 
 router.get('/aleatori', async (req, res) => {
     try {
-        const filter = { 'control_horari.actiu': true };
+        const filter = { estat: { $ne: 'desactivat' } };
         const count = await Lloc.countDocuments(filter);
         const random = Math.floor(Math.random() * count);
         const llocAleatori = await Lloc.findOne(filter).skip(random);

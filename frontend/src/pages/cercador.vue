@@ -110,8 +110,12 @@
 
     <!-- Lista de Resultados -->
     <div class="space-y-6">
-      <div v-for="lloc in llocsFiltrats" :key="lloc.id" class="bg-gray-200 rounded-3xl p-4 shadow-sm">
+      <div v-for="lloc in llocsFiltrats" :key="lloc.id" class="bg-gray-200 rounded-3xl p-4 shadow-sm relative" :class="lloc.estat === 'properament' ? 'opacity-50' : ''">
+        <div v-if="lloc.estat === 'properament'" class="absolute inset-0 bg-gradient-to-t from-[#402749]/90 to-transparent backdrop-blur-[2px] flex flex-col items-center justify-center z-10 rounded-3xl gap-2">
+          <span class="text-xl font-black uppercase text-[#d9a6c2] tracking-widest">PROPERAMENT</span>
+        </div>
         <h2 class="text-xl font-bold text-gray-900 mb-3">{{ lloc.nom }}</h2>
+        <div v-if="lloc.estat === 'properament'" class="text-[#402749] font-black text-sm mb-2">Properament...</div>
 
         <!-- Imagen -->
         <div class="w-full h-48 bg-gray-400 rounded-xl mb-3 overflow-hidden">
@@ -165,8 +169,10 @@
 
           <div class="flex-none flex justify-end">
             <button @click="anarALloc(lloc.id)"
-              class="bg-[rgba(64,39,73,1)] text-white font-bold py-2 px-6 rounded-xl text-sm hover:bg-[rgba(64,39,73,0.8)] transition transform active:scale-95 shadow-md">
-              EXPLORAR
+              class="bg-[rgba(64,39,73,1)] text-white font-bold py-2 px-6 rounded-xl text-sm hover:bg-[rgba(64,39,73,0.8)] transition transform active:scale-95 shadow-md"
+              :class="lloc.estat === 'properament' ? 'opacity-20 cursor-not-allowed' : ''"
+              :disabled="lloc.estat === 'properament'">
+              {{ lloc.estat === 'properament' ? 'Properament' : 'EXPLORAR' }}
             </button>
           </div>
         </div>
@@ -220,7 +226,8 @@ async function carregarDades() {
       dificultat: item.dificultat || 'Desconeguda',
       barri: item.barri || 'Desconegut',
       mitjana_estrelles: item.mitjana_estrelles || null,
-      total_ressenyes: item.total_ressenyes || 0
+      total_ressenyes: item.total_ressenyes || 0,
+      estat: item.estat || 'actiu'
     }));
 
   } catch (error) {
@@ -313,7 +320,10 @@ const llocsFiltrats = computed(() => {
     const coincideixBarri = !filtreBarri.value ||
       (lloc.barri === filtreBarri.value);
 
-    return coincideixText && coincideixDificultat && coincideixBarri;
+    // No mostrar desactivats
+    const noDesactivat = lloc.estat !== 'desactivat';
+
+    return coincideixText && coincideixDificultat && coincideixBarri && noDesactivat;
   });
 });
 

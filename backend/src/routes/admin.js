@@ -48,12 +48,34 @@ router.put('/llocs/:id', async function (req, res) {
 });
 
 router.delete('/llocs/:id', async function (req, res) {
-    try {
-        await Lloc.findByIdAndDelete(req.params.id);
-        res.json({ success: true, message: "Lloc eliminat correctament" });
-    } catch (error) {
-        res.status(500).json({ message: "Error al eliminar" });
-    }
+  try {
+    await Lloc.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Lloc eliminat correctament" });
+  } catch (error) {
+    res.status(500).json({ message: "Error al eliminar" });
+  }
+});
+
+// Canviar estat d'un lloc (visibilitat)
+router.patch('/llocs/:id/estat', async function (req, res) {
+  try {
+    const { estat } = req.body;
+    await Lloc.findByIdAndUpdate(req.params.id, { estat });
+    res.json({ success: true, message: "Estat actualitzat correctament" });
+  } catch (error) {
+    res.status(500).json({ message: "Error al actualitzar l'estat" });
+  }
+});
+
+// Canviar restricció horària
+router.patch('/llocs/:id/restriccio', async function (req, res) {
+  try {
+    const { actiu } = req.body;
+    await Lloc.findByIdAndUpdate(req.params.id, { 'control_horari.actiu': actiu });
+    res.json({ success: true, message: "Restricció horària actualitzada" });
+  } catch (error) {
+    res.status(500).json({ message: "Error al actualitzar la restricció" });
+  }
 });
 
 // 3. GESTIONAR PETICIONS
