@@ -29,13 +29,14 @@ let socketJoc = null; // Socket per rebre l'event game-over de la resta de jugad
 
 
 // Modal cromo
-const mostrarModal = ref(false);
-const cardGirada = ref(false); // controla l'animació de gira
+const mostrarCromoFinal = ref(false);
+const cromoFlipped = ref(false);
 const modalDades = ref({ 
   nom_lloc: '', 
   imatge_historica: '', 
   foto_historica: '',
   text_historic: '',
+  imatge_cromo: '',
   coincidencia: '', 
   cromo_nou: false,
   completat_tot: false 
@@ -251,12 +252,22 @@ function tancarModal() {
   mostrarModal.value = false;
 
   if (modalDades.value.completat_tot) {
-    // La partida ha acabat → anem a valorar
-    router.push('/valorar-lloc/' + route.params.id);
+    // Si ha completat tot, abans de valorar, ensenyem el cromo
+    if (modalDades.value.imatge_cromo) {
+        mostrarCromoFinal.value = true;
+    } else {
+        // Si no hi ha cromo (estrany), anem directe a valorar
+        router.push('/valorar-lloc/' + route.params.id);
+    }
   } else {
     // Si no ha acabat → tornem al mapa amb l'ID de la sessió
     router.push('/mapa/' + route.params.codi_sala);
   }
+}
+
+function tancarCromoFinal() {
+    mostrarCromoFinal.value = false;
+    router.push('/valorar-lloc/' + route.params.id);
 }
 
 async function executarTotElProces() {
@@ -311,6 +322,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
         nom_lloc: dades.nom_lloc,
         imatge_punt: dades.imatge_punt || dades.imatge_historica || '',
         imatge_historica: dades.imatge_historica,
+        imatge_cromo: dades.imatge_cromo || '',
         foto_historica: dades.foto_historica || '',
         text_historic: dades.text_historic || '',
         url_foto: dades.url_foto || '',
@@ -459,7 +471,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
                       @click="tancarModal"
                       class="mt-4 w-full py-3 rounded-xl font-black text-sm uppercase tracking-widest transition-all active:scale-95 hover:opacity-90"
                       style="background-color: #f59e0b; color: #1a0820;"
-                    >{{ modalDades.completat_tot ? '🏁 TORNAR A L\'INICI' : '✨ GENIAL!' }}</button>
+                    >{{ modalDades.completat_tot ? 'VEURE CROMO ✨' : '✨ GENIAL!' }}</button>
                   </div>
                 </div>
               </div>
@@ -503,8 +515,54 @@ async function enviarDadesAlBackend(imatgeEnText) {
             class="w-full py-4 font-bold text-sm transition-opacity hover:opacity-80 active:scale-95"
             style="background-color: #d9a6c2; color: #2a1030;"
           >
-            {{ !modalDades.exit ? '↩ TORNAR A INTENTAR' : modalDades.completat_tot ? 'TORNAR A L\'INICI' : '✨ GENIAL!' }}
+            {{ !modalDades.exit ? '↩ TORNAR A INTENTAR' : modalDades.completat_tot ? 'VEURE CROMO ✨' : '✨ GENIAL!' }}
           </button>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- MODAL REVELACIÓ CROMO FINAL -->
+    <Transition name="fade">
+      <div
+        v-if="mostrarCromoFinal"
+        class="absolute inset-0 z-[60] flex flex-col items-center justify-center p-6 overflow-y-auto"
+        style="background: radial-gradient(circle at center, #402749 0%, #1a0820 100%);"
+      >
+        <div class="glow-effect absolute pointer-events-none"></div>
+        
+        <div class="relative z-10 w-full max-w-sm flex flex-col items-center">
+            <h2 class="text-white font-black text-2xl mb-2 text-center drop-shadow-lg">HAS GUANYAT EL CROMO!</h2>
+            <p class="text-pink-300 text-sm mb-8 text-center px-4">Enhorabona! Has completat tota la ruta i has desbloquejat aquesta recompensa.</p>
+
+            <div class="cromo-container mb-10 w-full max-w-[280px] aspect-[3/4] relative perspective-1000">
+                <div class="cromo-card w-full h-full" :class="{ flipped: cromoFlipped }" @click="cromoFlipped = true">
+                    <!-- Contra cromo -->
+                    <div class="cromo-face cromo-back rounded-2xl overflow-hidden border-4 border-white/20 shadow-2xl flex flex-col items-center justify-center bg-gradient-to-br from-[#402749] to-[#2a1030]">
+                         <div class="absolute inset-0 opacity-20 pointer-events-none pattern-grid"></div>
+                         <span class="text-6xl mb-4">✨</span>
+                         <p class="text-white font-black text-sm tracking-widest">TOCA PER REVELAR</p>
+                    </div>
+                    <!-- Cromo real -->
+                    <div class="cromo-face cromo-front rounded-2xl overflow-hidden border-4 border-yellow-400 shadow-[0_0_50px_rgba(245,158,11,0.5)]">
+                        <img :src="API_URL + modalDades.imatge_cromo" class="w-full h-full object-cover" alt="Cromo guanyat" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-4">
+                            <p class="text-yellow-400 font-black text-[10px] uppercase tracking-widest">CROMO DE RUTA</p>
+                            <p class="text-white font-bold text-lg leading-tight">{{ modalDades.nom_lloc }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <Transition name="fade-up">
+                <button
+                    v-if="cromoFlipped"
+                    @click="tancarCromoFinal"
+                    class="w-full py-5 rounded-2xl font-black text-base uppercase tracking-widest transition-all active:scale-95 shadow-[0_10px_30px_rgba(0,0,0,0.4)]"
+                    style="background-color: #d9a6c2; color: #2a1030;"
+                >
+                    CONTINUAR A VALORACIONS
+                </button>
+            </Transition>
         </div>
       </div>
     </Transition>
@@ -669,5 +727,59 @@ async function enviarDadesAlBackend(imatgeEnText) {
 .slide-fade-leave-to {
   transform: translate(-50%, -20px);
   opacity: 0;
+}
+
+/* === CROMO REVEAL === */
+.cromo-container {
+    perspective: 1500px;
+}
+.cromo-card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transform-style: preserve-3d;
+    cursor: pointer;
+}
+.cromo-card.flipped {
+    transform: rotateY(180deg);
+}
+.cromo-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+.cromo-front {
+    transform: rotateY(180deg);
+}
+.cromo-back {
+    background: #2a1030;
+}
+
+.glow-effect {
+    width: 150%;
+    height: 150%;
+    background: radial-gradient(circle, rgba(217, 166, 194, 0.2) 0%, transparent 70%);
+    animation: pulse-glow 4s infinite alternate;
+}
+
+@keyframes pulse-glow {
+    from { transform: scale(0.8); opacity: 0.3; }
+    to { transform: scale(1.2); opacity: 0.7; }
+}
+
+.fade-up-enter-active {
+    transition: all 0.8s ease-out;
+}
+.fade-up-enter-from {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+.pattern-grid {
+    background-image: radial-gradient(circle, #fff 1px, transparent 1px);
+    background-size: 20px 20px;
 }
 </style>

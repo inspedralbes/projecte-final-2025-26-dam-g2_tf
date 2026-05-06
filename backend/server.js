@@ -17,7 +17,7 @@ const corsOptions = {
             callback(new Error('Not allowed by CORS'));
         }
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true
 };
 
@@ -49,6 +49,7 @@ function configurarRutes(middlewareHorari) {
     app.use('/api/personatges', require('./src/routes/personatges'));
     app.use('/api/verificacio', require('./src/routes/verificacio'));
     app.use('/api/carta-lore', require('./src/routes/carta_lore'));
+    app.use('/api/cromos', require('./src/routes/cromos'));
 
    
     if (middlewareHorari) {
@@ -67,6 +68,16 @@ async function startServer() {
         await connectDB();
         console.log("MongoDB Connectat correctament");
 
+        // Afegir 'ordre: 0' a documents antics que no el tinguin
+        const { Lloc } = require('./src/models/index');
+        const result = await Lloc.updateMany(
+          { ordre: { $exists: false } }, 
+          { $set: { ordre: 0 } }
+        );
+        if (result.modifiedCount > 0) {
+          console.log(`Documents antics actualitzats amb ordre: 0: ${result.modifiedCount}`);
+        }
+ 
         const { iniciarCronJobs } = require('./src/utils/cron');
         iniciarCronJobs();
 

@@ -27,13 +27,27 @@
         <table class="w-full">
           <thead class="bg-gray-50 border-b text-left">
             <tr class="text-[11px] text-[#bc85ab] uppercase tracking-[0.2em] font-black">
+              <th class="p-6 w-8"></th>
               <th class="p-6">Lloc</th>
               <th class="p-6 text-center">Restricció Horària</th>
               <th class="p-6 text-center">Estat</th>
+              <th class="p-6 text-center">Ordre</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-50">
-            <tr v-for="item in llista" :key="item._id" @click="prepararEdicion(item)" class="hover:bg-[#f5cbdd]/10 cursor-pointer transition-all group">
+            <tr 
+              v-for="(item, index) in llista" 
+              :key="item._id" 
+              @click="prepararEdicion(item)" 
+              draggable="true"
+              @dragstart="handleDragStart(index)"
+              @dragover.prevent
+              @drop="handleDrop(index)"
+              class="hover:bg-[#f5cbdd]/10 cursor-move transition-all group"
+            >
+              <td class="p-3 text-center" @click.stop>
+                <span class="text-gray-400">⠿</span>
+              </td>
               <td class="p-6 flex items-center gap-6">
                 <img :src="item.imatge_referencia" class="h-16 w-24 object-cover rounded-lg border-2 border-[#d9a6c2] shadow-sm">
                 <div>
@@ -45,15 +59,15 @@
               </td>
               <td class="p-6 text-center" @click.stop>
                 <div class="flex flex-col items-center gap-1">
-    <button
-   @click="toggleRestricció(item)"
-   :class="item.control_horari?.actiu
-     ? 'bg-orange-100 text-orange-600 hover:bg-orange-200'
-     : 'bg-gray-100 text-gray-400 hover:bg-gray-200'"
-   class="flex items-center justify-center px-4 py-2 rounded-xl text-xs font-black uppercase transition-all min-w-[120px]"
->
-   <span>{{ item.control_horari?.actiu ? 'Activada' : 'Desactivada' }}</span>
- </button>
+                  <button
+                    @click="toggleRestricció(item)"
+                    :class="item.control_horari?.actiu
+                      ? 'bg-orange-100 text-orange-600 hover:bg-orange-200'
+                      : 'bg-gray-100 text-gray-400 hover:bg-gray-200'"
+                    class="flex items-center justify-center px-4 py-2 rounded-xl text-xs font-black uppercase transition-all min-w-[120px]"
+                  >
+                    <span>{{ item.control_horari?.actiu ? 'Activada' : 'Desactivada' }}</span>
+                  </button>
                   <span v-if="item.control_horari?.actiu" class="text-[9px] text-gray-400 font-semibold">
                     {{ String(item.control_horari?.hora_inici ?? 22).padStart(2,'0') }}:00 – {{ String(item.control_horari?.hora_fi ?? 7).padStart(2,'0') }}:00
                   </span>
@@ -70,6 +84,9 @@
                   <option value="desactivat">Desactivat</option>
                   <option value="properament">Properament</option>
                 </select>
+              </td>
+              <td class="p-6 text-center" @click.stop>
+                <span class="font-bold text-[#402749]">{{ item.ordre }}</span>
               </td>
             </tr>
           </tbody>
@@ -227,13 +244,57 @@ const canviarEstat = async (item) => {
     const res = await fetch(`${API_URL}/api/admin/llocs/${item._id}/estat`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ estat: item.estat })
+      body: JSON.stringify({ estat: item.estat, ordre: item.ordre })
     });
     if (!res.ok) {
       await mostrarModal({ isAlert: true, message: "Error de connexió amb el servidor" });
     }
   } catch (err) {
     await mostrarModal({ isAlert: true, message: "Error de connexió amb el servidor" });
+  }
+};
+
+const dragStartIndex = ref(null);
+
+const handleDragStart = (index) => {
+  dragStartIndex.value = index;
+};
+
+const handleDrop = (destiIndex) => {
+  if (dragStartIndex.value === null || dragStartIndex.value === destiIndex) return;
+  
+  // Moure element dins de l'array
+  const [itemMogut] = llista.value.splice(dragStartIndex.value, 1);
+  llista.value.splice(destiIndex, 0, itemMogut);
+  dragStartIndex.value = null;
+
+  // Sincronitzar amb el backend
+  actualitzarOrdreTotal();
+};
+
+const actualitzarOrdreTotal = async () => {
+  try {
+    // Actualitzar els números d'ordre basant-se en la nova posició
+    const llocsPerEnviar = llista.value.map((item, index) => {
+      item.ordre = index + 1;
+      return { id: item._id, ordre: item.ordre };
+    });
+    const res = await fetch(`${API_URL}/api/admin/llocs/reordenar`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ llocs: llocsPerEnviar })
+    });
+    if (res.ok) {
+      // Forçar re-render de la llista per mostrar els nous números
+      llista.value = [...llista.value];
+    } else {
+      const errorData = await res.json();
+      console.error("Error del servidor:", errorData.message);
+      await mostrarModal({ isAlert: true, message: "Error al reordenar" });
+    }
+  } catch (err) {
+    console.error("Error de connexió:", err);
+    await mostrarModal({ isAlert: true, message: "Error de connexió al reordenar" });
   }
 };
 

@@ -115,6 +115,7 @@ onMounted(async () => {
     }
 
     const dades = await resposta.json();
+    // mapa/punts ja ve ordenat per 'ordre' del backend
     llistaLlocs.value = dades.filter(lloc => lloc.estat !== 'desactivat');
   } catch (err) {
     console.error("Error cargando rutas:", err);
