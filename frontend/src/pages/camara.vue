@@ -13,7 +13,8 @@ const { mostrarModal: showCustomModal } = useCustomModal();
 const idLloc = route.params.id;
 const idPuntParam = route.query.idPunt || null;
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
+
 const videoRef = ref(null);
 const canvasRef = ref(null);
 const carregant = ref(false);
@@ -54,6 +55,8 @@ const tipusPartida = ref(''); // 'individual', 'grup', 'grups'
 // Temporitzador
 const tempsRestant = ref(null);
 let intervalTimer = null;
+let notificationTimeout = null;
+
 
 onMounted(async () => {
   // 0. Carreguem la sessió per saber el temps límit
@@ -143,6 +146,12 @@ onMounted(async () => {
       socketJoc.emit('join-game-room', codi_sala);
       console.log('[Càmera] Socket connectat, unit a la room:', codi_sala);
     });
+    // Si ja està connectat per algun motiu, emetem també
+    if (socketJoc.connected) {
+      socketJoc.emit('join-game-room', codi_sala);
+      console.log('[Càmera] Socket ja estava connectat, unit a la room:', codi_sala);
+    }
+
     socketJoc.on('game-over', function (dades) {
       const meuId = usuari.value?._id?.toString();
       // Si soc el guanyador, ignoro l'event: el modal de "Partida Finalitzada!" ja em redirigirà
@@ -162,22 +171,20 @@ onMounted(async () => {
     });
 
     socketJoc.on('punt-aconseguit', (dades) => {
-      // En el mode 'grup' (tots junts amb un mòbil), no mostrem la notificació
-      // perquè tothom està mirant la mateixa pantalla i ja veu el que passa.
       if (tipusPartida.value === 'grup') return;
-      // No mostrem la notificació al propi jugador que ha fet la foto
       const meuNom = usuari.value?.nom_usuari;
       if (meuNom && dades.nomUsuari === meuNom) return;
 
       console.log('[Càmera] punt-aconseguit rebut:', dades);
       notificacioPunt.value = dades;
-      // Amaguem al cap de 5 segons
-      setTimeout(() => {
-        if (notificacioPunt.value === dades) {
-          notificacioPunt.value = null;
-        }
+
+      if (notificationTimeout) clearTimeout(notificationTimeout);
+      notificationTimeout = setTimeout(() => {
+        notificacioPunt.value = null;
+        notificationTimeout = null;
       }, 5000);
     });
+
   }
 });
 

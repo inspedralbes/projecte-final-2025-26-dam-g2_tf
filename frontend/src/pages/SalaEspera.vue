@@ -136,7 +136,8 @@ const router = useRouter();
 const socket = ref(null);
 const { mostrarModal } = useCustomModal();
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
+
 
 const roomCode = ref(route.params.id !== 'crear' ? route.params.id : '');
 const players = ref([]);

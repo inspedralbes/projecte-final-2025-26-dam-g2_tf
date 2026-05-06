@@ -177,7 +177,8 @@ export default {
       modalVisible: false,
       puntSeleccionat: null,
       fotoActual: null,
-      baseApi: import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat',
+      baseApi: import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat'),
+
       // Game-over
       mostrarGameOver: false,
       faseDerrota: 0,
@@ -203,6 +204,7 @@ export default {
 
       // Notificacions en temps real
       notificacioPunt: null,
+      _notificacioTimeout: null,
 
       personatgeIdUsuari: null, // Per filtrar els punts del mapa segons el personatge (fallback)
       puntsAssignatsIds: [],     // IDs de punts pre-assignats pel backend
@@ -387,6 +389,11 @@ export default {
         this._socket.emit('join-game-room', sessioId);
         console.log('[Mapa] Socket connectat, unit a la room:', sessioId);
       });
+      if (this._socket.connected) {
+        this._socket.emit('join-game-room', sessioId);
+        console.log('[Mapa] Socket ja estava connectat, unit a la room:', sessioId);
+      }
+
       this._socket.on('game-over', (dades) => {
         console.log('[Mapa] game-over rebut:', dades);
         this.sessioIdGameOver = dades.sessioId || sessioId;
@@ -420,13 +427,13 @@ export default {
         console.log('[Mapa] punt-aconseguit rebut:', dades);
         this.notificacioPunt = dades;
 
-        // Amaguem la notificació al cap de 5 segons
-        setTimeout(() => {
-          if (this.notificacioPunt === dades) {
-            this.notificacioPunt = null;
-          }
+        if (this._notificacioTimeout) clearTimeout(this._notificacioTimeout);
+        this._notificacioTimeout = setTimeout(() => {
+          this.notificacioPunt = null;
+          this._notificacioTimeout = null;
         }, 5000);
       });
+
     }
   },
 
