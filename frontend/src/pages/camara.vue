@@ -469,32 +469,26 @@ async function enviarDadesAlBackend(imatgeEnText) {
             <!-- CARA DARRERE: foto històrica + text -->
             <div class="card-cara card-darrere rounded-2xl overflow-hidden shadow-2xl"
               style="border: 2px solid #d9a6c2; background: #1a0820;">
-              <div class="relative w-full h-full flex flex-col">
-                <!-- Imatge històrica (Part superior) -->
-                <div class="h-1/2 w-full relative overflow-hidden">
-                  <img
-                    :src="netejarUrl(modalDades.foto_historica)"
-                    class="w-full h-full object-cover"
-                    alt="Foto històrica"
-                  />
-                  <div class="absolute inset-0 bg-gradient-to-t from-[#1a0820] to-transparent"></div>
-                </div>
+              <div class="relative w-full h-full">
+                <!-- Imatge històrica a pantalla completa -->
+                <img
+                  :src="netejarUrl(modalDades.foto_historica)"
+                  class="w-full h-full object-cover"
+                  alt="Foto històrica"
+                />
                 
-                <!-- Contingut (Part inferior) -->
-                <div class="flex-1 flex flex-col justify-between p-5 bg-[#1a0820]">
-                  <div class="space-y-2">
-                    <div class="flex items-center gap-2">
-                      <span class="w-8 h-px bg-pink-400"></span>
-                      <p class="text-pink-400 text-[10px] font-black uppercase tracking-[0.2em]">🏛️ Història Viva</p>
-                    </div>
-                    <p class="text-white text-sm font-medium leading-relaxed italic opacity-90 overflow-y-auto max-h-[120px] pr-2 custom-scrollbar">
-                      "{{ modalDades.text_historic }}"
+                <!-- Overlay d'informació més discret -->
+                <div class="absolute inset-x-0 bottom-0 p-4 pt-10 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
+                  <div class="space-y-1">
+                    <p class="text-pink-400 text-[9px] font-black uppercase tracking-[0.2em] opacity-80">🏛️ Arxiu Històric</p>
+                    <p class="text-white text-[11px] font-medium leading-snug opacity-90 line-clamp-3">
+                      {{ modalDades.text_historic }}
                     </p>
                   </div>
 
                   <button
                     @click="tancarModal"
-                    class="w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all active:scale-95 shadow-[0_10px_20px_rgba(0,0,0,0.3)] hover:brightness-110"
+                    class="mt-4 w-full py-3 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-95 shadow-lg"
                     style="background: linear-gradient(90deg, #d9a6c2 0%, #b3829d 100%); color: #1a0820;"
                   >
                     {{ modalDades.completat_tot ? 'VEURE CROMO ✨' : 'CONTINUAR ✨' }}
