@@ -226,6 +226,7 @@ import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import { useLoginModal } from '../composables/useLoginModal';
 import { useFaceDetection } from '../composables/useFaceDetection';
+import { useCustomModal } from '../composables/useCustomModal';
 import DisclaimerModal from './DisclaimerModal.vue'; 
 
 // Obtenim l'estat global del modal
@@ -307,14 +308,29 @@ async function registrarFinal(esMajor, imatge) {
 
     if (resultat.success) {
       if (resultat.usuari.verificacio_estat === 'pendent') {
-          // NO l'autentiquem, li mostrem missatge i resetegem
-          missatgePersonalitzat.value = "Sol·licitud enviada! Un administrador revisarà la teva identitat per confirmar que ets major d'edat. Torna a provar d'entrar en unes hores.";
-          pasVerificacio.value = false;
           aturarCamera();
-          // Netegem dades sensibles del form
+          pasVerificacio.value = false;
           contrasenya.value = '';
+          esRegistre.value = false;
+          tancarModal();
+          
+          const { mostrarModal } = useCustomModal();
+          await mostrarModal({
+             isAlert: true,
+             icon: 'warning',
+             title: 'Compte Pendent',
+             message: 'La teva compte està en mode pendent de verificació. Un administrador revisarà la teva identitat. Torna a provar d\'entrar en unes hores.'
+          });
           return;
       }
+
+      const { mostrarModal } = useCustomModal();
+      await mostrarModal({
+         isAlert: true,
+         icon: 'success',
+         title: 'Registre Correcte',
+         message: 'T\'has registrat correctament, benvingut!'
+      });
 
       // Si està aprovat, procedim normalment
       login(resultat.usuari);
