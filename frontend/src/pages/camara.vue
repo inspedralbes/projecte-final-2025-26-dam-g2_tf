@@ -155,15 +155,25 @@ onMounted(async () => {
     }
   }
 
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({ 
-      video: { facingMode: 'environment' }
-    });
-    if (videoRef.value) {
-      videoRef.value.srcObject = stream;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    await showCustomModal({ isAlert: true, message: "El teu navegador no suporta l'accés a la càmera o la connexió no és segura (HTTPS)." });
+  } else {
+    try {
+      const constraints = { 
+        video: { facingMode: 'environment' }
+      };
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (err) {
+        console.warn("Failing back to default camera in camara.vue:", err);
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
+      if (videoRef.value) {
+        videoRef.value.srcObject = stream;
+      }
+    } catch (error) {
+      await showCustomModal({ isAlert: true, message: "No s'ha pogut accedir a la càmera: " + error.message });
     }
-  } catch (error) {
-    await showCustomModal({ isAlert: true, message: "No s'ha pogut accedir a la càmera: " + error.message });
   }
 
   // S'ha mogut la inicialització del socket a l'inici de l'onMounted

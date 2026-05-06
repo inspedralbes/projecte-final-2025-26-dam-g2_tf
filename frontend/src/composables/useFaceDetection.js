@@ -130,15 +130,26 @@ export function useFaceDetection() {
   const iniciarCamera = async () => {
     await nextTick();
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("El teu navegador no suporta l'accés a la càmera o estàs en una connexió no segura (HTTP).");
+      }
       if (mediaStream) aturarCamera();
       
-      mediaStream = await navigator.mediaDevices.getUserMedia({ 
+      const constraints = { 
         video: { 
           facingMode: 'user',
           width: { ideal: 640 },
           height: { ideal: 480 }
         } 
-      });
+      };
+
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (err) {
+        console.warn("Failing back to default camera constraints:", err);
+        // Intentem sense facingMode i sense resolució ideal
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
       
       if (videoRef.value) {
         videoRef.value.srcObject = mediaStream;
