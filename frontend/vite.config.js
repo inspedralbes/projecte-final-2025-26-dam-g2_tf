@@ -14,4 +14,16 @@ export default defineConfig({
     },
     historyApiFallback: true, 
   },
+
+  // ─── Configuració de Vitest (tests del frontend) ─────────────
+  test: {
+    // globals: true → podem fer servir describe/test/expect sense importar-los
+    globals: true,
+
+    // jsdom simula el navegador per poder testar components Vue
+    environment: 'jsdom',
+
+    // On buscar els fitxers de tests
+    include: ['src/__tests__/**/*.test.js'],
+  }
 })
