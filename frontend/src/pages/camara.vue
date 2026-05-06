@@ -264,16 +264,25 @@ function tancarModal() {
 
   if (modalDades.value.completat_tot) {
     // Si ha completat tot, anem a la pàgina de revelació
-    if (modalDades.value.imatge_cromo) {
+    let pathCromo = modalDades.value.imatge_cromo;
+    
+    // Si tenim un nom de fitxer però no la ruta completa, l'arreglem
+    if (pathCromo && !pathCromo.startsWith('/') && !pathCromo.includes('/')) {
+        pathCromo = '/Cromos/' + pathCromo;
+    }
+
+    if (pathCromo) {
+        console.log('[Càmera] Redirigint a RevelacioCromo amb path:', pathCromo);
         router.push({
             name: 'revelacio-cromo',
             params: { id: route.params.id },
             query: { 
-                imatge: modalDades.value.imatge_cromo,
+                imatge: pathCromo,
                 nom: modalDades.value.nom_lloc
             }
         });
     } else {
+        console.warn('[Càmera] No s\'ha trobat cap cromo per aquesta ruta.');
         router.push('/valorar-lloc/' + route.params.id);
     }
   } else {

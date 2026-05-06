@@ -54,8 +54,16 @@ const cromoFlipped = ref(false);
 
 // Obtenim les dades de la query
 const idLloc = route.params.id;
-const imatgeCromo = route.query.imatge || '';
+let imatgeCromo = route.query.imatge || '';
 const nomLloc = route.query.nom || 'Ruta Completada';
+
+// Normalització del path per si de cas
+if (imatgeCromo && !imatgeCromo.startsWith('/') && !imatgeCromo.includes('/')) {
+    imatgeCromo = '/Cromos/' + imatgeCromo;
+}
+if (imatgeCromo && !imatgeCromo.startsWith('/')) {
+    imatgeCromo = '/' + imatgeCromo;
+}
 
 function revelarCromo() {
     cromoFlipped.value = true;

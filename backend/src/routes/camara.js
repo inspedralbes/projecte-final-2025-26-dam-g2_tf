@@ -339,6 +339,7 @@ router.post('/', async function (req, res) {
                 // La resta de jugadors veuran una notificació amb el nom del guanyador
                 if (haAcabatLaLlista) {
                     const nomGuanyador = perfil ? perfil.nom_usuari : 'Un jugador';
+                    console.log(`[Càmera] Ruta completada! Cromo assignat: "${lloc.cromo_imatge}"`);
                     notifyGameOver(codi_sala, sessio, perfilId, nomGuanyador);
                 }
 
