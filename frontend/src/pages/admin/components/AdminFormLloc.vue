@@ -72,7 +72,19 @@
             <input v-model="form.adreca_inici" placeholder="Adreça del punt d'inici (Opcional, ex: Plaça Catalunya)" class="w-full border-2 border-purple-100 p-3 rounded-2xl bg-purple-50/30 text-xs shadow-sm font-bold text-purple-800 placeholder-purple-300 outline-none focus:border-purple-300">
             <input v-model="form.imatge_referencia" placeholder="URL Foto Principal (Realitat)" class="w-full border-2 border-gray-50 p-3 rounded-2xl bg-gray-50 text-xs shadow-sm">
             <input v-model="form.foto_mapa" placeholder="URL Foto Mapa (Dibuix esquemàtic)" class="w-full border-2 border-gray-50 p-3 rounded-2xl bg-gray-50 text-xs shadow-sm">
-            <input v-model="form.cromo_imatge" placeholder="URL Cromo (ex: /Cromos/SagradaFamilia_historica.jpg)" class="w-full border-2 border-gray-50 p-3 rounded-2xl bg-gray-50 text-xs shadow-sm">
+            <div class="bg-purple-50 border-2 border-purple-100 rounded-2xl p-4 mt-2">
+              <h3 class="text-[11px] font-black text-purple-600 uppercase tracking-widest mb-3">🖼️ Cromo de la Ruta</h3>
+              <p class="text-[10px] text-purple-500 mb-3">Escull la imatge del cromo que guanyaran els jugadors en completar aquesta ruta.</p>
+              <select v-model="form.cromo_imatge" class="w-full border-2 border-purple-100 p-2.5 rounded-xl text-sm outline-none bg-white">
+                <option value="">-- Sense cromo --</option>
+                <option v-for="cromo in cromosDisponibles" :key="cromo.path" :value="cromo.path">
+                  {{ cromo.nom }}
+                </option>
+              </select>
+              <div v-if="form.cromo_imatge" class="mt-3 rounded-xl overflow-hidden border-2 border-purple-200 shadow-sm">
+                <img :src="baseApi + form.cromo_imatge" class="w-full max-h-48 object-contain bg-purple-50" alt="Previsualització cromo" />
+              </div>
+            </div>
           </div>
 
           <!-- SECCIÓ LORE -->
@@ -335,6 +347,7 @@ const fotosDisponibles = ref([]);
 const fotosHistoriquesDisponibles = ref([]);
 const personatgesDisponibles = ref([]);
 const cartesLoreDisponibles = ref([]);
+const cromosDisponibles = ref([]);
 const puntPendentEsPersonatge = ref(false);
 
 const props = defineProps({
@@ -506,6 +519,17 @@ async function carregarCartesLore() {
   }
 }
 
+async function carregarCromos() {
+  try {
+    var resposta = await fetch(baseApi + '/api/cromos/totes');
+    if (!resposta.ok) return;
+    var dades = await resposta.json();
+    cromosDisponibles.value = dades.cromos || [];
+  } catch (err) {
+    console.error('Error carregant cromos:', err);
+  }
+}
+
 onUnmounted(function() {
   if (map) {
     try {
@@ -523,5 +547,6 @@ onMounted(function() {
   carregarFotosHistoriques();
   carregarPersonatges();
   carregarCartesLore();
+  carregarCromos();
 });
 </script>

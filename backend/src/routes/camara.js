@@ -351,6 +351,7 @@ router.post('/', async function (req, res) {
                     nom_lloc: lloc.nom,
                     imatge_punt: imatgePuntMissio || imatgeReferencia,  // imatge del punt per mostrar al modal
                     imatge_historica: imatgeReferencia,
+                    imatge_cromo: lloc.cromo_imatge || '',
                     foto_historica: fotoHistorica,   // foto antiga per la contraportada
                     text_historic: textHistoric,     // text d'història per la contraportada
                     sessioId: codi_sala,
