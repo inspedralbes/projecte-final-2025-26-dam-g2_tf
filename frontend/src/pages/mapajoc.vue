@@ -146,22 +146,11 @@
       </div>
     </Transition>
     
-    <!-- NOTIFICACIÓ DE PUNTS EN TEMPS REAL -->
-    <Transition name="slide-fade">
-      <div v-if="notificacioPunt" class="notificacio-punt">
-          <div class="notificacio-icon">🚀</div>
-          <div class="notificacio-text">
-            <strong>{{ notificacioPunt.nomUsuari }}</strong> ha aconseguit el punt: 
-            <span class="punto-nom">{{ notificacioPunt.nomPunt }}</span>
-          </div>
-      </div>
-    </Transition>
-
-    <!-- NOTIFICACIÓ FOTO PRESA EN TEMPS REAL -->
+    <!-- NOTIFICACIÓ EN TEMPS REAL: un altre jugador ha completat un punt -->
     <Transition name="popup-foto">
-      <div v-if="notificacioFoto" class="notificacio-foto-presa">
-        <div class="notificacio-foto-linia-1">{{ notificacioFoto.nomUsuari }} ha fet una foto</div>
-        <div class="notificacio-foto-linia-2">{{ notificacioFoto.nomPunt }}</div>
+      <div v-if="notificacioPunt" class="notificacio-foto-presa">
+        <div class="notificacio-foto-linia-1">{{ notificacioPunt.nomUsuari }} ha completat un punt</div>
+        <div class="notificacio-foto-linia-2">{{ notificacioPunt.nomPunt }}</div>
       </div>
     </Transition>
   </div>
@@ -214,7 +203,6 @@ export default {
 
       // Notificacions en temps real
       notificacioPunt: null,
-      notificacioFoto: null,
 
       personatgeIdUsuari: null, // Per filtrar els punts del mapa segons el personatge (fallback)
       puntsAssignatsIds: [],     // IDs de punts pre-assignats pel backend
@@ -414,45 +402,28 @@ export default {
       });
 
       this._socket.on('punt-aconseguit', (dades) => {
-        console.log('[Mapa] punt-aconseguit rebut:', dades);
-        this.notificacioPunt = dades;
-
-        // Actualitzem visualment el marcador si el punt és nostre
-        if (dades.idPunt) {
-          const userStr = localStorage.getItem('usuari');
-          const user = userStr ? JSON.parse(userStr) : {};
-          if (dades.nomUsuari === user.nom_usuari) {
-            if (!this.puntsCompletatsIds.includes(dades.idPunt)) {
-              this.puntsCompletatsIds.push(dades.idPunt);
-              
-              // Comprovem si ha acabat tots els punts ara mateix
-              const totalMeusPunts = this.puntsAssignatsIds.length > 0 ? this.puntsAssignatsIds.length : this.puntsMissio.length;
-              if (this.puntsCompletatsIds.length >= totalMeusPunts && totalMeusPunts > 0) {
-                setTimeout(() => this.anarAHome(), 2000); // Donem temps a veure la notificació
-              }
+        // No mostrem la notificació al propi jugador
+        const userStr = localStorage.getItem('usuari');
+        const user = userStr ? JSON.parse(userStr) : {};
+        if (dades.nomUsuari === user.nom_usuari) {
+          // Si som nosaltres, només actualitzem el marcador visualment
+          if (dades.idPunt && !this.puntsCompletatsIds.includes(dades.idPunt)) {
+            this.puntsCompletatsIds.push(dades.idPunt);
+            const totalMeusPunts = this.puntsAssignatsIds.length > 0 ? this.puntsAssignatsIds.length : this.puntsMissio.length;
+            if (this.puntsCompletatsIds.length >= totalMeusPunts && totalMeusPunts > 0) {
+              setTimeout(() => this.anarAHome(), 2000);
             }
           }
+          return;
         }
+
+        console.log('[Mapa] punt-aconseguit rebut:', dades);
+        this.notificacioPunt = dades;
 
         // Amaguem la notificació al cap de 5 segons
         setTimeout(() => {
           if (this.notificacioPunt === dades) {
             this.notificacioPunt = null;
-          }
-        }, 5000);
-      });
-
-      this._socket.on('foto-presa', (dades) => {
-        console.log('[Mapa] foto-presa rebuda:', dades);
-        // Ignorem si el nom coincideix amb el nostre
-        const userStr = localStorage.getItem('usuari');
-        const user = userStr ? JSON.parse(userStr) : {};
-        if (dades.nomUsuari === user.nom_usuari) return;
-
-        this.notificacioFoto = dades;
-        setTimeout(() => {
-          if (this.notificacioFoto === dades) {
-            this.notificacioFoto = null;
           }
         }, 5000);
       });
@@ -892,58 +863,7 @@ export default {
   transform: scale(0.95);
 }
 
-/* Notificació de punts */
-.notificacio-punt {
-  position: fixed;
-  bottom: 30px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(26, 8, 32, 0.9);
-  backdrop-filter: blur(10px);
-  border: 2px solid #d9a6c2;
-  padding: 12px 24px;
-  border-radius: 50px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  z-index: 300;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-  min-width: 300px;
-  max-width: 90%;
-}
-
-.notificacio-icon {
-  font-size: 1.6rem;
-}
-
-.notificacio-text {
-  color: white;
-  font-size: 0.95rem;
-  line-height: 1.3;
-}
-
-.punto-nom {
-  color: #d9a6c2;
-  font-weight: 800;
-}
-
-/* Transició slide-fade */
-.slide-fade-enter-active {
-  transition: all 0.4s ease-out;
-}
-.slide-fade-leave-active {
-  transition: all 0.6s cubic-bezier(1, 0.5, 0.8, 1);
-}
-.slide-fade-enter-from {
-  transform: translate(-50%, 40px);
-  opacity: 0;
-}
-.slide-fade-leave-to {
-  transform: translate(-50%, -20px);
-  opacity: 0;
-}
-
-/* Popup foto presa */
+/* Popup de notificació (completat punt per un altre jugador) */
 .notificacio-foto-presa {
   position: fixed;
   top: 80px;
@@ -959,6 +879,7 @@ export default {
   min-width: 220px;
   max-width: 85vw;
   text-align: center;
+  pointer-events: none;
 }
 
 .notificacio-foto-linia-1 {
@@ -980,7 +901,7 @@ export default {
   text-overflow: ellipsis;
 }
 
-/* Transició popup-foto */
+/* Transició popup */
 .popup-foto-enter-active {
   transition: all 0.3s ease-out;
 }

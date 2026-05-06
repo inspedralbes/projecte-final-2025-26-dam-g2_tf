@@ -51,7 +51,6 @@ const cardDefeatFlipped = ref(false);
 const faseDerrota = ref(0);
 const cardDefeatFlippedBig = ref(false);
 const notificacioPunt = ref(null);
-const notificacioFoto = ref(null);
 const tipusPartida = ref(''); // 'individual', 'grup', 'grups'
 
 // Temporitzador
@@ -168,6 +167,9 @@ onMounted(async () => {
       // En el mode 'grup' (tots junts amb un mòbil), no mostrem la notificació
       // perquè tothom està mirant la mateixa pantalla i ja veu el que passa.
       if (tipusPartida.value === 'grup') return;
+      // No mostrem la notificació al propi jugador que ha fet la foto
+      const meuNom = usuari.value?.nom_usuari;
+      if (meuNom && dades.nomUsuari === meuNom) return;
 
       console.log('[Càmera] punt-aconseguit rebut:', dades);
       notificacioPunt.value = dades;
@@ -175,22 +177,6 @@ onMounted(async () => {
       setTimeout(() => {
         if (notificacioPunt.value === dades) {
           notificacioPunt.value = null;
-        }
-      }, 5000);
-    });
-
-    socketJoc.on('foto-presa', (dades) => {
-      // En mode 'grup' tots comparteixen pantalla, no cal notificar
-      if (tipusPartida.value === 'grup') return;
-      // Ignorem la notificació si som el propi jugador que ha fet la foto
-      const meuId = usuari.value?.nom_usuari;
-      if (meuId && dades.nomUsuari === meuId) return;
-
-      console.log('[Càmera] foto-presa rebuda:', dades);
-      notificacioFoto.value = dades;
-      setTimeout(() => {
-        if (notificacioFoto.value === dades) {
-          notificacioFoto.value = null;
         }
       }, 5000);
     });
@@ -644,22 +630,11 @@ async function enviarDadesAlBackend(imatgeEnText) {
       </div>
     </Transition>
 
-    <!-- NOTIFICACIÓ DE PUNTS EN TEMPS REAL -->
-    <Transition name="slide-fade">
-      <div v-if="notificacioPunt" class="notificacio-punt">
-          <div class="notificacio-icon">&#128640;</div>
-          <div class="notificacio-text">
-            <strong>{{ notificacioPunt.nomUsuari }}</strong> ha aconseguit el punt: 
-            <span class="punto-nom">{{ notificacioPunt.nomPunt }}</span>
-          </div>
-      </div>
-    </Transition>
-
-    <!-- NOTIFICACIÓ FOTO PRESA EN TEMPS REAL -->
+    <!-- NOTIFICACIÓ EN TEMPS REAL: un altre jugador ha completat un punt -->
     <Transition name="popup-foto">
-      <div v-if="notificacioFoto" class="notificacio-foto-presa">
-        <div class="notificacio-foto-linia-1">{{ notificacioFoto.nomUsuari }} ha fet una foto</div>
-        <div class="notificacio-foto-linia-2">{{ notificacioFoto.nomPunt }}</div>
+      <div v-if="notificacioPunt" class="notificacio-foto-presa">
+        <div class="notificacio-foto-linia-1">{{ notificacioPunt.nomUsuari }} ha completat un punt</div>
+        <div class="notificacio-foto-linia-2">{{ notificacioPunt.nomPunt }}</div>
       </div>
     </Transition>
 
@@ -808,7 +783,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
     background-size: 20px 20px;
 }
 
-/* Popup foto presa */
+/* Popup de notificació (completat punt per un altre jugador) */
 .notificacio-foto-presa {
   position: fixed;
   top: 80px;
@@ -824,6 +799,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
   min-width: 220px;
   max-width: 85vw;
   text-align: center;
+  pointer-events: none;
 }
 
 .notificacio-foto-linia-1 {
@@ -845,7 +821,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
   text-overflow: ellipsis;
 }
 
-/* Transició popup-foto */
+/* Transició popup */
 .popup-foto-enter-active {
   transition: all 0.3s ease-out;
 }

@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 const { Lloc, Perfil, SessioJoc } = require('../models');
-const { notifyGameOver, notifyPointAchieved, notifyFotoPresa } = require('./gameSocket');
+const { notifyGameOver, notifyPointAchieved } = require('./gameSocket');
 
 // 1. Importem TensorFlow.js per a Node i el model MobileNet
 const tf = require('@tensorflow/tfjs-node');
@@ -66,20 +66,6 @@ router.post('/', async function (req, res) {
             return res.status(400).json({ missatge: "La partida ja ha acabat." });
         }
         if (!lloc) return res.status(404).json({ missatge: "Lloc no trobat." });
-
-        // Notifiquem a la resta de jugadors que algú ha fet una foto (temps real)
-        // Busquem el nom del jugador i del punt per personalitzar la notificació
-        {
-            const perfilInfo = await Perfil.findById(perfilId).select('nom_usuari');
-            const nomJugador = perfilInfo ? perfilInfo.nom_usuari : 'Un jugador';
-            // Obtenim el nom del punt si n'hi ha
-            let nomPuntFoto = lloc ? lloc.nom : '';
-            if (idPunt && lloc) {
-                const puntObj = (lloc.punts_missio || []).find(p => p._id.toString() === idPunt.toString());
-                if (puntObj && puntObj.nom_punt) nomPuntFoto = puntObj.nom_punt;
-            }
-            notifyFotoPresa(sessio, nomJugador, nomPuntFoto);
-        }
 
         // Busquem la imatge de referència per a la IA: primer mirem si el punt concret en té, si no usem la del lloc
         let imatgeReferencia = lloc.imatge_referencia;
