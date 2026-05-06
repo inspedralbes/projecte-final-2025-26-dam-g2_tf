@@ -78,7 +78,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
-import { PageFlip } from 'page-flip';
+import { PageFlip } from 'page-flip/dist/js/page-flip.module.js';
 import { netejarUrl } from '../utils/url';
 
 const props = defineProps({
@@ -147,7 +147,17 @@ function triggerInit(delay = 150) {
 }
 
 async function initPageFlip() {
-  if (!bookElement.value || !pagesContainer.value) return;
+  console.log("DiariExploracio: Starting initialization...", { 
+    hasCromos: !!props.cromos, 
+    cromoCount: props.cromos?.length,
+    hasBookElement: !!bookElement.value,
+    hasPagesContainer: !!pagesContainer.value
+  });
+
+  if (!bookElement.value || !pagesContainer.value) {
+    console.warn("DiariExploracio: Initialization aborted - Missing elements");
+    return;
+  }
 
   // Wait for Vue to render the hidden pages from the props
   await nextTick();
@@ -189,11 +199,19 @@ async function initPageFlip() {
   }
 
   try {
-    if (typeof PageFlip === 'undefined') {
-      console.error("PageFlip library is not loaded properly.");
+    // Robust check for PageFlip
+    let PageFlipClass = PageFlip;
+    
+    if (typeof PageFlipClass === 'undefined' && window.St && window.St.PageFlip) {
+      PageFlipClass = window.St.PageFlip;
+    }
+
+    if (!PageFlipClass) {
+      console.error("PageFlip library is not loaded properly. (Import is undefined)");
       return;
     }
-    pageFlipInstance = new PageFlip(bookElement.value, {
+    
+    pageFlipInstance = new PageFlipClass(bookElement.value, {
       width: pW,
       height: pH,
       size: 'fixed',
@@ -216,6 +234,10 @@ async function initPageFlip() {
       pageFlipInstance.on('changeState', (e) => {
         isFlipping.value = e.data === 'flipping';
       });
+
+      // MAKE VISIBLE
+      bookElement.value.style.visibility = 'visible';
+      console.log("DiariExploracio: Book is now visible");
 
       // Automatic opening effect
       openTimeout = setTimeout(() => {

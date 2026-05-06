@@ -121,7 +121,9 @@ async function irAlJuego() {
     }
 
     // 2. Creem la sessió real a la base de dades
-    const resposta = await fetch(`${import.meta.env.VITE_API_URL}/api/sessionsJoc/crear`, {
+    const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
+    const resposta = await fetch(`${API_URL}/api/sessionsJoc/crear`, {
+
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

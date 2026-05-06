@@ -38,7 +38,9 @@ function notifyGameOver(sessioId, sessio, guanyadorId, nomGuanyador) {
         jugadors: jugadorsOrdenats,
         timeout: guanyadorId === 'timeout'
     });
+    console.log(`[Socket] Event game-over emès correctament a la sala: ${roomCode}`);
 }
+
 
 /**
  * Emet l'event 'punt-aconseguit' quan un jugador fa la foto bé.
@@ -51,7 +53,9 @@ function notifyPointAchieved(sessio, nomUsuari, nomPunt, idPunt) {
         nomPunt,
         idPunt: idPunt ? idPunt.toString() : null
     });
+    console.log(`[Socket] Event punt-aconseguit emès a sala ${sessio.codi_sala} per ${nomUsuari}`);
 }
+
 
 
 function configureSocket(server) {
@@ -284,8 +288,9 @@ function configureSocket(server) {
                 const sessio = await SessioJoc.findOne(query).select('codi_sala');
                 if (sessio && sessio.codi_sala) {
                     socket.join(sessio.codi_sala);
-                    console.log(`[Socket] Socket ${socket.id} s'ha unit a la room ${sessio.codi_sala} via join-game-room`);
+                    console.log(`[Socket] Socket ${socket.id} s'ha unit a la room "${sessio.codi_sala}" via join-game-room (${idOrCodi})`);
                 } else {
+
                     console.warn(`[Socket] join-game-room: sessió ${idOrCodi} no trobada o sense codi_sala`);
                 }
             } catch (err) {

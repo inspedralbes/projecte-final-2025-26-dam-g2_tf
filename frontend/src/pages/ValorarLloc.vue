@@ -81,7 +81,8 @@ const { mostrarModal } = useCustomModal();
 const { usuari } = useAuth();
 
 const idLloc = route.params.id;
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8088';
+const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
+
 
 const rating = ref(0);
 const hoverValue = ref(0);
