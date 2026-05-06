@@ -125,8 +125,8 @@ const PeticioRutaSchema = new mongoose.Schema({
   nom_proposat: String,
   motiu: String,
   fotos_proporcionades: [String],
-  estat_validacio: { type: String, default: 'pendent' }
-});
+  estat_validacio: { type: String, default: 'pendent', enum: ['pendent', 'aprovada', 'preparant', 'rebutjada'] }
+}, { timestamps: true });
 
 
 // 6. Ressenya (ressenyes)

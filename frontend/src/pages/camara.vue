@@ -54,13 +54,56 @@ const tipusPartida = ref(''); // 'individual', 'grup', 'grups'
 
 // Temporitzador
 const tempsRestant = ref(null);
+const mostrarModal = ref(false);
+const cardGirada = ref(false);
 let intervalTimer = null;
 let notificationTimeout = null;
 
 
 onMounted(async () => {
-  // 0. Carreguem la sessió per saber el temps límit
   const codi_sala = route.params.codi_sala;
+  
+  // 0. Connectem el socket immediatament per no perdre events
+  if (codi_sala) {
+    socketJoc = io(API_URL);
+    socketJoc.on('connect', () => {
+      socketJoc.emit('join-game-room', codi_sala);
+      console.log('[Càmera] Socket connectat, unit a la room:', codi_sala);
+    });
+    
+    socketJoc.on('game-over', (dades) => {
+      console.log('[Càmera] Game-over rebut:', dades);
+      const meuId = usuari.value?._id?.toString();
+      if (meuId && dades.guanyadorId && meuId === dades.guanyadorId.toString()) return;
+
+      sessioIdGuanyador.value = dades.sessioId || codi_sala;
+      nomGuanyador.value = dades.nomGuanyador || 'Un jugador';
+      isTimeout.value = dades.timeout || false;
+      
+      if (isTimeout.value) {
+        faseDerrota.value = 1;
+      } else {
+        faseDerrota.value = 2;
+        mostrarNotificacioGuanyador.value = true;
+      }
+      if (intervalTimer) clearInterval(intervalTimer);
+    });
+
+    socketJoc.on('punt-aconseguit', (dades) => {
+      console.log('[Càmera] punt-aconseguit rebut:', dades);
+      const meuNom = usuari.value?.nom_usuari;
+      if (meuNom && dades.nomUsuari === meuNom) return;
+
+      notificacioPunt.value = dades;
+      if (notificationTimeout) clearTimeout(notificationTimeout);
+      notificationTimeout = setTimeout(() => {
+        notificacioPunt.value = null;
+        notificationTimeout = null;
+      }, 5000);
+    });
+  }
+
+  // 1. Carreguem la sessió per saber el temps límit
   if (codi_sala) {
     try {
         const respSessio = await fetch(`${API_URL}/api/sessionsJoc/${codi_sala}`);
@@ -123,69 +166,7 @@ onMounted(async () => {
     await showCustomModal({ isAlert: true, message: "No s'ha pogut accedir a la càmera: " + error.message });
   }
 
-  // Carreguem la sessió per saber el mode de joc i així filtrar notificacions
-  if (codi_sala) {
-    try {
-        const resSessio = await fetch(`${API_URL}/api/sessionsJoc/${codi_sala}`);
-        if (resSessio.ok) {
-            const sessio = await resSessio.json();
-            tipusPartida.value = sessio.tipus_partida || 'individual';
-            console.log("[Càmera] Mode de partida detectat:", tipusPartida.value);
-        }
-    } catch (e) {
-        console.error("[Càmera] Error recuperant dades de la sessió:", e);
-    }
-  }
-
-  // Connectem el socket i escoltem l'event 'game-over'
-  // Emetem 'join-game-room' perquè el backend ens uneixi a la room correcta
-  if (codi_sala) {
-    socketJoc = io(API_URL);
-    // Quan el socket es connecta, demanem unir-nos a la room de la partida
-    socketJoc.on('connect', function () {
-      socketJoc.emit('join-game-room', codi_sala);
-      console.log('[Càmera] Socket connectat, unit a la room:', codi_sala);
-    });
-    // Si ja està connectat per algun motiu, emetem també
-    if (socketJoc.connected) {
-      socketJoc.emit('join-game-room', codi_sala);
-      console.log('[Càmera] Socket ja estava connectat, unit a la room:', codi_sala);
-    }
-
-    socketJoc.on('game-over', function (dades) {
-      const meuId = usuari.value?._id?.toString();
-      // Si soc el guanyador, ignoro l'event: el modal de "Partida Finalitzada!" ja em redirigirà
-      if (meuId && dades.guanyadorId && meuId === dades.guanyadorId.toString()) return;
-
-      sessioIdGuanyador.value = dades.sessioId || codi_sala;
-      nomGuanyador.value = dades.nomGuanyador || 'Un jugador';
-      isTimeout.value = dades.timeout || false;
-      
-      if (isTimeout.value) {
-        faseDerrota.value = 1;
-      } else {
-        faseDerrota.value = 2;
-        mostrarNotificacioGuanyador.value = true;
-      }
-      if (intervalTimer) clearInterval(intervalTimer);
-    });
-
-    socketJoc.on('punt-aconseguit', (dades) => {
-      if (tipusPartida.value === 'grup') return;
-      const meuNom = usuari.value?.nom_usuari;
-      if (meuNom && dades.nomUsuari === meuNom) return;
-
-      console.log('[Càmera] punt-aconseguit rebut:', dades);
-      notificacioPunt.value = dades;
-
-      if (notificationTimeout) clearTimeout(notificationTimeout);
-      notificationTimeout = setTimeout(() => {
-        notificacioPunt.value = null;
-        notificationTimeout = null;
-      }, 5000);
-    });
-
-  }
+  // S'ha mogut la inicialització del socket a l'inici de l'onMounted
 });
 
 function anarAHome() {
@@ -201,6 +182,9 @@ onUnmounted(() => {
   }
   if (intervalTimer) {
       clearInterval(intervalTimer);
+  }
+  if (notificationTimeout) {
+      clearTimeout(notificationTimeout);
   }
 });
 

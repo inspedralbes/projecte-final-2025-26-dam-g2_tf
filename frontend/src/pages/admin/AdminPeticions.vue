@@ -35,17 +35,26 @@
 
             <div v-if="peticionSeleccionada.estat_validacio === 'pendent'" class="flex flex-col sm:flex-row gap-4 pt-4">
               <button 
-                @click="votar(peticionSeleccionada, 'acceptada')" 
+                @click="votar(peticionSeleccionada, 'aprovada')" 
                 class="flex-1 bg-[#402749] text-[#f5cbdd] py-4 rounded-xl font-bold uppercase shadow-lg hover:bg-[#5d3962] transition-all"
               >
-                Aprovar i Publicar
+                Aprovar
               </button>
-
+              
               <button 
                 @click="votar(peticionSeleccionada, 'rebutjada')" 
                 class="flex-1 bg-white text-[#402749] border-2 border-[#402749] py-4 rounded-xl font-bold uppercase shadow-md hover:bg-gray-50 transition-all"
               >
                 Rebutjar
+              </button>
+            </div>
+
+            <div v-else-if="peticionSeleccionada.estat_validacio === 'aprovada'" class="flex flex-col sm:flex-row gap-4 pt-4">
+              <button 
+                @click="moureAPreparant(peticionSeleccionada)" 
+                class="flex-1 bg-purple-600 text-white py-4 rounded-xl font-bold uppercase shadow-lg hover:bg-purple-700 transition-all"
+              >
+                Posar en Preparació
               </button>
             </div>
             
@@ -127,17 +136,17 @@ const cargarPeticiones = async () => {
 };
 
 const votar = async (peticion, nouEstat) => {
-
+  
   const id = peticion._id || peticion.id;
-
+  
   if (!id) {
     console.error("Dades de la petició:", peticion);
     await mostrarModal({ isAlert: true, message: "Error: No s'ha pogut trobar l'ID en l'objecte." });
     return;
   }
-
-  const isConfirmed = await mostrarModal({ isAlert: false, title: 'Confirmació', message: `Vols marcar aquesta petició com a ${nouEstat}?` });
-  if (!isConfirmed) return;
+  
+  const isConfirmat = await mostrarModal({ isAlert: false, title: 'Confirmació', message: `Vols marcar aquesta petició com a ${nouEstat}?` });
+  if (!isConfirmat) return;
   
   try {
     const res = await fetch(`${API_URL}/api/admin/peticions/${id}`, {
@@ -154,6 +163,40 @@ const votar = async (peticion, nouEstat) => {
     }
   } catch (err) {
     console.error("Error al votar:", err);
+    await mostrarModal({ isAlert: true, message: "Error de connexió." });
+  }
+};
+
+const moureAPreparant = async (peticion) => {
+  const id = peticion._id || peticion.id;
+
+  if (!id) {
+    console.error("Dades de la petició:", peticion);
+    await mostrarModal({ isAlert: true, message: "Error: No s'ha pogut trobar l'ID en l'objecte." });
+    return;
+  }
+
+  const isConfirmat = await mostrarModal({ 
+    isAlert: false,
+    title: 'Preparar Lloc', 
+    message: `Vols moure aquesta petició a l'estat de preparació? Es crearà el lloc ocult.` 
+  });
+
+  if (!isConfirmat) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/peticions/${id}/preparant`, {
+      method: 'PUT'
+    });
+    
+    if (res.ok) {
+      peticionSeleccionada.value = null; 
+      await cargarPeticiones(); 
+    } else {
+      await mostrarModal({ isAlert: true, message: "Error en el servidor." });
+    }
+  } catch (err) {
+    console.error("Error a preparant:", err);
     await mostrarModal({ isAlert: true, message: "Error de connexió." });
   }
 };

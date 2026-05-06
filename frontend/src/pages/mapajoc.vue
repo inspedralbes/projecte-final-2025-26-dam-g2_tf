@@ -431,7 +431,8 @@ export default {
         this._notificacioTimeout = setTimeout(() => {
           this.notificacioPunt = null;
           this._notificacioTimeout = null;
-        }, 5000);
+          console.log('[Mapa] Notificació esborrada automàticament');
+        }, 3000);
       });
 
     }
@@ -444,6 +445,9 @@ export default {
     }
     if (this.intervalTimer) {
         clearInterval(this.intervalTimer);
+    }
+    if (this._notificacioTimeout) {
+        clearTimeout(this._notificacioTimeout);
     }
   },
 
