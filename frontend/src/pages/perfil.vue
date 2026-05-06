@@ -80,51 +80,76 @@
           <p v-if="misPosts.length === 0" class="text-center text-gray-600 text-sm italic">No has publicat res encara.</p>
         </div>
 
-
-<div v-if="activeTab === 'cromos'" class="space-y-8 animate-fade-in">
-
-
-  <DiariExploracio :cromos="user?.inventari_cromos || []" />
-</div>
-
-     <div v-if="activeTab === 'amics'" class="space-y-6">
-  
-        <div v-if="user?.sollicituds_pendents?.length > 0" class="space-y-3">
-          <h3 class="text-[#bc85ab] text-[10px] font-black tracking-widest uppercase">Sol·licituds noves</h3>
-          <div v-for="sol in user.sollicituds_pendents" :key="sol.id_usuari" class="bg-[#f5cbdd]/10 p-4 rounded-2xl border border-[#f5cbdd]/20 flex items-center justify-between">
-            <span class="text-sm font-bold text-[#f5cbdd]">{{ sol.nom_usuari }}</span>
-            <div class="flex gap-2">
-              <button @click="acceptarAmic(sol)" class="bg-[#bc85ab] text-black text-[10px] font-bold px-3 py-1 rounded-lg">ACCEPTAR</button>
-              <button @click="rebutjarAmic(sol)" class="bg-red-500/20 text-red-400 text-[10px] font-bold px-3 py-1 rounded-lg">REBUTJAR</button>
-            </div>
-          </div>
+        <div v-if="activeTab === 'cromos'" class="space-y-8 animate-fade-in">
+          <DiariExploracio :cromos="user?.inventari_cromos || []" />
         </div>
 
-        <div class="space-y-2">
-          <h3 class="text-gray-500 text-[10px] font-black tracking-widest uppercase">Els teus amics</h3>
-          
-          <div 
-            v-for="amic in user?.amics" 
-            :key="amic._id" 
-            @click="router.push(`/perfil-visita/${amic._id}`)"
-            class="bg-[#2d1b33] p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-[#3d2b43] transition-colors group"
-          >
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-full bg-[#bc85ab] flex items-center justify-center text-[10px] font-bold text-black">
-                {{ amic.nom_usuari?.charAt(0).toUpperCase() || '?' }}
+        <div v-if="activeTab === 'amics'" class="space-y-6">
+          <div v-if="user?.sollicituds_pendents?.length > 0" class="space-y-3">
+            <h3 class="text-[#bc85ab] text-[10px] font-black tracking-widest uppercase">Sol·licituds noves</h3>
+            <div v-for="sol in user.sollicituds_pendents" :key="sol.id_usuari" class="bg-[#f5cbdd]/10 p-4 rounded-2xl border border-[#f5cbdd]/20 flex items-center justify-between">
+              <span class="text-sm font-bold text-[#f5cbdd]">{{ sol.nom_usuari }}</span>
+              <div class="flex gap-2">
+                <button @click="acceptarAmic(sol)" class="bg-[#bc85ab] text-black text-[10px] font-bold px-3 py-1 rounded-lg">ACCEPTAR</button>
+                <button @click="rebutjarAmic(sol)" class="bg-red-500/20 text-red-400 text-[10px] font-bold px-3 py-1 rounded-lg">REBUTJAR</button>
               </div>
-              <span class="text-sm font-bold group-hover:text-[#bc85ab]">{{ amic.nom_usuari }}</span>
             </div>
-            <span class="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_#22c55e]"></span>
           </div>
-          
-          <p v-if="!user?.amics?.length" class="text-center text-gray-600 text-sm italic">Encara no tens amics afegits.</p>
-        </div>
-      </div> </div> <button @click="tancarSessio" class="w-full mt-10 py-4 border border-red-500/30 text-red-400 rounded-2xl font-bold text-sm hover:bg-red-500/10">
-      TANCAR SESSIÓ
-    </button>
 
-    </main>
+          <div class="space-y-2">
+            <h3 class="text-gray-500 text-[10px] font-black tracking-widest uppercase">Els teus amics</h3>
+            
+            <div 
+              v-for="amic in user?.amics" 
+              :key="amic._id" 
+              @click="router.push(`/perfil-visita/${amic._id}`)"
+              class="bg-[#2d1b33] p-3 rounded-xl flex items-center justify-between cursor-pointer hover:bg-[#3d2b43] transition-colors group"
+            >
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-[#bc85ab] flex items-center justify-center text-[10px] font-bold text-black">
+                  {{ amic.nom_usuari?.charAt(0).toUpperCase() || '?' }}
+                </div>
+                <span class="text-sm font-bold group-hover:text-[#bc85ab]">{{ amic.nom_usuari }}</span>
+              </div>
+              <span class="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_#22c55e]"></span>
+            </div>
+            
+            <p v-if="!user?.amics?.length" class="text-center text-gray-600 text-sm italic">Encara no tens amics afegits.</p>
+          </div>
+        </div>
+
+        <div v-if="activeTab === 'propostes'" class="space-y-4 animate-fade-in">
+          <h3 class="text-[#bc85ab] text-[10px] font-black tracking-widest uppercase">Les meves propostes</h3>
+          <div v-for="p in mevesPeticions" :key="p._id" class="bg-[#2d1b33] p-4 rounded-2xl border border-white/5">
+            <div class="flex justify-between items-center mb-2">
+              <span class="font-bold text-sm text-white">{{ p.nomLloc }}</span>
+              <span 
+                class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                :class="p.estat === 'aprovada' ? 'bg-blue-100 text-blue-800' : 
+                        p.estat === 'preparant' ? 'bg-purple-100 text-purple-800' : 
+                        p.estat === 'rebutjada' ? 'bg-red-100 text-red-800' : 
+                        'bg-yellow-100 text-yellow-800'"
+              >
+                {{ p.estat === 'aprovada' ? 'Acceptada' : 
+                   p.estat === 'preparant' ? 'treballant' : 
+                   p.estat }}
+              </span>
+            </div>
+            <p class="text-[10px] text-gray-400 mb-1">{{ p.dataCreacio ? new Date(p.dataCreacio).toLocaleDateString() : 'Data no disponible' }}</p>
+            <p v-if="p.estat === 'rebutjada' && p.motiuRebuig" class="text-[10px] text-red-400 italic">
+              Motiu: {{ p.motiuRebuig }}
+            </p>
+          </div>
+          <p v-if="mevesPeticions.length === 0" class="text-center text-gray-600 text-sm italic">No has fet cap proposta.</p>
+        </div>
+
+      </div>
+
+      <button @click="tancarSessio" class="w-full mt-10 py-4 border border-red-500/30 text-red-400 rounded-2xl font-bold text-sm hover:bg-red-500/10">
+        TANCAR SESSIÓ
+      </button> 
+
+    </main> 
 
     <ModalPersonalitzat 
       :show="modalVisible"
@@ -211,8 +236,27 @@ const activeTab = ref('posts');
 const tabs = [
   { id: 'posts', label: 'MIS POSTS' },
   { id: 'cromos', label: 'CROMOS' },
-  { id: 'amics', label: 'AMICS' }
+  { id: 'amics', label: 'AMICS' },
+  { id: 'propostes', label: 'PROPOSTES' }
 ];
+
+// 4. LES MEVES PROPOSTES
+const mevesPeticions = ref([]);
+
+async function fetchMevesPeticions() {
+  try {
+    const usuari = JSON.parse(localStorage.getItem('usuari'));
+    if (!usuari?._id) return;
+    const res = await fetch(`${API_URL}/api/peticions/meves`, {
+      headers: { 'X-User-Id': usuari._id }
+    });
+    if (res.ok) {
+      mevesPeticions.value = await res.json();
+    }
+  } catch (err) {
+    console.error("Error carregant propostes:", err);
+  }
+}
 
 // 1. CARREGAR MIS POSTS
 const misPosts = ref([]);
@@ -336,6 +380,7 @@ onMounted(async () => {
     
     tempBio.value = user.value?.biografia || '';
     carregarMisPosts();
+    fetchMevesPeticions();
   } else {
     router.push('/login');
   }

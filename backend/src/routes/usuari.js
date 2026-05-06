@@ -137,9 +137,13 @@ router.post('/acceptar-amistat', async (req, res) => {
 // OBTENIR PERFIL PER ID (Amb el nom dels amics carregat)
 router.get('/:id', async (req, res) => {
     try {
+        // Validació de l'ID per evitar que Mongoose peti
+        if (!req.params.id || !req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.status(400).json({ message: "ID d'usuari no vàlid" });
+        }
         const perfil = await Perfil.findById(req.params.id)
             .populate('usuari_id', 'correu')
-            .populate('amics', 'nom_usuari'); // <--- CRÍTIC: Carrega els noms dels amics
+            .populate('amics', 'nom_usuari'); 
 
         if (!perfil) {
             return res.status(404).json({ message: "Perfil no trobat" });
@@ -148,7 +152,8 @@ router.get('/:id', async (req, res) => {
         res.json(perfil);
     } catch (error) {
         console.error("Error al carregar el perfil:", error);
-        res.status(500).json({ message: "Error intern del servidor" });
+        // Retornem sempre una resposta JSON, mai deixem el procés penjat
+        res.status(500).json({ message: "Error intern del servidor", detall: error.message });
     }
 });
 
