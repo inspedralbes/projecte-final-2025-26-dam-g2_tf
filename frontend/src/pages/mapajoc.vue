@@ -432,7 +432,7 @@ export default {
           this.notificacioPunt = null;
           this._notificacioTimeout = null;
           console.log('[Mapa] Notificació esborrada automàticament');
-        }, 3000);
+        }, 1000);
       });
 
     }
