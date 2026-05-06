@@ -49,6 +49,7 @@ function configurarRutes(middlewareHorari) {
     app.use('/api/personatges', require('./src/routes/personatges'));
     app.use('/api/verificacio', require('./src/routes/verificacio'));
     app.use('/api/carta-lore', require('./src/routes/carta_lore'));
+    app.use('/api/cromos', require('./src/routes/cromos'));
 
    
     if (middlewareHorari) {
