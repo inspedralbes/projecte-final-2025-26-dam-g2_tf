@@ -19,6 +19,24 @@ router.post('/login', async function (req, res) {
 });
 
 // 2. GESTIONAR LLOCS
+// Reordenar llocs (Drag & Drop) - HA D'ESTAR ABANS DE /:id
+router.put('/llocs/reordenar', async function (req, res) {
+  try {
+    const { llocs } = req.body; // [{ id: '...', ordre: 1 }, ...]
+    if (!Array.isArray(llocs)) {
+      return res.status(400).json({ message: "Format incorrecte, s'esperava un array 'llocs'" });
+    }
+    const updates = llocs.map(item => 
+      Lloc.findByIdAndUpdate(item.id, { ordre: item.ordre })
+    );
+    await Promise.all(updates);
+    res.json({ success: true, message: "Ordre actualitzat correctament" });
+  } catch (error) {
+    console.error("Error al reordenar:", error);
+    res.status(500).json({ message: "Error al reordenar" });
+  }
+});
+
 router.get('/llocs', async function (req, res) {
     try {
         const llocs = await Lloc.find({});
@@ -56,13 +74,16 @@ router.delete('/llocs/:id', async function (req, res) {
   }
 });
 
-// Canviar estat d'un lloc (visibilitat)
+// Canviar estat d'un lloc (visibilitat i ordre)
 router.patch('/llocs/:id/estat', async function (req, res) {
   try {
-    const { estat } = req.body;
-    await Lloc.findByIdAndUpdate(req.params.id, { estat });
+    const { estat, ordre } = req.body;
+    const updateData = { estat };
+    if (ordre !== undefined) updateData.ordre = ordre;
+    await Lloc.findByIdAndUpdate(req.params.id, updateData);
     res.json({ success: true, message: "Estat actualitzat correctament" });
   } catch (error) {
+    console.error("Error al actualitzar l'estat:", error);
     res.status(500).json({ message: "Error al actualitzar l'estat" });
   }
 });
@@ -74,6 +95,7 @@ router.patch('/llocs/:id/restriccio', async function (req, res) {
     await Lloc.findByIdAndUpdate(req.params.id, { 'control_horari.actiu': actiu });
     res.json({ success: true, message: "Restricció horària actualitzada" });
   } catch (error) {
+    console.error("Error al actualitzar la restricció:", error);
     res.status(500).json({ message: "Error al actualitzar la restricció" });
   }
 });

@@ -6,7 +6,7 @@ const { Lloc, Ressenya } = require('../models');
 // Obtener todos los lugares
 router.get('/', async (req, res) => {
     try {
-        const llocs = await Lloc.find({ estat: { $ne: 'desactivat' } }).lean();
+        const llocs = await Lloc.find({ estat: { $ne: 'desactivat' } }).sort({ ordre: 1 }).lean();
         
         // Calcular medias de ressenyes
         const ressenyesAgregades = await Ressenya.aggregate([
