@@ -477,11 +477,11 @@ async function enviarDadesAlBackend(imatgeEnText) {
                   alt="Foto històrica"
                 />
                 
-                <!-- Overlay d'informació més discret -->
-                <div class="absolute inset-x-0 bottom-0 p-4 pt-10 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
-                  <div class="space-y-1">
-                    <p class="text-pink-400 text-[9px] font-black uppercase tracking-[0.2em] opacity-80">🏛️ Arxiu Històric</p>
-                    <p class="text-white text-[11px] font-medium leading-snug opacity-90 line-clamp-3">
+                <!-- Overlay d'informació amb degradat per a llegibilitat -->
+                <div class="absolute inset-x-0 bottom-0 p-5 pt-16 bg-gradient-to-t from-black/95 via-black/60 to-transparent">
+                  <div class="space-y-2">
+                    <p class="text-pink-400 text-[10px] font-black uppercase tracking-[0.2em] opacity-90">🏛️ Arxiu Històric</p>
+                    <p class="text-white text-[13px] font-semibold leading-relaxed drop-shadow-md">
                       {{ modalDades.text_historic }}
                     </p>
                   </div>
