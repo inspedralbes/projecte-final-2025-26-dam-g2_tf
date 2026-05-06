@@ -10,7 +10,6 @@ const allowedOrigins = [process.env.ORIGIN_URL, 'http://localhost:5173', 'http:/
 
 const corsOptions = {
     origin: function (origin, callback) {
-        // Permetre peticions sense origen (com apps mòbils o curl)
         if (!origin) return callback(null, true);
         if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost:')) {
             callback(null, true);
@@ -35,7 +34,8 @@ app.use('/fotos_historiques', express.static(path.join(__dirname, 'public/fotos_
 app.use('/personatges', express.static(path.join(__dirname, 'public/personatges')));
 app.use('/assets', express.static(path.join(__dirname, 'public/assets')));
 app.use('/Cromos', express.static(path.join(__dirname, 'public/Cromos')));
-// Funció que configura totes les rutes de l'app
+
+
 // La separem del servidor per poder fer tests sense aixecar el servidor real
 function configurarRutes(middlewareHorari) {
     // Rutes que NO necessiten control d'horari
@@ -50,7 +50,7 @@ function configurarRutes(middlewareHorari) {
     app.use('/api/verificacio', require('./src/routes/verificacio'));
     app.use('/api/carta-lore', require('./src/routes/carta_lore'));
 
-    // Rutes que SÍ necessiten el middleware de control d'horari
+   
     if (middlewareHorari) {
         app.use('/api/cercador', middlewareHorari, require('./src/routes/cercador'));
         app.use('/api/mapa', middlewareHorari, require('./src/routes/mapa'));
@@ -59,32 +59,24 @@ function configurarRutes(middlewareHorari) {
     }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Registrem les rutes IMMEDIATAMENT quan es carrega el mòdul
-// Així quan els tests fan `require('./server')` ja troben les rutes
-// (no cal que es cridi startServer())
-// ─────────────────────────────────────────────────────────────
-configurarRutes(null); // null = sense middleware d'horari (ok pels tests)
+
+configurarRutes(null); 
 
 async function startServer() {
     try {
         await connectDB();
         console.log("MongoDB Connectat correctament");
 
-        // Iniciar tasques programades (Cron jobs)
         const { iniciarCronJobs } = require('./src/utils/cron');
         iniciarCronJobs();
 
         const { comprovarToqueDeQueda } = require('./src/utils/horari');
 
-        // Afegim les rutes AMB middleware d'horari per al servidor real
-        // (les rutes sense horari ja s'han afegit a dalt)
         app.use('/api/cercador', comprovarToqueDeQueda, require('./src/routes/cercador'));
         app.use('/api/mapa', comprovarToqueDeQueda, require('./src/routes/mapa'));
         app.use('/api/validar-foto', comprovarToqueDeQueda, require('./src/routes/camara'));
         app.use('/api/sessionsJoc', comprovarToqueDeQueda, require('./src/routes/sessionsJoc'));
 
-        // Configurar Socket.io
         const http = require('http');
         const server = http.createServer(app);
 
@@ -101,10 +93,7 @@ async function startServer() {
     }
 }
 
-// Exportem l'app perquè els tests la puguin fer servir sense aixecar el servidor
-// require.main === module vol dir: "s'està executant directament? (node server.js)"
 if (require.main === module) {
-    // Si executen 'node server.js' directament, iniciem el servidor normalment
     startServer();
 }
 
