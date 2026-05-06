@@ -252,6 +252,9 @@ function fotoSeguent() {
 function tancarModal() {
   mostrarModal.value = false;
 
+  console.log('[Càmera] tancarModal | completat_tot:', modalDades.value.completat_tot);
+  console.log('[Càmera] tancarModal | imatge_cromo:', modalDades.value.imatge_cromo);
+
   if (modalDades.value.completat_tot) {
     // Si ha completat tot, anem a la pàgina de revelació
     if (modalDades.value.imatge_cromo) {
@@ -488,7 +491,7 @@ async function enviarDadesAlBackend(imatgeEnText) {
         >
           <div class="w-full flex flex-col items-center pt-6 pb-3 px-6">
             <h2 class="text-white font-bold text-lg text-center leading-tight">
-              {{ !modalDades.exit ? 'Imatge errònia!' : modalDades.completat_tot ? (modalDades.cromo_nou ? 'Enhorabona per guanyar la partida! Has desbloquejat un cromo nou.' : 'Enhorabona per guanyar la partida! Pots veure el teu cromo al teu perfil.') : 'Punt trobat!' }}
+              {{ !modalDades.exit ? 'Imatge errònia!' : modalDades.completat_tot ? 'ENHORABONA! HAS GUANYAT EL CROMO!' : 'Punt trobat!' }}
             </h2>
             <p class="text-pink-300 text-sm mt-1 text-center">
               {{ !modalDades.exit ? 'Torna a provar, la foto no s\'assembla prou' : modalDades.nom_lloc }}
