@@ -73,8 +73,8 @@
       <div class="mt-10">
         <h3 class="font-bold text-gray-300 uppercase text-[10px] tracking-[0.2em] mb-4">Valoracions dels usuaris</h3>
         
-        <div v-if="ressenyes.length > 0" class="space-y-4">
-          <div v-for="ressenya in ressenyes" :key="ressenya._id" class="bg-gray-50 p-4 rounded-2xl shadow-sm border border-gray-100">
+        <div v-if="ressenyesVisibles.length > 0" class="space-y-4">
+          <div v-for="ressenya in ressenyesVisibles" :key="ressenya._id" class="bg-gray-50 p-4 rounded-2xl shadow-sm border border-gray-100">
             <div class="flex items-center gap-3 mb-2">
               <div class="w-8 h-8 rounded-full bg-purple-200 overflow-hidden">
                 <img v-if="ressenya.id_usuari?.avatar" :src="netejarUrl(ressenya.id_usuari.avatar)" class="w-full h-full object-cover" />
@@ -96,6 +96,20 @@
             </div>
             <p class="text-gray-600 text-sm italic">"{{ ressenya.comentari }}"</p>
           </div>
+
+          <button 
+            v-if="ressenyes.length > 3" 
+            @click="mostrarTotes = !mostrarTotes"
+            class="w-full py-4 mt-2 text-xs font-black uppercase tracking-widest text-purple-600 bg-purple-50 rounded-2xl hover:bg-purple-100 transition-all flex items-center justify-center gap-2 active:scale-95 border border-purple-100"
+          >
+            {{ mostrarTotes ? 'Veure menys' : `Veure totes (${ressenyes.length})` }}
+            <svg v-if="!mostrarTotes" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
+            </svg>
+            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 15l7-7 7 7" />
+            </svg>
+          </button>
         </div>
 
         <div v-else class="text-center py-6 bg-gray-50 rounded-2xl border border-gray-100">
@@ -118,6 +132,12 @@ const route = useRoute()
 const router = useRouter() 
 const lloc = ref(null)
 const ressenyes = ref([])
+const mostrarTotes = ref(false);
+
+const ressenyesVisibles = computed(() => {
+  if (mostrarTotes.value) return ressenyes.value;
+  return ressenyes.value.slice(0, 3);
+});
 
 const { usuari } = useAuth();
 const { obrirModal } = useLoginModal();
