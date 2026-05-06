@@ -6,7 +6,7 @@ const { Lloc } = require('../models/index');
 router.get('/punts', async (req, res) => {
     try {
 
-        const llocs = await Lloc.find({}).populate('punts_missio.personatge_id');
+        const llocs = await Lloc.find({}).sort({ ordre: 1 }).populate('punts_missio.personatge_id');
         res.json(llocs);
     } catch (error) {
         console.error("Error al carregar punts:", error);

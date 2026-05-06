@@ -74,7 +74,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
-import { PageFlip } from 'page-flip';
+// import { PageFlip } from 'page-flip';
 import { netejarUrl } from '../utils/url';
 
 const props = defineProps({

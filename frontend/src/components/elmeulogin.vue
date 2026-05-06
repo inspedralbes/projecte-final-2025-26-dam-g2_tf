@@ -35,6 +35,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
+import { useCustomModal } from '../composables/useCustomModal';
 
 defineProps(['isVisible']);
 const emit = defineEmits(['tancar', 'exit']);
@@ -66,6 +67,29 @@ async function executarAccio() {
 
     const resultat = await resposta.json();
 if (resultat.success) {
+      if (esRegistre.value) {
+        if (resultat.usuari.verificacio_estat === 'pendent') {
+          esRegistre.value = false;
+          contrasenya.value = '';
+          const { mostrarModal } = useCustomModal();
+          await mostrarModal({
+             isAlert: true,
+             icon: 'warning',
+             title: 'Compte Pendent',
+             message: 'La teva compte està en mode pendent de verificació. Un administrador revisarà la teva identitat. Torna a provar d\'entrar en unes hores.'
+          });
+          return;
+        }
+
+        const { mostrarModal } = useCustomModal();
+        await mostrarModal({
+           isAlert: true,
+           icon: 'success',
+           title: 'Registre Correcte',
+           message: 'T\'has registrat correctament, benvingut!'
+        });
+      }
+
       // 1. Actualitzem l'estat global de l'auth (composable)
       login(resultat.usuari);
 

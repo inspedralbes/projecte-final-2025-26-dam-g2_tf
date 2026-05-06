@@ -53,6 +53,23 @@ function notifyPointAchieved(sessio, nomUsuari, nomPunt, idPunt) {
     });
 }
 
+/**
+ * Emet l'event 'foto-presa' quan un jugador dispara la càmera.
+ * Només s'emet si hi ha més d'un jugador a la sessió.
+ * @param {object} sessio     - El document Mongoose de la SessioJoc
+ * @param {string} nomUsuari  - Nom del jugador que fa la foto
+ * @param {string} nomPunt    - Nom del punt que intenta fotografiar
+ */
+function notifyFotoPresa(sessio, nomUsuari, nomPunt) {
+    if (!ioInstance || !sessio.codi_sala) return;
+    if (!sessio.jugadors || sessio.jugadors.length <= 1) return;
+    console.log(`[Socket] foto-presa a sala ${sessio.codi_sala}: ${nomUsuari} -> ${nomPunt}`);
+    ioInstance.to(sessio.codi_sala).emit('foto-presa', {
+        nomUsuari,
+        nomPunt
+    });
+}
+
 function configureSocket(server) {
     const allowedOrigins = [process.env.ORIGIN_URL, 'http://localhost:5173', 'http://localhost:3000'].filter(Boolean);
 
@@ -315,7 +332,7 @@ function configureSocket(server) {
     });
 }
 
-module.exports = { configureSocket, notifyGameOver, notifyPointAchieved };
+module.exports = { configureSocket, notifyGameOver, notifyPointAchieved, notifyFotoPresa };
 
 function repartirPersonatgesAleatoriament(players, personatgesDisponibles) {
     const resultat = [];
