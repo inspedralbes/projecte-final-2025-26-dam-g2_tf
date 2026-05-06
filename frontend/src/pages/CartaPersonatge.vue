@@ -28,7 +28,7 @@
           <div class="card-back w-full h-full flex items-center justify-center overflow-hidden bg-[#402749] shadow-none">
             <img 
               v-if="personatge.imatge" 
-              :src="personatge.imatge" 
+              :src="netejarUrl(personatge.imatge)" 
               :alt="personatge.nom"
               class="w-full h-full object-contain shadow-none"
             />
@@ -102,6 +102,7 @@ export default {
     await this.carregarPersonatgeDeAPI();
   },
   methods: {
+    netejarUrl,
     async carregarPersonatgeDeAPI() {
       try {
         console.log("[CartaPersonatge] Intentant carregar de l'API per a la sessió:", this.sessioId);
