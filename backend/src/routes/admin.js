@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const { Lloc, PeticioRuta, Config } = require('../models/index');
 
 // 1. LOGIN DE L'ADMINISTRADOR
@@ -58,18 +59,57 @@ router.post('/llocs', async function (req, res) {
 
 router.put('/llocs/:id', async function (req, res) {
     try {
-        await Lloc.findByIdAndUpdate(req.params.id, req.body);
+        if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).send('ID inválido');
+        }
+
+        const lloc = await Lloc.findByIdAndUpdate(req.params.id, req.body, { new: true });
+
+        if (!lloc) {
+            return res.status(404).json({ message: "Lloc no trobat" });
+        }
+
+        // Sincronització: Si s'activa el lloc, actualitzem la petició a 'aprovada'
+        if (req.body.actiu === true) {
+            try {
+                // 1. Per peticio_id (si existeix)
+                if (lloc.peticio_id) {
+                    await PeticioRuta.updateOne(
+                        { _id: lloc.peticio_id },
+                        { $set: { estat_validacio: 'aprovada' } }
+                    );
+                    console.log(`Petició ${lloc.peticio_id} actualitzada a 'aprovada' per peticio_id.`);
+                }
+                // 2. Per nom exacte (com sol·licitat: nom Lloc coincideix amb nom propost)
+                const nameUpdateResult = await PeticioRuta.updateMany(
+                    { nom_proposat: lloc.nom, estat_validacio: { $ne: 'aprovada' } },
+                    { $set: { estat_validacio: 'aprovada' } }
+                );
+                if (nameUpdateResult.modifiedCount > 0) {
+                    console.log(`Actualitzades ${nameUpdateResult.modifiedCount} peticions a 'aprovada' per nom coincident (${lloc.nom}).`);
+                }
+            } catch (syncError) {
+                // No matem el servidor, només registrem l'error
+                console.error("Error en sincronització de petició:", syncError);
+            }
+        }
+
         res.json({ success: true, message: "Lloc actualitzat correctament" });
     } catch (error) {
-        res.status(500).json({ message: "Error al actualitzar" });
+        console.error(error);
+        if (!res.headersSent) res.status(500).json({ message: "Error al actualitzar" });
     }
 });
 
 router.delete('/llocs/:id', async function (req, res) {
   try {
+    if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(400).send('ID inválido');
+    }
     await Lloc.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Lloc eliminat correctament" });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Error al eliminar" });
   }
 });
@@ -77,6 +117,9 @@ router.delete('/llocs/:id', async function (req, res) {
 // Canviar estat d'un lloc (visibilitat i ordre)
 router.patch('/llocs/:id/estat', async function (req, res) {
   try {
+    if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(400).send('ID inválido');
+    }
     const { estat, ordre } = req.body;
     const updateData = { estat };
     if (ordre !== undefined) updateData.ordre = ordre;
@@ -91,6 +134,9 @@ router.patch('/llocs/:id/estat', async function (req, res) {
 // Canviar restricció horària
 router.patch('/llocs/:id/restriccio', async function (req, res) {
   try {
+    if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return res.status(400).send('ID inválido');
+    }
     const { actiu } = req.body;
     await Lloc.findByIdAndUpdate(req.params.id, { 'control_horari.actiu': actiu });
     res.json({ success: true, message: "Restricció horària actualitzada" });
@@ -112,12 +158,20 @@ router.get('/peticions', async function (req, res) {
 
 router.put('/peticions/:id', async function (req, res) {
     try {
-        const idPetició = req.params.id;
+        if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).send('ID inválido');
+        }
+        const idPeticio = req.params.id;
         const estatNou = req.body.estat_validacio;
 
-        const peticio = await PeticioRuta.findByIdAndUpdate(idPetició, { estat_validacio: estatNou }, { new: true });
+        const peticio = await PeticioRuta.findByIdAndUpdate(idPeticio, { estat_validacio: estatNou }, { new: true });
 
-        if (estatNou === 'acceptada') {
+        if (!peticio) {
+            return res.status(404).json({ message: "Petició no trobada" });
+        }
+
+        // Si s'aprova, no creem el lloc aquí, es crearà a 'preparant' i s'activarà després
+        if (estatNou === 'preparant') {
             const nouLlocOficial = new Lloc({
                 nom: peticio.nom_proposat,
                 descripcio: peticio.motiu,
@@ -126,13 +180,16 @@ router.put('/peticions/:id', async function (req, res) {
                     type: 'Point',
                     coordinates: peticio.ubicacio
                 },
-                dificultat: "Mitjana", // Canviat a la nova nomenclatura
-                tags: []
+                dificultat: "Mitjana",
+                tags: [],
+                peticio_id: peticio._id,
+                actiu: false
             });
             await nouLlocOficial.save();
         }
         res.json({ success: true, message: "La petició ha estat " + estatNou });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: "Error al processar la petició" });
     }
 });

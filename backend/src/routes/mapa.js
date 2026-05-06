@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const { Lloc } = require('../models/index');
 
 // 1. Obtenir tots els llocs (Punts del mapa)
@@ -17,6 +18,9 @@ router.get('/punts', async (req, res) => {
 // 2. Obtenir un sol lloc per ID
 router.get('/punts/:id', async (req, res) => {
     try {
+        if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ error: "ID no vàlid" });
+        }
         const lloc = await Lloc.findById(req.params.id).populate('punts_missio.personatge_id');
 
         if (!lloc) {
@@ -45,6 +49,9 @@ router.post('/punts', async (req, res) => {
 // 4. ACTUALITZAR un lloc existent
 router.put('/punts/:id', async (req, res) => {
     try {
+        if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ error: "ID no vàlid" });
+        }
         // Netejar camps immutables que podrien bloquejar l'actualització
         const dadesActualitzacio = { ...req.body };
         delete dadesActualitzacio._id;
@@ -74,9 +81,13 @@ router.put('/punts/:id', async (req, res) => {
 // 5. ELIMINAR un lloc
 router.delete('/punts/:id', async (req, res) => {
     try {
+        if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ error: "ID no vàlid" });
+        }
         await Lloc.findByIdAndDelete(req.params.id);
         res.json({ message: "Lloc eliminat correctament" });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: "No s'ha pogut eliminar" });
     }
 });
@@ -84,6 +95,9 @@ router.delete('/punts/:id', async (req, res) => {
 // 6. Obtenir ressenyes d'un lloc
 router.get('/punts/:id/ressenyes', async (req, res) => {
     try {
+        if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ error: "ID no vàlid" });
+        }
         const { Ressenya } = require('../models/index');
         const ressenyes = await Ressenya.find({ id_lloc: req.params.id })
             .populate('id_usuari', 'nom_usuari avatar')

@@ -58,6 +58,9 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.
 const peticionsPendentsCount = ref(0);
 let intervalId = null;
 
+let lastErrorTime = 0;
+const ERROR_COOLDOWN = 30000; // 30 segundos entre reintentos tras error
+
 async function carregarPeticionsPendents() {
   if (!usuari.value) {
     peticionsPendentsCount.value = 0;
@@ -68,9 +71,14 @@ async function carregarPeticionsPendents() {
     if (res.ok) {
       const dades = await res.json();
       peticionsPendentsCount.value = dades.sollicituds_pendents?.length || 0;
+      lastErrorTime = 0; // Resetear si hay éxito
     }
   } catch (err) {
-    console.error("Error carregar peticions navBar:", err);
+    const now = Date.now();
+    if (now - lastErrorTime > ERROR_COOLDOWN) {
+      console.error("Error carregar peticions navBar:", err);
+      lastErrorTime = now;
+    }
   }
 }
 

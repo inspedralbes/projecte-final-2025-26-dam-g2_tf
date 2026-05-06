@@ -71,7 +71,7 @@
         </button>
       </nav>
 
-      <div class="mt-4">
+    <div class="mt-4">
         <div v-if="activeTab === 'posts'" class="space-y-3">
           <div v-for="post in misPosts" :key="post._id" class="bg-[#2d1b33] p-4 rounded-xl border border-white/5 relative group">
             <p class="text-sm">{{ post.text }}</p>
@@ -125,14 +125,15 @@
               <span class="font-bold text-sm text-white">{{ p.nomLloc }}</span>
               <span 
                 class="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                :class="p.estat === 'aprovada' ? 'bg-blue-100 text-blue-800' : 
+                :class="p.estat === 'pendent' ? 'bg-yellow-100 text-yellow-800' : 
                         p.estat === 'preparant' ? 'bg-purple-100 text-purple-800' : 
-                        p.estat === 'rebutjada' ? 'bg-red-100 text-red-800' : 
-                        'bg-yellow-100 text-yellow-800'"
+                        p.estat === 'aprovada' ? 'bg-blue-100 text-blue-800' : 
+                        'bg-red-100 text-red-800'"
               >
-                {{ p.estat === 'aprovada' ? 'Acceptada' : 
-                   p.estat === 'preparant' ? 'treballant' : 
-                   p.estat }}
+                {{ p.estat === 'pendent' ? 'Pendent' : 
+                   p.estat === 'preparant' ? 'Treballant-hi' : 
+                   p.estat === 'aprovada' ? 'Acceptada' : 
+                   'Rebutjada' }}
               </span>
             </div>
             <p class="text-[10px] text-gray-400 mb-1">{{ p.dataCreacio ? new Date(p.dataCreacio).toLocaleDateString() : 'Data no disponible' }}</p>
@@ -142,23 +143,22 @@
           </div>
           <p v-if="mevesPeticions.length === 0" class="text-center text-gray-600 text-sm italic">No has fet cap proposta.</p>
         </div>
-
       </div>
 
       <button @click="tancarSessio" class="w-full mt-10 py-4 border border-red-500/30 text-red-400 rounded-2xl font-bold text-sm hover:bg-red-500/10">
         TANCAR SESSIÓ
       </button> 
 
-    </main> 
+      </main>
 
-    <ModalPersonalitzat 
-      :show="modalVisible"
-      v-bind="modalProps"
-      @confirm="handleModalConfirm"
-      @cancel="handleModalCancel"
-    />
-  </div>
-</template>
+      <ModalPersonalitzat 
+        :show="modalVisible"
+        v-bind="modalProps"
+        @confirm="handleModalConfirm"
+        @cancel="handleModalCancel"
+      />
+   </div>
+ </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
@@ -251,7 +251,12 @@ async function fetchMevesPeticions() {
       headers: { 'X-User-Id': usuari._id }
     });
     if (res.ok) {
-      mevesPeticions.value = await res.json();
+      const data = await res.json();
+      // Mapegem 'estat_validacio' a 'estat' per compatibilitat amb el template
+      mevesPeticions.value = data.map(p => ({
+        ...p,
+        estat: p.estat_validacio || p.estat || 'pendent'
+      }));
     }
   } catch (err) {
     console.error("Error carregant propostes:", err);

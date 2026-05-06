@@ -6,16 +6,26 @@ const { connectDB } = require('./src/config/db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const allowedOrigins = [process.env.ORIGIN_URL, 'http://localhost:5173', 'http://localhost:3000'].filter(Boolean);
+// Manejo global de excepciones para evitar que el servidor se caiga
+process.on('uncaughtException', (err) => {
+    console.error('UNCAUGHT EXCEPTION:', err);
+    // No cerramos el proceso, permitimos que el servidor siga vivo
+});
+process.on('unhandledRejection', (err) => {
+    console.error('UNHANDLED REJECTION:', err);
+});
 
+// CORS permisivo para desarrollo (ajustar en producción)
 const corsOptions = {
     origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost:')) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
+        // Permitir solicitudes sin origin (como Postman) o desde localhost
+        if (!origin || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+            return callback(null, true);
         }
+        if (process.env.ORIGIN_URL && origin === process.env.ORIGIN_URL) {
+            return callback(null, true);
+        }
+        callback(null, true); // Permisivo por defecto para evitar bloqueos
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true

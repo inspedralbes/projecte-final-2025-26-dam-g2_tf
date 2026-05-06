@@ -202,8 +202,10 @@ const moureAPreparant = async (peticion) => {
 };
 
 const colorEstado = (s) => {
-  if (s === 'pendent') return 'bg-[#f5cbdd] text-[#402749]';
-  if (s === 'acceptada') return 'bg-[#bc85ab] text-white';
+  if (s === 'pendent') return 'bg-yellow-100 text-yellow-800'; // Amarillo
+  if (s === 'preparant') return 'bg-purple-100 text-purple-800'; // Morado
+  if (s === 'aprovada') return 'bg-blue-100 text-blue-800'; // Azul
+  if (s === 'rebutjada') return 'bg-red-100 text-red-800'; // Rojo
   return 'bg-gray-100 text-gray-400';
 };
 

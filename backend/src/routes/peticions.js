@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const { PeticioRuta } = require('../models');
 
 // Middleware simple: llegeix l'ID d'usuari de la capçalera X-User-Id
@@ -26,23 +27,34 @@ router.get('/meves', verifyToken, async (req, res) => {
     }));
     res.json(result);
   } catch (error) {
-    console.error("Error carregant les meves peticions:", error);
-    res.status(500).json({ message: "Error del servidor" });
+    console.error(error);
+    if (!res.headersSent) res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 });
 
 router.post('/', async (req, res) => {
     try {
-        const { nom_proposat, motiu, ubicacio, fotos_proporcionades, id_usuari } = req.body;
+        // Acceptem tant el format antic com el nou del frontend
+        const { nomLloc, nom_proposat, latitud, longitud, ubicacio, motiu, fotos_proporcionades, id_usuari } = req.body;
 
-        if (!id_usuari) {
-            return res.status(401).json({ message: "Has d'estar loguejat per fer aquesta acció." });
+        // Validació crítica: camps requerits
+        const nomFinal = nomLloc || nom_proposat;
+        if (!nomFinal || !id_usuari) {
+            return res.status(400).json({ error: 'Faltan datos (nombre o usuario)' });
+        }
+
+        // Gestionem les coordenades (pot venir com a [lat,lng] o lat/lng separats)
+        let coords = [0, 0];
+        if (Array.isArray(ubicacio) && ubicacio.length === 2) {
+            coords = ubicacio;
+        } else if (latitud !== undefined && longitud !== undefined) {
+            coords = [latitud, longitud];
         }
 
         const nuevaPeticion = new PeticioRuta({
-            nom_proposat,
+            nom_proposat: nomFinal,
             motiu,
-            ubicacio: ubicacio || [],
+            ubicacio: coords,
             fotos_proporcionades: fotos_proporcionades ? [fotos_proporcionades] : [],
             estat_validacio: "pendent",
             id_usuari
@@ -50,23 +62,28 @@ router.post('/', async (req, res) => {
 
         await nuevaPeticion.save();
 
-    res.status(201).json({
+        res.status(201).json({
             message: "Petició guardada correctament!",
             id: nuevaPeticion._id
         });
     
     } catch (error) {
-        console.error("Error guardant la petició:", error);
+        console.error(error);
         if (error.name === 'ValidationError') {
-            return res.status(400).json({ message: "Dades incorrectes", detalls: error.message });
+            return res.status(400).json({ error: 'Validation Error', details: error.message });
         }
-        res.status(500).json({ message: "Error del servidor." });
+        if (!res.headersSent) res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 });
 
 // Actualitzar estat de petició (Acceptar/Rebutjar/Preparar)
 router.put('/:id', async (req, res) => {
     try {
+        // Validació crítica de l'ID amb Mongoose
+        if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).send('ID inválido');
+        }
+
         const { estat_validacio, motiuRebuig } = req.body;
         const updateData = {};
         if (estat_validacio !== undefined) updateData.estat_validacio = estat_validacio;
@@ -80,47 +97,57 @@ router.put('/:id', async (req, res) => {
 
         if (!peticio) return res.status(404).json({ message: "Petició no trobada" });
 
-        // Si s'aprova, creem el lloc en estat 'desactivat' per preparar-lo
-        if (estat_validacio === 'aprovada') {
+        // Lògica d'estats
+        if (estat_validacio === 'preparant') {
+            const Lloc = require('../models').Lloc;
+            let coordinates = [0, 0];
+            if (Array.isArray(peticio.ubicacio) && peticio.ubicacio.length === 2) {
+                const [lat, lng] = peticio.ubicacio;
+                if (typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng)) {
+                    coordinates = [lng, lat];
+                }
+            }
+            // Creem el lloc amb actiu: false
             const nouLloc = new Lloc({
-                nom: peticio.nom_proposat,
-                descripcio: peticio.motiu,
-                ubicacio: { type: 'Point', coordinates: peticio.ubicacio },
+                nom: peticio.nom_proposat || 'Lloc sense nom',
+                descripcio: peticio.motiu || '',
+                ubicacio: { type: 'Point', coordinates: coordinates },
                 fotos_actuals: peticio.fotos_proporcionades || [],
-                estat: 'desactivat',
+                peticio_id: peticio._id, // Vinculamos la petición
+                actiu: false,
                 ordre: 0
             });
             await nouLloc.save();
-        }
-
+        } 
+        
         res.json({ success: true, message: `Petició marcada com a ${estat_validacio}` });
     } catch (error) {
-        console.error("Error actualitzant petició:", error);
-        res.status(500).json({ message: "Error del servidor" });
+        console.error(error);
+        if (!res.headersSent) res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 });
 
-// Canviar petició a 'preparant' i crear el lloc desactivat
+// Canviar petició a 'preparant' (crea el lloc desactivat)
 router.put('/:id/preparant', async (req, res) => {
     try {
+        if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).send('ID inválido');
+        }
         const peticio = await PeticioRuta.findById(req.params.id);
         if (!peticio) return res.status(404).json({ message: "Petició no trobada" });
 
         peticio.estat_validacio = 'preparant';
         await peticio.save();
 
-        // Creem el lloc en estat 'desactivat' per preparar-lo
         const Lloc = require('../models').Lloc;
         
-        // Validem coordenades: si són invàlides, posem un valor per defecte
+        // Validem i convertim coordenades
         let coordinates = [0, 0];
-        if (Array.isArray(peticio.ubicacio) && 
-            peticio.ubicacio.length === 2 &&
-            typeof peticio.ubicacio[0] === 'number' && 
-            typeof peticio.ubicacio[1] === 'number' &&
-            !isNaN(peticio.ubicacio[0]) && 
-            !isNaN(peticio.ubicacio[1])) {
-            coordinates = peticio.ubicacio;
+        if (Array.isArray(peticio.ubicacio) && peticio.ubicacio.length === 2) {
+            const [lat, lng] = peticio.ubicacio;
+            if (typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng)) {
+                coordinates = [lng, lat]; 
+            }
         }
 
         const nouLloc = new Lloc({
@@ -135,8 +162,8 @@ router.put('/:id/preparant', async (req, res) => {
         
         res.json({ success: true, message: "Petició en preparació i lloc creat (desactivat)" });
     } catch (error) {
-        console.error("Error canviant a preparant:", error);
-        res.status(500).json({ message: "Error del servidor" });
+        console.error(error);
+        if (!res.headersSent) res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 });
 

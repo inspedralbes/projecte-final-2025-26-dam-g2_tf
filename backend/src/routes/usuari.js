@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const { Usuario, Perfil } = require('../models');
 
 function calcularNivell(cromos) {
@@ -13,6 +14,9 @@ function calcularNivell(cromos) {
 router.put('/update', async (req, res) => {
     try {
         const { perfilId, nouNom, novaBio } = req.body;
+        if (!perfilId || !mongoose.Types.ObjectId.isValid(perfilId)) {
+            return res.status(400).send('ID inválido');
+        }
         const perfil = await Perfil.findById(perfilId);
 
         if (nouNom) perfil.nom_usuari = nouNom;
@@ -25,7 +29,8 @@ router.put('/update', async (req, res) => {
         await perfil.save();
         res.json({ success: true, user: perfil });
     } catch (error) {
-        res.status(500).json({ message: "Error en actualitzar" });
+        console.error(error);
+        if (!res.headersSent) res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 });
 
@@ -33,6 +38,9 @@ router.put('/update', async (req, res) => {
 router.put('/afegir-cromo', async (req, res) => {
     try {
         const { perfilId, nouCromo } = req.body;
+        if (!perfilId || !mongoose.Types.ObjectId.isValid(perfilId)) {
+            return res.status(400).send('ID inválido');
+        }
         const perfil = await Perfil.findById(perfilId);
 
         // Afegim el cromo
@@ -47,7 +55,8 @@ router.put('/afegir-cromo', async (req, res) => {
         await perfil.save();
         res.json({ success: true, user: perfil });
     } catch (error) {
-        res.status(500).json({ message: "Error al afegir cromo" });
+        console.error(error);
+        if (!res.headersSent) res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 });
 
@@ -89,8 +98,8 @@ router.post('/sollicitud-amistat', async (req, res) => {
         await perfilDesti.save();
         res.json({ success: true, message: "Sol·licitud enviada" });
     } catch (error) {
-        console.error("ERROR CRÍTIC:", error); // Això t'ajudarà a veure el detall a la terminal
-        res.status(500).json({ message: "Error intern del servidor", detall: error.message });
+        console.error(error);
+        if (!res.headersSent) res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 });
 
@@ -129,16 +138,16 @@ router.post('/acceptar-amistat', async (req, res) => {
 
         res.json({ success: true, user: jo });
     } catch (error) {
-        console.error("Error al acceptar amistat:", error);
-        res.status(500).json({ message: "Error intern", detall: error.message });
+        console.error(error);
+        if (!res.headersSent) res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 });
 
 // OBTENIR PERFIL PER ID (Amb el nom dels amics carregat)
 router.get('/:id', async (req, res) => {
     try {
-        // Validació de l'ID per evitar que Mongoose peti
-        if (!req.params.id || !req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+        // Validació de l'ID amb Mongoose per evitar que el servidor peti
+        if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ message: "ID d'usuari no vàlid" });
         }
         const perfil = await Perfil.findById(req.params.id)
@@ -151,9 +160,8 @@ router.get('/:id', async (req, res) => {
 
         res.json(perfil);
     } catch (error) {
-        console.error("Error al carregar el perfil:", error);
-        // Retornem sempre una resposta JSON, mai deixem el procés penjat
-        res.status(500).json({ message: "Error intern del servidor", detall: error.message });
+        console.error(error);
+        if (!res.headersSent) res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 });
 
