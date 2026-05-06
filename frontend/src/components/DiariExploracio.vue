@@ -14,8 +14,8 @@
       </div>
     </div>
 
-    <!-- Hidden source pages -->
-    <div v-show="false">
+    <!-- Hidden source pages - Use visibility hidden instead of display none to allow measurements if needed -->
+    <div style="position: absolute; visibility: hidden; pointer-events: none; z-index: -1; height: 0; overflow: hidden;">
       <div ref="pagesContainer">
         <!-- FRONT COVER -->
         <div class="page cover front" data-density="hard">
@@ -42,7 +42,11 @@
               <div class="cromo-container" :style="{ transform: `rotate(${idx % 2 === 0 ? 1.5 : -1.5}deg)` }">
                 <div class="photo-only" :class="{ 'is-locked': !cromo.descobert }">
                   <template v-if="cromo.descobert">
-                    <img :src="imatgeCromo(cromo.imatge_cromo || cromo.imatge_usuari)" class="actual-img" />
+                    <img 
+                      :src="imatgeCromo(cromo.imatge_cromo || cromo.imatge_usuari)" 
+                      class="actual-img" 
+                      @error="(e) => e.target.src = API_URL + '/CromoInicial.jpg'"
+                    />
                     <div class="photo-sheen"></div>
                   </template>
                   <div v-else class="locked-placeholder">?</div>
@@ -74,7 +78,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
-// import { PageFlip } from 'page-flip';
+import { PageFlip } from 'page-flip';
 import { netejarUrl } from '../utils/url';
 
 const props = defineProps({
@@ -108,6 +112,7 @@ const bookCenterStyle = computed(() => {
 });
 
 function imatgeCromo(src) {
+  if (!src) return API_URL + '/CromoInicial.jpg';
   return netejarUrl(src);
 }
 
@@ -184,6 +189,10 @@ async function initPageFlip() {
   }
 
   try {
+    if (typeof PageFlip === 'undefined') {
+      console.error("PageFlip library is not loaded properly.");
+      return;
+    }
     pageFlipInstance = new PageFlip(bookElement.value, {
       width: pW,
       height: pH,
