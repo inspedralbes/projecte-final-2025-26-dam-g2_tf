@@ -91,22 +91,34 @@ export default {
   },
   methods: {
     async carregarCartaLore() {
+      let url = '';
       if (this.sessioId === 'inicial') {
-        this.cartaLoreUrl = netejarUrl(this.baseUrl + '/assets/Carta_lore/carta_inicial.png');
-        return;
-      }
-      try {
-        const res = await fetch(`${this.baseUrl}/api/sessionsJoc/${this.sessioId}`);
-        if (!res.ok) return;
-        const sessio = await res.json();
-
-        // id_lloc_desti ve populat amb carta_lore (gràcies al populate que hem afegit)
-        const cartaLore = sessio.id_lloc_desti?.carta_lore || '';
-        if (cartaLore) {
-          this.cartaLoreUrl = netejarUrl(this.baseUrl + cartaLore);
+        url = netejarUrl(this.baseUrl + '/assets/Carta_lore/carta_inicial.png');
+      } else {
+        try {
+          const res = await fetch(`${this.baseUrl}/api/sessionsJoc/${this.sessioId}`);
+          if (!res.ok) return;
+          const sessio = await res.json();
+          const cartaLore = sessio.id_lloc_desti?.carta_lore || '';
+          if (cartaLore) {
+            url = netejarUrl(this.baseUrl + cartaLore);
+          }
+        } catch (e) {
+          console.error('[SobreLore] Error carregant dades de la sessió:', e);
         }
-      } catch (e) {
-        console.error('[SobreLore] Error carregant carta de lore:', e);
+      }
+
+      if (url) {
+        // Pre-carregar i pre-decodificar la imatge (molt important per a fitxers pesats com el de 4MB)
+        const img = new Image();
+        img.src = url;
+        try {
+          // Això prepara la imatge en memòria abans que la transició comenci
+          if (img.decode) await img.decode();
+        } catch (e) {
+          console.warn('[SobreLore] Error pre-decodificant imatge:', e);
+        }
+        this.cartaLoreUrl = url;
       }
     },
 
