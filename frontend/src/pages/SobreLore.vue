@@ -1,5 +1,5 @@
-<template>
-  <div class="sobre-wrapper" :class="{ 'fase-carta': mostrarCarta }">
+  <transition name="fade-in">
+    <div v-if="ready" class="sobre-wrapper" :class="{ 'fase-carta': mostrarCarta }">
 
     <!-- ─────────── FASE 1: SOBRE ─────────── -->
     <transition name="fade-out">
@@ -64,7 +64,8 @@
       </div>
     </transition>
 
-  </div>
+    </div>
+  </transition>
 </template>
 
 <script>
@@ -80,19 +81,27 @@ export default {
       cartaLoreUrl: '',
       sobreObert: false,
       cartaVisible: false,
-      mostrarTitol: false,
       mostrarCarta: false,
+      ready: false,
     };
   },
   async mounted() {
+    await this.carregarCartaLore();
+    this.ready = true;
+
     // Animació d'entrada del títol
     setTimeout(() => { this.mostrarTitol = true; }, 400);
-
-    await this.carregarCartaLore();
   },
   methods: {
     async carregarCartaLore() {
-      // Pre-carregar l'imatge del sobre obert perquè el canvi sigui instantani
+      // 1. Pre-carregar l'imatge del sobre tancat (el primer que es veu)
+      const imgTancat = new Image();
+      imgTancat.src = netejarUrl(this.baseUrl + '/assets/Sobre/Sobre Tancat.png');
+      try {
+        if (imgTancat.decode) await imgTancat.decode();
+      } catch (e) {}
+
+      // 2. Pre-carregar l'imatge del sobre obert
       const imgSobre = new Image();
       imgSobre.src = netejarUrl(this.baseUrl + '/assets/Sobre/Sobre_Obert.png');
       if (imgSobre.decode) imgSobre.decode().catch(() => {});
@@ -352,6 +361,13 @@ export default {
 }
 
 /* ── Transicions Vue ── */
+.fade-in-enter-active {
+  transition: opacity 1s ease;
+}
+.fade-in-enter-from {
+  opacity: 0;
+}
+
 .fade-out-leave-active {
   transition: opacity 0.4s ease;
 }
