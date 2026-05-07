@@ -83,6 +83,14 @@
           <button @click="tabActual = 'eliminats'" :class="tabActual === 'eliminats' ? 'bg-red-600 text-white shadow-md' : 'text-red-500 hover:bg-red-50'" class="whitespace-nowrap flex-shrink-0 px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 border border-transparent hover:border-red-200">Historial Eliminats</button>
         </div>
 
+        <div v-if="tabActual === 'ressenyes'" class="flex items-center gap-3">
+          <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Filtrar per Lloc:</span>
+          <select v-model="filtreLloc" class="bg-white border border-gray-200 py-2 px-4 rounded-xl text-xs font-bold text-[#402749] focus:ring-2 focus:ring-[#bc85ab] outline-none shadow-sm transition-all">
+            <option value="">Tots els Llocs</option>
+            <option v-for="lloc in llistaLlocs" :key="lloc" :value="lloc">{{ lloc }}</option>
+          </select>
+        </div>
+
         <button 
           v-if="tabActual === 'posts' && postsFiltrats.length > 0"
           @click="alternarSeleccioTots"
@@ -230,6 +238,7 @@
             <thead class="bg-gray-50">
               <tr>
                 <th class="p-4 text-[10px] font-black uppercase text-gray-400">Usuari</th>
+                <th class="p-4 text-[10px] font-black uppercase text-gray-400">Lloc / Ruta</th>
                 <th class="p-4 text-[10px] font-black uppercase text-gray-400">Estrelles</th>
                 <th class="p-4 text-[10px] font-black uppercase text-gray-400">Comentari</th>
                 <th class="p-4 text-[10px] font-black uppercase text-gray-400 text-right">Accions</th>
@@ -238,6 +247,14 @@
             <tbody>
               <tr v-for="res in ressenyesFiltrades" :key="res._id" class="border-t border-gray-50 hover:bg-gray-50/50 transition-colors">
                 <td class="p-4 font-bold text-sm text-[#402749]">{{ res.id_usuari?.nom_usuari || 'Anònim' }}</td>
+                <td class="p-4">
+                  <div class="font-bold text-xs text-gray-800">{{ res.id_lloc?.nom || 'Lloc desconegut' }}</div>
+                  <div class="flex flex-wrap gap-1 mt-1">
+                    <span v-for="tag in res.id_lloc?.tags" :key="tag" class="text-[8px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-black uppercase">
+                      {{ tag }}
+                    </span>
+                  </div>
+                </td>
                 <td class="p-4">
                   <div class="flex text-amber-500">
                     <svg v-for="i in 5" :key="i" class="w-4 h-4" :class="i <= res.estrelles ? 'fill-current' : 'text-gray-300 fill-current'" viewBox="0 0 20 20">
@@ -251,7 +268,7 @@
                 </td>
               </tr>
               <tr v-if="ressenyesFiltrades.length === 0">
-                <td colspan="4" class="p-10 text-center text-gray-400 italic text-sm">No s'han trobat ressenyes.</td>
+                <td colspan="5" class="p-10 text-center text-gray-400 italic text-sm">No s'han trobat ressenyes.</td>
               </tr>
             </tbody>
           </table>
@@ -307,6 +324,17 @@ const filtreCerca = ref('');
 const historialEliminats = ref([]);
 const identitatsPendents = ref([]);
 const estaCarregant = ref(false);
+const filtreLloc = ref('');
+
+const llistaLlocs = computed(() => {
+  const llocs = new Set();
+  ressenyes.value.forEach(res => {
+    if (res.id_lloc?.nom) {
+      llocs.add(res.id_lloc.nom);
+    }
+  });
+  return Array.from(llocs).sort();
+});
 
 const postsFiltrats = computed(() => {
   const cerca = filtreCerca.value.toLowerCase();
@@ -318,10 +346,17 @@ const postsFiltrats = computed(() => {
 
 const ressenyesFiltrades = computed(() => {
   const cerca = filtreCerca.value.toLowerCase();
+  const llocSeleccionat = filtreLloc.value;
+  
   return ressenyes.value.filter(r => {
-    const nom = (r.id_usuari?.nom_usuari || 'Anònim').toLowerCase();
+    const nomUsuari = (r.id_usuari?.nom_usuari || 'Anònim').toLowerCase();
     const text = (r.comentari || '').toLowerCase();
-    return nom.includes(cerca) || text.includes(cerca);
+    const nomLloc = (r.id_lloc?.nom || '').toLowerCase();
+    
+    const coincideixLloc = !llocSeleccionat || r.id_lloc?.nom === llocSeleccionat;
+    const coincideixCerca = nomUsuari.includes(cerca) || text.includes(cerca) || nomLloc.includes(cerca);
+    
+    return coincideixCerca && coincideixLloc;
   });
 });
 
