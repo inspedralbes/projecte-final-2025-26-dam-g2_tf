@@ -56,15 +56,16 @@ async function ferRegistre(peticio, resposta) {
                     data_obtencio: new Date(),
                     imatge_usuari: "/CromoInicial.jpg"
                 }
-            ]
+            ],
+            lore_inicial_vist: false
         });
 
-        await nouPerfil.save();
+        const perfilGuardat = await nouPerfil.save();
 
         resposta.status(201).json({
             success: true,
             usuari: {
-                ...nouPerfil._doc,
+                ...perfilGuardat._doc,
                 rol: usuariGuardat.rol,
                 verificacio_estat: usuariGuardat.verificacio_estat
             }
@@ -105,6 +106,11 @@ async function ferLogin(peticio, resposta) {
             rol: compte.rol,
             verificacio_estat: compte.verificacio_estat
         };
+
+        // Ens assegurem que el camp existeixi per a usuaris antics
+        if (usuariSessio.lore_inicial_vist === undefined) {
+            usuariSessio.lore_inicial_vist = false;
+        }
 
         resposta.json({
             success: true,
