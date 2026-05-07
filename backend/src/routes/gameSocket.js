@@ -10,15 +10,26 @@ let ioInstance = null;
  * @param {string} guanyadorId   - El perfilId del jugador que ha acabat (string)
  * @param {string} nomGuanyador  - El nom d'usuari del guanyador
  */
-function notifyGameOver(sessioId, sessio, guanyadorId, nomGuanyador) {
+async function notifyGameOver(sessioId, sessio, guanyadorId, nomGuanyador, guanyadorGrupId = null) {
     if (!ioInstance) return;
 
-    // Usem sessio.codi_sala (guardat a la BD) en lloc d'un mapa en memòria
-    // Això fa que funcioni fins i tot si el servidor s'ha reiniciat
     const roomCode = sessio.codi_sala;
     if (!roomCode) {
         console.warn('[Socket] notifyGameOver: sessio.codi_sala és buit, no es pot notificar.');
         return;
+    }
+
+    // Busquem dades extres del lloc si no les tenim
+    let imatgeCromo = '';
+    let nomLloc = '';
+    try {
+        const lloc = await Lloc.findById(sessio.id_lloc_desti);
+        if (lloc) {
+            imatgeCromo = lloc.cromo_imatge || '';
+            nomLloc = lloc.nom || '';
+        }
+    } catch (e) {
+        console.error('[Socket] Error buscant lloc per a notifyGameOver:', e);
     }
 
     // Preparem la llista de jugadors ordenada:
@@ -36,7 +47,12 @@ function notifyGameOver(sessioId, sessio, guanyadorId, nomGuanyador) {
         guanyadorId: guanyadorId === 'timeout' ? 'timeout' : (guanyadorId ? guanyadorId.toString() : null),
         nomGuanyador: guanyadorId === 'timeout' ? 'EL TEMPS S\'HA ACABAT' : (nomGuanyador || 'Un jugador'),
         jugadors: jugadorsOrdenats,
-        timeout: guanyadorId === 'timeout'
+        timeout: guanyadorId === 'timeout',
+        tipus_partida: sessio.tipus_partida,
+        imatge_cromo: imatgeCromo,
+        nom_lloc: nomLloc,
+        id_lloc: sessio.id_lloc_desti,
+        guanyadorGrupId: guanyadorGrupId
     });
     console.log(`[Socket] Event game-over emès correctament a la sala: ${roomCode}`);
 }
@@ -252,7 +268,7 @@ function configureSocket(server) {
                             s.estat = 'finalitzada';
                             await s.save();
                             console.log(`[Timeout] La sala ${roomCode} ha arribat al límit de temps.`);
-                            notifyGameOver(s._id, s, 'timeout', null);
+                            await notifyGameOver(s._id, s, 'timeout', null);
                         }
                     } catch (e) {
                         console.error('[Timeout] Error al finalitzar sessió:', e);

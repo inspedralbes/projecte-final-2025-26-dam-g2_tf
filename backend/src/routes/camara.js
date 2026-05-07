@@ -199,7 +199,7 @@ router.post('/', async function (req, res) {
                     if (sessio.estat === 'jugant') {
                         sessio.estat = 'finalitzada';
                         await sessio.save();
-                        notifyGameOver(sessio._id, sessio, 'timeout', null);
+                        await notifyGameOver(sessio._id, sessio, 'timeout', null);
                     }
                     return res.status(400).json({ missatge: "S'ha acabat el temps! No pots fer més fotos." });
                 }
@@ -340,7 +340,7 @@ router.post('/', async function (req, res) {
                 if (haAcabatLaLlista) {
                     const nomGuanyador = perfil ? perfil.nom_usuari : 'Un jugador';
                     console.log(`[Càmera] Ruta completada! Cromo assignat: "${lloc.cromo_imatge}"`);
-                    notifyGameOver(codi_sala, sessio, perfilId, nomGuanyador);
+                    await notifyGameOver(codi_sala, sessio, perfilId, nomGuanyador, jugador.grup_id);
                 }
 
                 return res.json({

@@ -7,17 +7,35 @@
        <span class="temps-text" :class="{'temps-critic': tempsRestant < 60}">{{ formatarTemps(tempsRestant) }}</span>
     </div>
 
-    <div v-if="!isCapita" class="w-full flex flex-col items-center justify-center min-h-[80vh] text-center px-4">
-      <h1 class="text-4xl font-bold text-white mb-8" style="color: #d9a6c2;">Sigue al Capitán</h1>
-      <div class="w-24 h-24 rounded-full flex items-center justify-center text-white text-5xl font-bold mb-4 shadow-lg" style="background-color: #bc85ab; width: 100px; height: 100px; border-radius: 50%;">
-        {{ nomCapita.charAt(0).toUpperCase() }}
+    <!-- PANTALLA D'ACOMPANYANT (NO CAPITÀ) -->
+    <div v-if="!isCapita" class="pantalla-seguint">
+      <div class="glow-seguint"></div>
+      
+      <div class="contingut-seguint">
+        <h1 class="titol-seguint">Segueix al Detectiu</h1>
+        
+        <div class="avatar-capita-wrapper">
+          <div class="avatar-capita">
+            {{ nomCapita.charAt(0).toUpperCase() }}
+          </div>
+          <div class="avatar-pols"></div>
+        </div>
+
+        <div class="missatge-seguint">
+          <p class="p-principal">
+            El capità <strong>{{ nomCapita }}</strong> està liderant la partida.
+          </p>
+          <p class="p-secundari">
+            Acompanya'l i ajuda'l a trobar els punts de la ruta! No cal que miris el mapa, ell t'indicarà el camí.
+          </p>
+        </div>
+
+        <div class="esperant-punts">
+          <div class="punt-animat" style="animation-delay: 0s"></div>
+          <div class="punt-animat" style="animation-delay: 0.2s"></div>
+          <div class="punt-animat" style="animation-delay: 0.4s"></div>
+        </div>
       </div>
-      <p class="text-xl text-indigo-200 mt-4" style="color: #e8c4d9; font-size: 1.25rem;">
-        El capità <strong>{{ nomCapita }}</strong> està controlant la partida al seu dispositiu.
-      </p>
-      <p class="mt-6 text-sm text-indigo-300" style="color: rgba(255,255,255,0.6);">
-        Pots guardar el mòbil i acompanyar-lo mentre busqueu els punts!
-      </p>
     </div>
 
     <div v-else style="width: 100%; display: flex; flex-direction: column; align-items: center;">
@@ -191,6 +209,7 @@ export default {
       
       isCapita: true,
       nomCapita: '',
+      meuGrupId: null,
       
       // Temporitzador
       tempsRestant: null,
@@ -320,6 +339,7 @@ export default {
                   console.log("[Mapa] Jugador trobat a la sessió:", myPlayer.id_usuari?.nom_usuari || myPlayer.id_usuari);
                   this.sessioId = sessio._id;
                   this.isCapita = myPlayer.capita !== false; 
+                  this.meuGrupId = myPlayer.grup_id;
                   this.pistes_gastades = myPlayer.pistes_gastades || 0;
                   this.personatgeIdUsuari = myPlayer.personatge_id || null;
                   this.puntsAssignatsIds = myPlayer.punts_assignats || [];
@@ -399,11 +419,37 @@ export default {
         this.sessioIdGameOver = dades.sessioId || sessioId;
         this.nomGuanyador = dades.nomGuanyador || 'Un jugador';
         this.isTimeout = dades.timeout || false;
+
         if (this.isTimeout) {
-          this.faseDerrota = 1;
+          this.faseDerrota = 1; // Policia
         } else {
-          this.faseDerrota = 2;
-          this.mostrarGameOver = true;
+          // Si no és timeout, algú ha guanyat.
+          // Comprovem si el meu grup ha guanyat (en mode grup o grups)
+          const tipus = dades.tipus_partida ? dades.tipus_partida.toLowerCase() : 'individual';
+          const guanyadorGrupId = dades.guanyadorGrupId;
+          
+          let joGuanyo = false;
+          if (tipus === 'grup') {
+            joGuanyo = true; // En mode grup, tothom guanya quan el capità acaba
+          } else if (tipus === 'grups') {
+            joGuanyo = (this.meuGrupId === guanyadorGrupId);
+          }
+
+          if (joGuanyo) {
+            // REDIRIGIM A REVELACIÓ DE CROMO
+            this.$router.push({
+              name: 'revelacio-cromo',
+              params: { id: dades.id_lloc || this.llocRealId },
+              query: { 
+                imatge: dades.imatge_cromo,
+                nom: dades.nom_lloc
+              }
+            });
+          } else {
+            // Hem perdut (individual o un altre grup)
+            this.faseDerrota = 2;
+            this.mostrarGameOver = true;
+          }
         }
         if (this.intervalTimer) clearInterval(this.intervalTimer);
       });
@@ -656,6 +702,129 @@ export default {
   font-size: 24px;
   margin-bottom: 20px;
   font-weight: bold;
+}
+
+/* ── PANTALLA SEGUINT (NO CAPITÀ) ── */
+.pantalla-seguint {
+  width: 100%;
+  min-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  padding: 20px;
+}
+
+.glow-seguint {
+  position: absolute;
+  width: 150%;
+  height: 150%;
+  background: radial-gradient(circle, rgba(217, 166, 194, 0.1) 0%, transparent 70%);
+  animation: rotateGlow 10s linear infinite;
+}
+
+@keyframes rotateGlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.contingut-seguint {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  max-width: 400px;
+}
+
+.titol-seguint {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #d9a6c2;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+  line-height: 1;
+  margin: 0;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.avatar-capita-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.avatar-capita {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #bc85ab 0%, #402749 100%);
+  border: 4px solid #d9a6c2;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 3.5rem;
+  font-weight: 900;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  position: relative;
+  z-index: 3;
+}
+
+.avatar-pols {
+  position: absolute;
+  inset: -10px;
+  border: 2px solid #d9a6c2;
+  border-radius: 50%;
+  opacity: 0;
+  animation: avatarPols 2s infinite;
+}
+
+@keyframes avatarPols {
+  0% { transform: scale(0.8); opacity: 0.8; }
+  100% { transform: scale(1.3); opacity: 0; }
+}
+
+.missatge-seguint {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.p-principal {
+  font-size: 1.2rem;
+  color: #e8c4d9;
+  margin: 0;
+}
+
+.p-secundari {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.esperant-punts {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.punt-animat {
+  width: 10px;
+  height: 10px;
+  background-color: #d9a6c2;
+  border-radius: 50%;
+  animation: bouncePunt 1s infinite alternate;
+}
+
+@keyframes bouncePunt {
+  from { transform: translateY(0); opacity: 0.3; }
+  to { transform: translateY(-10px); opacity: 1; }
 }
 
 .contenidor-imatge {

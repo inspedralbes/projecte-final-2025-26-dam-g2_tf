@@ -5,6 +5,7 @@ import { useAuth } from '../composables/useAuth';
 import { io } from 'socket.io-client';
 import { useCustomModal } from '../composables/useCustomModal';
 import { netejarUrl } from '../utils/url';
+import PantallaDerrota from './PantallaDerrota.vue';
 
 const route = useRoute();
 const router = useRouter(); 
@@ -51,6 +52,7 @@ const faseDerrota = ref(0);
 const cardDefeatFlippedBig = ref(false);
 const notificacioPunt = ref(null);
 const tipusPartida = ref(''); // 'individual', 'grup', 'grups'
+const meuGrupId = ref(null);
 
 // Temporitzador
 const tempsRestant = ref(null);
@@ -74,6 +76,8 @@ onMounted(async () => {
     socketJoc.on('game-over', (dades) => {
       console.log('[Càmera] Game-over rebut:', dades);
       const meuId = usuari.value?._id?.toString();
+      
+      // Si sóc el guanyador, ja estic gestionant el meu propi final a tancarModal() o al processament de la foto
       if (meuId && dades.guanyadorId && meuId === dades.guanyadorId.toString()) return;
 
       sessioIdGuanyador.value = dades.sessioId || codi_sala;
@@ -81,10 +85,32 @@ onMounted(async () => {
       isTimeout.value = dades.timeout || false;
       
       if (isTimeout.value) {
-        faseDerrota.value = 1;
+        faseDerrota.value = 1; // Policia
       } else {
-        faseDerrota.value = 2;
-        mostrarNotificacioGuanyador.value = true;
+        // Si no és timeout, comprovem si el meu grup ha guanyat
+        const tipus = dades.tipus_partida ? dades.tipus_partida.toLowerCase() : 'individual';
+        const guanyadorGrupId = dades.guanyadorGrupId;
+        
+        let joGuanyo = false;
+        if (tipus === 'grup') {
+          joGuanyo = true;
+        } else if (tipus === 'grups') {
+          joGuanyo = (meuGrupId.value === guanyadorGrupId);
+        }
+
+        if (joGuanyo) {
+          router.push({
+            name: 'revelacio-cromo',
+            params: { id: dades.id_lloc || route.params.id },
+            query: { 
+              imatge: dades.imatge_cromo,
+              nom: dades.nom_lloc
+            }
+          });
+        } else {
+          faseDerrota.value = 2;
+          mostrarNotificacioGuanyador.value = true;
+        }
       }
       if (intervalTimer) clearInterval(intervalTimer);
     });
@@ -115,6 +141,7 @@ onMounted(async () => {
             let me = null;
             if (sessio.jugadors && meuId) {
                 me = sessio.jugadors.find(j => (j.id_usuari._id || j.id_usuari).toString() === meuId);
+                if (me) meuGrupId.value = me.grup_id;
             }
 
             const finalTime = (me && me.temps_limit) ? me.temps_limit : sessio.temps_limit;
@@ -541,29 +568,12 @@ async function enviarDadesAlBackend(imatgeEnText) {
       </div>
     </Transition>
 
-    <!-- FASE 1: CARTA GRAN DEL POLICIA -->
-    <Transition name="fade">
-      <div
-        v-if="faseDerrota === 1"
-        class="min-h-screen bg-[#402749] flex flex-col items-center justify-center p-8 overflow-y-auto overflow-x-hidden"
-        style="position: fixed; inset: 0; z-index: 300;"
-      >
-        <div class="relative z-10 w-full max-w-sm flex flex-col items-center justify-center min-h-full py-12">
-          <div 
-            class="perspective-1000 w-full max-w-[350px] aspect-[2/3] min-h-[525px] mb-10 shadow-none cursor-pointer"
-            @click="girarCartaDefeat"
-          >
-            <div class="w-full h-full flex items-center justify-center overflow-hidden bg-[#402749] shadow-none">
-              <img 
-                :src="netejarUrl(API_URL + '/personatges/El policia.jpg')" 
-                alt="Carta El Policia" 
-                class="w-full h-full object-contain shadow-none scale-105" 
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </Transition>
+    <!-- FASE 1: CARTA DEL POLICIA -->
+    <PantallaDerrota
+      :visible="faseDerrota === 1"
+      :base-api="API_URL"
+      @tornar-inici="anarAHome"
+    />
 
     <!-- Notificació: un altre jugador ha guanyat -->
     <Transition name="fade">

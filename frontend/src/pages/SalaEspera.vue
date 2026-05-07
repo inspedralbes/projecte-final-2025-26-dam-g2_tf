@@ -211,6 +211,7 @@ const tipusPartida = ref('');
 const currentIdLloc = ref(null);
 const showGroupsModal = ref(false);
 const previewGroups = ref([]);
+const meuGrupId = ref(null);
 
 const durationOptions = [
     { label: '30 seg', value: 0.5, desc: 'PROVA' },
@@ -445,7 +446,10 @@ onMounted(() => {
     const userStr = localStorage.getItem('usuari');
     const userObj = userStr ? JSON.parse(userStr) : {};
     const perfilId = userObj._id;
-    const isUserCapita = dades.groups && dades.groups.some(g => g.capita_id === perfilId);
+    
+    const myGroup = dades.groups && dades.groups.find(g => g.members.includes(perfilId));
+    if (myGroup) meuGrupId.value = myGroup.grup_id;
+    const isUserCapita = myGroup && myGroup.capita_id === perfilId;
 
     if (mode.toLowerCase() === 'individual' || isUserCapita) {
         router.push('/sobre-lore/' + dades.sessioId);
@@ -460,11 +464,40 @@ onMounted(() => {
 
   socket.value.on('game-over', function(dades) {
     console.log("[SalaEspera] Joc finalitzat:", dades);
-    // Redirigim a tots els que s'han quedat a la sala d'espera a valorar el lloc
-    if (currentIdLloc.value) {
-        router.push('/valorar-lloc/' + currentIdLloc.value);
+
+    if (dades.timeout) {
+      // Si és timeout, mostrem que han perdut (podríem redirigir a una pantalla de derrota)
+      // Per ara anem directe a valorar o podríem fer un modal
+      router.push('/valorar-lloc/' + (dades.id_lloc || currentIdLloc.value));
+      return;
+    }
+
+    const tipus = dades.tipus_partida ? dades.tipus_partida.toLowerCase() : 'individual';
+    const guanyadorGrupId = dades.guanyadorGrupId;
+    
+    let joGuanyo = false;
+    if (tipus === 'grup') {
+      joGuanyo = true;
+    } else if (tipus === 'grups') {
+      joGuanyo = (meuGrupId.value === guanyadorGrupId);
+    }
+
+    if (joGuanyo) {
+      router.push({
+        name: 'revelacio-cromo',
+        params: { id: dades.id_lloc || currentIdLloc.value },
+        query: { 
+          imatge: dades.imatge_cromo,
+          nom: dades.nom_lloc
+        }
+      });
     } else {
-        router.push('/leaderboard/' + roomCode.value);
+      // Redirigim a tots els que s'han quedat a la sala d'espera a valorar el lloc
+      if (currentIdLloc.value || dades.id_lloc) {
+          router.push('/valorar-lloc/' + (dades.id_lloc || currentIdLloc.value));
+      } else {
+          router.push('/leaderboard/' + roomCode.value);
+      }
     }
   });
 
@@ -490,3 +523,4 @@ onUnmounted(() => {
     
 });
 </script>
+
