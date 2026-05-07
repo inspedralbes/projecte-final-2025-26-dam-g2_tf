@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-[#402749]/5 flex items-center justify-center p-4">
-    <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-lg text-center">
+    <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-lg text-center relative">
       <h1 class="text-3xl font-bold mb-6 text-[#402749]">
         <span v-if="!showModeSelection">Sala d'Espera</span>
         <span v-else>Configuració de la Partida</span>
@@ -172,6 +172,28 @@
         </div>
       </div>
     </Transition>
+    <!-- DERROTA: Pantalla calabozo (Polícia) -->
+    <PantallaDerrota
+      :visible="showDefeat"
+      :base-api="API_URL"
+      @tornar-inici="anarAValorar"
+    />
+
+    <!-- MODAL GAME OVER (Per quan guanya un altre equip en mode competitiu) -->
+    <Transition name="fade">
+      <div v-if="showGameOver" class="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl text-center border border-white/20">
+          <div class="text-6xl mb-4">🏆</div>
+          <h2 class="text-2xl font-black text-[#402749] mb-4 uppercase tracking-tighter">La partida ha acabat!</h2>
+          <p class="text-gray-600 mb-8">
+            <strong class="text-[#402749]">{{ nomGuanyador }}</strong> ha completat la ruta primer.
+          </p>
+          <button @click="anarAValorar" class="w-full bg-[#402749] text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-[#402749]/80 transition-all active:scale-95 uppercase tracking-widest text-xs">
+            CONTINUAR
+          </button>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -180,6 +202,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { io } from 'socket.io-client';
 import { useCustomModal } from '../composables/useCustomModal';
+import PantallaDerrota from './PantallaDerrota.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -212,6 +235,9 @@ const currentIdLloc = ref(null);
 const showGroupsModal = ref(false);
 const previewGroups = ref([]);
 const meuGrupId = ref(null);
+const showDefeat = ref(false);
+const showGameOver = ref(false);
+const nomGuanyador = ref('');
 
 const durationOptions = [
     { label: '30 seg', value: 0.5, desc: 'PROVA' },
@@ -233,6 +259,10 @@ async function compartirInvitacio() {
         navigator.clipboard.writeText(url);
         await mostrarModal({ isAlert: true, icon: 'success', title: 'Enllaç copiat', message: 'Enllaç copiat al porta-retalls!' });
     }
+}
+
+function anarAValorar() {
+    router.push('/valorar-lloc/' + (currentIdLloc.value || route.query.idLloc));
 }
 
 function obrirGoogleMaps() {
@@ -464,11 +494,10 @@ onMounted(() => {
 
   socket.value.on('game-over', function(dades) {
     console.log("[SalaEspera] Joc finalitzat:", dades);
+    nomGuanyador.value = dades.nomGuanyador || 'Un jugador';
 
     if (dades.timeout) {
-      // Si és timeout, mostrem que han perdut (podríem redirigir a una pantalla de derrota)
-      // Per ara anem directe a valorar o podríem fer un modal
-      router.push('/valorar-lloc/' + (dades.id_lloc || currentIdLloc.value));
+      showDefeat.value = true;
       return;
     }
 
@@ -492,12 +521,8 @@ onMounted(() => {
         }
       });
     } else {
-      // Redirigim a tots els que s'han quedat a la sala d'espera a valorar el lloc
-      if (currentIdLloc.value || dades.id_lloc) {
-          router.push('/valorar-lloc/' + (dades.id_lloc || currentIdLloc.value));
-      } else {
-          router.push('/leaderboard/' + roomCode.value);
-      }
+      // Hem perdut (un altre grup ha guanyat)
+      showGameOver.value = true;
     }
   });
 
