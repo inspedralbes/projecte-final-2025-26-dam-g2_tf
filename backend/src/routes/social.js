@@ -9,7 +9,7 @@ router.get('/leaderboard/global', async (req, res) => {
         // O el mantenim si penses afegir-lo al PerfilSchema
         const topExploradors = await Perfil.find({}) 
             .sort({ punts: -1 }) // De més a menys punts
-            .limit(10)
+            .limit(3)
             .select('nom_usuari punts avatar nivell'); // Seleccionem els camps necessaris
 
         res.json(topExploradors);
@@ -209,7 +209,7 @@ router.get('/admin/ressenyes', async (req, res) => {
         // Fem un .populate per veure el nom de l'usuari i el lloc si cal
         const ressenyes = await Ressenya.find()
             .populate('id_usuari', 'nom_usuari')
-            .populate('id_lloc', 'nom')
+            .populate('id_lloc', 'nom tags')
             .sort({ data: -1 });
         res.json(ressenyes);
     } catch (error) {

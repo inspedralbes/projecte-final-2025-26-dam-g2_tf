@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Worldstar';
+  src: url('./assets/Worldstar.ttf') format('truetype');
+  font-display: block;
+}
+
 /* Configuració base */
 html,
 body,

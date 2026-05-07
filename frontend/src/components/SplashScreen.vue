@@ -88,11 +88,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-@font-face {
-  font-family: 'Worldstar';
-  src: url('../assets/Worldstar.ttf') format('truetype');
-}
-
 * {
   margin: 0;
   padding: 0;
