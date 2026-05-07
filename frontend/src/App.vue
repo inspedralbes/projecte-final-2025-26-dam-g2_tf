@@ -57,17 +57,17 @@ body {
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.8s ease-in;
+  animation: fadeIn 0.2s ease-out;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1);
   }
 }
 </style>
