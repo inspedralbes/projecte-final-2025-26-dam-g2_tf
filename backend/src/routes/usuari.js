@@ -236,4 +236,24 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+// MARCAR LORE INICIAL COM A VIST
+router.put('/marcar-lore-vist/:id', async (req, res) => {
+    try {
+        const perfilId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(perfilId)) {
+            return res.status(400).send('ID inválido');
+        }
+        const perfil = await Perfil.findById(perfilId);
+        if (!perfil) return res.status(404).json({ message: "Perfil no trobat" });
+
+        perfil.lore_inicial_vist = true;
+        await perfil.save();
+
+        res.json({ success: true, user: perfil });
+    } catch (error) {
+        console.error(error);
+        if (!res.headersSent) res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    }
+});
+
 module.exports = router;

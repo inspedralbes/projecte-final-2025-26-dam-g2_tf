@@ -81,6 +81,9 @@ import BotonPerfil from '../components/BotonPerfil.vue';
 import { netejarUrl } from '../utils/url';
 
 
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 const llistaLlocs = ref([]);
 const activeIndex = ref(0);
 const scrollContainer = ref(null);
@@ -105,6 +108,16 @@ const esBloqueig = (lloc) => {
 const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
 
 onMounted(async () => {
+  // Comprovar si l'usuari ha de veure el lore inicial
+  const usuariRaw = localStorage.getItem('usuari');
+  if (usuariRaw) {
+    const usuari = JSON.parse(usuariRaw);
+    if (usuari.lore_inicial_vist === false) {
+      router.push('/sobre-lore/inicial');
+      return;
+    }
+  }
+
   try {
     const resposta = await fetch(`${API_URL}/api/mapa/punts`);
     

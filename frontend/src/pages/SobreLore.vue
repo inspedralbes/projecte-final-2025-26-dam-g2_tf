@@ -82,6 +82,10 @@ export default {
   },
   methods: {
     async carregarCartaLore() {
+      if (this.sessioId === 'inicial') {
+        this.cartaLoreUrl = netejarUrl(this.baseUrl + '/assets/Carta_lore/carta_inicial.png');
+        return;
+      }
       try {
         const res = await fetch(`${this.baseUrl}/api/sessionsJoc/${this.sessioId}`);
         if (!res.ok) return;
@@ -104,8 +108,36 @@ export default {
       setTimeout(() => { this.cartaVisible = true; }, 500);
     },
 
-    continuarAlPersonatge() {
+    async continuarAlPersonatge() {
       this.mostrarCarta = true;
+
+      if (this.sessioId === 'inicial') {
+        // Marcar com a vist al backend
+        const usuariRaw = localStorage.getItem('usuari');
+        if (usuariRaw) {
+          const usuari = JSON.parse(usuariRaw);
+          try {
+            const res = await fetch(`${this.baseUrl}/api/usuari/marcar-lore-vist/${usuari._id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            if (res.ok) {
+              const data = await res.json();
+              // Actualitzar localStorage
+              const nouUsuari = { ...usuari, lore_inicial_vist: true };
+              localStorage.setItem('usuari', JSON.stringify(nouUsuari));
+            }
+          } catch (e) {
+            console.error('[SobreLore] Error marcant lore inicial com a vist:', e);
+          }
+        }
+
+        setTimeout(() => {
+          this.$router.push('/');
+        }, 500);
+        return;
+      }
+
       setTimeout(() => {
         this.$router.push('/carta-personatge/' + this.sessioId);
       }, 500);
