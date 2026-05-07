@@ -7,7 +7,15 @@
 
         <!-- Títol ambiental -->
         <transition name="slide-down">
-          <p v-if="mostrarTitol" class="text-misteri">Una carta t'espera...</p>
+          <div v-if="mostrarTitol" class="capsalera-text">
+            <template v-if="sessioId === 'inicial'">
+              <h1 class="text-misteri-especial">Benvingut, explorador</h1>
+              <p class="text-subtitol-especial">Una carta misteriosa ha aparegut per a tu...</p>
+            </template>
+            <template v-else>
+              <p class="text-misteri">Una carta t'espera...</p>
+            </template>
+          </div>
         </transition>
 
         <!-- SOBRE -->
@@ -49,7 +57,7 @@
           </div>
 
           <button @click="continuarAlPersonatge" class="boto-continuar">
-            Continuar
+            {{ sessioId === 'inicial' ? "Començar l'aventura" : "Continuar" }}
           </button>
         </div>
       </div>
@@ -180,6 +188,36 @@ export default {
   text-transform: uppercase;
   opacity: 0.85;
   text-align: center;
+}
+
+.text-misteri-especial {
+  font-family: 'Georgia', serif;
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 8px;
+  text-shadow: 0 0 20px rgba(188, 133, 171, 0.6);
+}
+
+.text-subtitol-especial {
+  font-family: 'Georgia', serif;
+  color: #d4a8c7;
+  font-size: 0.9rem;
+  font-style: italic;
+  letter-spacing: 0.05em;
+  text-align: center;
+  opacity: 0.9;
+}
+
+.capsalera-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0 20px;
 }
 
 .text-instruccio {
