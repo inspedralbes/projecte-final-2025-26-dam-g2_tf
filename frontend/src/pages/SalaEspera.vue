@@ -18,7 +18,7 @@
       <!-- PANTALLA D'ESPERA PER ACOMPANYANTS (MODE GRUP) -->
       <Transition name="fade">
         <div v-if="gameStarted" class="fixed inset-0 z-[100] bg-[#1a0820] flex flex-col items-center justify-center p-8 text-center">
-            <h2 class="text-4xl font-black text-white mb-4 uppercase tracking-tighter">Segueixin al Detectiu</h2>
+            <h2 class="text-4xl font-black text-white mb-4 uppercase tracking-tighter">Segueix al Detectiu</h2>
             <p class="text-pink-200/70 text-lg leading-relaxed max-w-md">
                 La partida està en curs al mòbil del capità. <br>
                 Ajudeu-lo a trobar tots els racons secrets de la ciutat!
@@ -183,7 +183,7 @@
     <Transition name="fade">
       <div v-if="showGameOver" class="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl text-center border border-white/20">
-          <div class="text-6xl mb-4">🏆</div>
+          <div class="text-6xl mb-4"></div>
           <h2 class="text-2xl font-black text-[#402749] mb-4 uppercase tracking-tighter">La partida ha acabat!</h2>
           <p class="text-gray-600 mb-8">
             <strong class="text-[#402749]">{{ nomGuanyador }}</strong> ha completat la ruta primer.
