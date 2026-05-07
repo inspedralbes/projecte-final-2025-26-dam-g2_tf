@@ -20,17 +20,18 @@
 
         <!-- SOBRE -->
         <div class="sobre-container" :class="{ 'obert': sobreObert }" @click="obrirSobre">
+          <!-- Fem servir ambdós per evitar el 'jump' i assegurar pre-càrrega -->
           <img
-            v-if="!sobreObert"
             :src="netejarUrl(baseUrl + '/assets/Sobre/Sobre Tancat.png')"
             alt="Sobre tancat"
             class="sobre-imatge sobre-tancat"
+            :class="{ 'hidden-image': sobreObert }"
           />
           <img
-            v-else
             :src="netejarUrl(baseUrl + '/assets/Sobre/Sobre_Obert.png')"
             alt="Sobre obert"
             class="sobre-imatge sobre-obert"
+            :class="{ 'hidden-image': !sobreObert }"
           />
         </div>
 
@@ -91,6 +92,11 @@ export default {
   },
   methods: {
     async carregarCartaLore() {
+      // Pre-carregar l'imatge del sobre obert perquè el canvi sigui instantani
+      const imgSobre = new Image();
+      imgSobre.src = netejarUrl(this.baseUrl + '/assets/Sobre/Sobre_Obert.png');
+      if (imgSobre.decode) imgSobre.decode().catch(() => {});
+
       let url = '';
       if (this.sessioId === 'inicial') {
         url = netejarUrl(this.baseUrl + '/assets/Carta_lore/carta_inicial.png');
@@ -265,6 +271,13 @@ export default {
   object-fit: contain;
   border-radius: 4px;
   filter: drop-shadow(0 12px 40px rgba(180, 100, 160, 0.35));
+  transition: opacity 0.1s ease; /* Transició ultra-ràpida per suavitzar el canvi */
+}
+
+.hidden-image {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* ── Overlay carta ── */
