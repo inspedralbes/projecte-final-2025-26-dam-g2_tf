@@ -9,7 +9,7 @@ router.get('/leaderboard/global', async (req, res) => {
         // O el mantenim si penses afegir-lo al PerfilSchema
         const topExploradors = await Perfil.find({}) 
             .sort({ punts: -1 }) // De més a menys punts
-            .limit(10)
+            .limit(3)
             .select('nom_usuari punts avatar nivell'); // Seleccionem els camps necessaris
 
         res.json(topExploradors);
