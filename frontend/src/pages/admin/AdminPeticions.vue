@@ -167,7 +167,7 @@ const votar = async (peticion, nouEstat) => {
       peticionSeleccionada.value = null; 
       await cargarPeticiones(); 
     } else {
-      await mostrarModal({ isAlert: true, message: "Error en el servidor al actualitzar l'estat." });
+      await mostrarModal({ isAlert: true, message: "Error al servidor en actualitzar l'estat." });
     }
   } catch (err) {
     console.error("Error al votar:", err);

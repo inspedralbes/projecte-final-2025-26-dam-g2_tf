@@ -19,7 +19,7 @@
           :class="['flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all',
                   pestanyaActiva === tab ? 'bg-[#f5cbdd] text-[#402749]' : 'text-white/60']"
         >
-          {{ tab === 'feed' ? 'Muro' : tab === 'ranking' ? 'Rànquing' : 'Amics' }}
+          {{ tab === 'feed' ? 'Mur' : tab === 'ranking' ? 'Rànquing' : 'Amics' }}
         </button>
       </div>
 

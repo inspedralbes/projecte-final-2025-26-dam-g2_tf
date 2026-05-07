@@ -237,7 +237,7 @@ const emojiRol = computed(() => {
 
 const activeTab = ref('posts');
 const tabs = [
-  { id: 'posts', label: 'MIS POSTS' },
+  { id: 'posts', label: 'ELS MEUS POSTS' },
   { id: 'cromos', label: 'CROMOS' },
   { id: 'amics', label: 'AMICS' },
   { id: 'propostes', label: 'PROPOSTES' }
@@ -397,7 +397,7 @@ async function eliminarCompte() {
       isAlert: true,
       icon: 'warning',
       title: 'Error',
-      message: "Hi ha hagut un problema al eliminar el compte."
+      message: "Hi ha hagut un problema en eliminar el compte."
     });
   }
 }

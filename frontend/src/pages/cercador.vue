@@ -67,9 +67,12 @@
 
       <!-- Input de búsqueda -->
       <div class="relative flex-1">
-        <input type="text" v-model="textBusqueda" placeholder="Buscar llocs..."
-          class="w-full bg-gray-200 text-gray-700 rounded-full py-3 px-5 pr-12 focus:outline-none focus:ring-2 focus:ring-gray-400" />
-        <button class="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-gray-500">
+        <input
+          v-model="textBusqueda"
+          type="text"
+          placeholder="Cercar llocs..."
+          class="w-full bg-white border-2 border-[#bc85ab]/20 rounded-2xl px-6 py-4 text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#bc85ab] focus:ring-4 focus:ring-[#bc85ab]/10 transition-all text-lg font-medium shadow-inner"
+        /><button class="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-gray-500">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
             class="w-5 h-5">
             <path stroke-linecap="round" stroke-linejoin="round"
@@ -214,7 +217,7 @@ onMounted(() => {
 // Función para cargar los lugares desde el servidor
 async function carregarDades() {
   try {
-    const resposta = await fetch(`${API_URL}/api/cercador`);    if (!resposta.ok) throw new Error('Error al carregar dades');
+    const resposta = await fetch(`${API_URL}/api/cercador`);    if (!resposta.ok) throw new Error('Error en carregar dades');
     const dades = await resposta.json();
 
     // Guardamos los datos limpios en nuestra variable

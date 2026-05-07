@@ -223,8 +223,8 @@ const adrecaInici = ref('');
 
 // Recuperar usuari del localStorage o usar un per defecte
 const userStr = localStorage.getItem('usuari');
-const user = userStr ? JSON.parse(userStr) : { nom_usuari: 'Invitado' };
-const nomUsuari = user.nom_usuari || 'Invitado';
+const user = userStr ? JSON.parse(userStr) : { nom_usuari: 'Convidat' };
+const nomUsuari = user.nom_usuari || 'Convidat';
 
 const showModeSelection = ref(false);
 const selectedMode = ref('Individual');

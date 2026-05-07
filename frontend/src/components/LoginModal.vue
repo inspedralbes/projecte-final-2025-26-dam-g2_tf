@@ -31,7 +31,7 @@
 
             <!-- Títol i subtítol -->
             <h2 class="text-2xl font-black uppercase tracking-tight relative">
-              {{ esRegistre ? '¡Benvingut!' : 'Hola, explorador! ' }}
+              {{ esRegistre ? 'Benvingut!' : 'Hola, explorador!' }}
             </h2>
             <p class="text-[#f5cbdd] text-sm mt-2 font-medium opacity-90 relative">
               {{ missatgePersonalitzat || (esRegistre

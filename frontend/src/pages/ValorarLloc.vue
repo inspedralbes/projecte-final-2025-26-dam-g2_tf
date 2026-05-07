@@ -8,9 +8,9 @@
       <div class="absolute top-4 left-4 text-[#d9a6c2] opacity-50 text-xl font-bold italic">N</div>
       <div class="absolute top-4 right-4 text-[#d9a6c2] opacity-50 text-xl font-bold italic">W</div>
       
-      <h1 class="font-black text-2xl mb-2 text-pink-300 uppercase tracking-widest mt-6">Ruta Finalizada</h1>
+      <h1 class="font-black text-2xl mb-2 text-pink-300 uppercase tracking-widest mt-6">Ruta Finalitzada</h1>
       <p class="text-sm text-indigo-200 mb-6 font-medium">
-        {{ llocNom ? `¿Qué te ha parecido ${llocNom}?` : 'Valora la experiencia de esta ruta.' }}
+        {{ llocNom ? `Què t’ha semblat ${llocNom}?` : 'Valora l’experiència d’aquesta ruta.' }}
       </p>
 
       <div v-if="imatgeLloc" class="w-full rounded-xl overflow-hidden mb-6 border-2 border-pink-400/50 shadow-lg" style="aspect-ratio: 16/9;">
@@ -38,7 +38,7 @@
         <textarea 
           v-model="comentari" 
           rows="3" 
-          placeholder="Añade tus pensamientos... (ej. Pistas, atmósfera, dificultad)"
+          placeholder="Afegeix els teus pensaments... (ex. pistes, atmosfera, dificultat)"
           class="w-full bg-[#1a0820]/80 border border-[#d9a6c2]/50 rounded-xl p-4 text-white text-sm placeholder-white/40 focus:outline-none focus:border-pink-400 focus:ring-1 focus:ring-pink-400 resize-none transition-all"
         ></textarea>
         <!-- Neon border effect bottom -->
@@ -54,14 +54,14 @@
           class="w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(217,166,194,0.3)] hover:shadow-[0_0_25px_rgba(217,166,194,0.6)] active:scale-95"
           style="background-color: #d9a6c2; color: #2a1030;"
         >
-          {{ carregant ? 'ENVIANT...' : 'ENVIAR VALORACIÓN' }}
+          {{ carregant ? 'ENVIANT...' : 'ENVIAR VALORACIÓ' }}
         </button>
         
         <button 
           @click="ometre"
           class="w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all border border-white/20 text-white/70 hover:bg-white/5 active:scale-95"
         >
-          OMITIR
+          OMETRE
         </button>
       </div>
 
@@ -121,7 +121,7 @@ function seleccionarEstrella(val) {
 
 async function enviarValoracio() {
   if (rating.value === 0) {
-    await mostrarModal({ isAlert: true, message: "Por favor, selecciona al menos una estrella para valorar." });
+    await mostrarModal({ isAlert: true, message: "Si us plau, selecciona almenys una estrella per valorar." });
     return;
   }
 
@@ -146,14 +146,14 @@ async function enviarValoracio() {
     });
 
     if (resposta.ok) {
-      await mostrarModal({ isAlert: true, icon: 'none', title: "¡Gracias!", message: "Tu valoración se ha enviado correctamente." });
+      await mostrarModal({ isAlert: true, icon: 'none', title: "Gràcies!", message: "La teva valoració s'ha enviat correctament." });
       router.push({ name: 'home' });
     } else {
-      await mostrarModal({ isAlert: true, message: "Ha ocurrido un error al enviar la valoración." });
+      await mostrarModal({ isAlert: true, message: "Hi ha hagut un error en enviar la valoració." });
     }
   } catch (e) {
     console.error(e);
-    await mostrarModal({ isAlert: true, message: "Error de conexión con el servidor." });
+    await mostrarModal({ isAlert: true, message: "Error de connexió amb el servidor." });
   } finally {
     carregant.value = false;
   }

@@ -177,7 +177,7 @@
                     @click="puntPendentEsPersonatge = true"
                     :class="puntPendentEsPersonatge ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-500'"
                     class="flex-1 py-1.5 rounded-lg text-xs font-bold transition-all"
-                  >Si</button>
+                  >Sí</button>
                 </div>
 
                 <div v-if="puntPendentEsPersonatge">
@@ -316,7 +316,7 @@
         <p class="text-xs text-gray-500 mb-4">Pega les coordenades de Google Maps</p>
         <input v-model="inputCoordenadas" placeholder="Latitud, Longitud" class="w-full border-2 border-gray-100 p-4 rounded-2xl outline-none bg-gray-50 mb-6">
         <div class="flex gap-3">
-          <button @click="mostrarPopupUbi = false" class="flex-1 py-3 text-gray-400 font-bold uppercase text-xs">Cancelar</button>
+          <button @click="mostrarPopupUbi = false" class="flex-1 py-3 text-gray-400 font-bold uppercase text-xs">Cancel·lar</button>
           <button @click="procesarCoordenadas" class="flex-1 bg-purple-600 text-white py-3 rounded-xl font-bold uppercase text-xs shadow-lg">Aplicar</button>
         </div>
       </div>
