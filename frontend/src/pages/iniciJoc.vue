@@ -116,7 +116,7 @@ async function irAlJuego() {
     });
 
     if (!perfilId) {
-        await showCustomModal({ isAlert: true, message: "Sessió caducada. Torna a fer login." });
+        await showCustomModal({ isAlert: true, message: "Sessió caducada. Torna a iniciar sessió." });
         return router.push('/login');
     }
 
@@ -134,7 +134,7 @@ async function irAlJuego() {
 
     if (!resposta.ok) {
       const errorText = await resposta.text();
-      throw new Error("El servidor ha fallat al crear la sessió: " + errorText);
+      throw new Error("El servidor ha fallat en crear la sessió: " + errorText);
     }
 
     const sessioNova = await resposta.json();

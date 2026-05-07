@@ -127,7 +127,7 @@ const titolConfirm = computed(() => {
 
 const missatgeConfirm = computed(() => {
   return pasConfirmacio.value === 1 
-    ? "¿Estàs segur que vols eliminar aquest lloc? Aquesta acció no es pot desfer."
+    ? "Estàs segur que vols eliminar aquest lloc? Aquesta acció no es pot desfer."
     : "ATENCIÓ: Estàs a punt d'esborrar definitivament aquest punt del mapa. Aquesta acció és irreversible. Vols continuar?";
 });
 
@@ -190,7 +190,7 @@ const guardarLloc = async (datos) => {
       cargarDatos();
     }
   } catch (error) {
-    await mostrarModal({ isAlert: true, message: "Error al guardar" });
+    await mostrarModal({ isAlert: true, message: "Error en guardar" });
   }
 };
 
@@ -216,7 +216,7 @@ const confirmarEliminar = async () => {
     pasConfirmacio.value = 1;
     cargarDatos();
   } catch (error) {
-    await mostrarModal({ isAlert: true, message: "Error al eliminar" });
+    await mostrarModal({ isAlert: true, message: "Error en eliminar" });
   }
 };
 
@@ -290,7 +290,7 @@ const actualitzarOrdreTotal = async () => {
     } else {
       const errorData = await res.json();
       console.error("Error del servidor:", errorData.message);
-      await mostrarModal({ isAlert: true, message: "Error al reordenar" });
+      await mostrarModal({ isAlert: true, message: "Error en reordenar" });
     }
   } catch (err) {
     console.error("Error de connexió:", err);

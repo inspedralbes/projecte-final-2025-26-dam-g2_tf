@@ -633,7 +633,7 @@ export default {
             this.iniciarTemporitzador(dades.nou_temps_limit);
           }
         } else {
-          await this.mostrarModal({ isAlert: true, message: dades.missatge || "Error al demanar la pista" });
+          await this.mostrarModal({ isAlert: true, message: dades.missatge || "Error en demanar la pista" });
         }
       } catch (err) {
         console.error("Error demanant pista:", err);

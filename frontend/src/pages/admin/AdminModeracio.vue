@@ -460,7 +460,7 @@ const eliminarComentari = (postId, comentariId) => {
 
 const decidirIdentitat = (userId, estat) => {
   const titol = estat === 'aprovat' ? "Aprovar Identitat" : "Rebutjar i Esborrar";
-  const msj = estat === 'aprovat' ? "S'activarà el compte de l'usuari definitivament." : "Es borrarà l'usuari i totes les seves dades per ser menor o incomplir les regles.";
+  const msj = estat === 'aprovat' ? "S'activarà el compte de l'usuari definitivament." : "S'esborrarà l'usuari i totes les seves dades per ser menor o incomplir les regles.";
   
   demanarConfirmacio(titol, msj, async () => {
     try {
@@ -482,7 +482,7 @@ const eliminarRessenya = async (resObj) => {
   if (!isConfirmed) return;
   const idToErase = resObj._id || resObj.id;
   if (!idToErase) {
-    console.error("No se encontró el ID de la ressenya", resObj);
+    console.error("No s'ha trobat l'ID de la ressenya", resObj);
     return;
   }
   try {

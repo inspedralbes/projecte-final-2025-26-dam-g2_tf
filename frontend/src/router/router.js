@@ -218,7 +218,7 @@ router.beforeEach((to, from, next) => {
     } else {
       // Usuari NO autenticat: bloquejem la navegació i obrim el modal
       const missatgesPerRuta = {
-        'social': 'Uneix-te a la comunitat! Inicia sessió per veure el muro, el rànquing i interactuar amb altres exploradors.',
+        'social': 'Uneix-te a la comunitat! Inicia sessió per veure el mur, el rànquing i interactuar amb altres exploradors.',
         'detall-lloc': 'Per veure el detall d\'aquest lloc i començar la ruta, has d\'iniciar sessió primer.',
         'peticions': 'Vols proposar un nou lloc? Genial! Només cal que iniciis sessió primer.',
       };

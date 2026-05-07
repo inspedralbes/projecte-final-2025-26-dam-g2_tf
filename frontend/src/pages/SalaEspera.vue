@@ -223,8 +223,8 @@ const adrecaInici = ref('');
 
 // Recuperar usuari del localStorage o usar un per defecte
 const userStr = localStorage.getItem('usuari');
-const user = userStr ? JSON.parse(userStr) : { nom_usuari: 'Invitado' };
-const nomUsuari = user.nom_usuari || 'Invitado';
+const user = userStr ? JSON.parse(userStr) : { nom_usuari: 'Convidat' };
+const nomUsuari = user.nom_usuari || 'Convidat';
 
 const showModeSelection = ref(false);
 const selectedMode = ref('Individual');
@@ -250,7 +250,7 @@ async function compartirInvitacio() {
     const url = `${window.location.origin}/join/${roomCode.value}`;
     if (navigator.share) {
         navigator.share({
-            title: 'Juga amb mi a Barcelona Secreta!',
+            title: 'Juga amb mi a North!',
             text: `Uneix-te a la meva partida amb el codi: ${roomCode.value}`,
             url: url
         }).catch(err => console.log('Error compartint', err));

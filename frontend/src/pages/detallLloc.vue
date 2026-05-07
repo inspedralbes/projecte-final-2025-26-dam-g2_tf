@@ -168,7 +168,7 @@ const esBloqueig = computed(() => {
 
 function obrirGoogleMaps() {
   if (!lloc.value || !lloc.value.ubicacio || !lloc.value.ubicacio.coordinates) {    
-  console.error("No hay coordenadas disponibles");
+  console.error("No hi ha coordenades disponibles");
     return;
   }
   
@@ -189,7 +189,7 @@ function anarACamara() {
 
 function comencarJoc() {
   if (!usuari.value) {
-    obrirModal('Per començar la ruta i guardar el teu progress, has d\'iniciar sessió primer. és ràpid i gratuit!');
+    obrirModal('Per començar la ruta i guardar el teu progrés, has d\'iniciar sessió primer. és ràpid i gratuït!');
     return;
   }
 

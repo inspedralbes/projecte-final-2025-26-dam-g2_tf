@@ -76,7 +76,7 @@ if (resultat.success) {
              isAlert: true,
              icon: 'warning',
              title: 'Compte Pendent',
-             message: 'La teva compte està en mode pendent de verificació. Un administrador revisarà la teva identitat. Torna a provar d\'entrar en unes hores.'
+             message: 'El teu compte està en mode pendent de verificació. Un administrador revisarà la teva identitat. Torna a provar d\'entrar en unes hores.'
           });
           return;
         }

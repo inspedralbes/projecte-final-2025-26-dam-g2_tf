@@ -263,10 +263,10 @@ export default {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ punts_missio: this.puntsMissio })
         });
-        if (!resposta.ok) throw new Error('Error al desar');
+        if (!resposta.ok) throw new Error('Error en desar');
         this.missatgeDesar = 'Punts desats correctament!';
       } catch (err) {
-        this.missatgeDesar = ' Error al desar: ' + err.message;
+        this.missatgeDesar = ' Error en desar: ' + err.message;
       } finally {
         this.desant = false;
         setTimeout(() => { this.missatgeDesar = ''; }, 3000);

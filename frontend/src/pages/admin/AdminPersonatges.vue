@@ -9,7 +9,7 @@
         <div class="flex items-center gap-3 mb-2">
     
           <div>
-            <h1 class="text-3xl font-black text-[#402749] tracking-tight">Gestio de Personatges</h1>
+            <h1 class="text-3xl font-black text-[#402749] tracking-tight">Gestió de Personatges</h1>
           </div>
         </div>
       </header>
@@ -48,7 +48,7 @@
 
           <!-- Descripcio (full width) -->
           <div class="flex flex-col gap-1 md:col-span-2">
-            <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Descripcio</label>
+            <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Descripció</label>
             <textarea
               v-model="formDescripcio"
               rows="3"
@@ -82,7 +82,7 @@
             @click="cancellarEdicio"
             class="bg-gray-100 hover:bg-gray-200 text-gray-600 font-black uppercase text-xs px-6 py-3 rounded-2xl transition-all"
           >
-            Cancellar
+            Cancel·lar
           </button>
         </div>
       </section>
@@ -137,7 +137,7 @@
             <div class="p-4 flex-1 flex flex-col">
               <h3 class="font-black text-[#402749] text-sm mb-1 truncate">{{ p.nom }}</h3>
               <p class="text-xs text-gray-400 leading-relaxed flex-1 line-clamp-3">
-                {{ p.descripcio || 'Sense descripcio.' }}
+                {{ p.descripcio || 'Sense descripció.' }}
               </p>
               <p class="text-[9px] font-mono text-gray-300 mt-3">{{ new Date(p.data_creacio).toLocaleDateString() }}</p>
             </div>
@@ -230,7 +230,7 @@ async function guardarPersonatge() {
   missatgeError.value = '';
 
   if (!formNom.value.trim()) {
-    missatgeError.value = 'El nom del personatge es obligatori.';
+    missatgeError.value = 'El nom del personatge és obligatori.';
     return;
   }
 
@@ -274,7 +274,7 @@ async function guardarPersonatge() {
       } else {
         // Si no és JSON, probablement és un error del servidor o del proxy (ex: 413 Payload Too Large)
         if (res.status === 413) {
-          missatgeError.value = 'La imatge es massa gran. Intenta-ho amb una foto mes petita.';
+          missatgeError.value = 'La imatge és massa gran. Intenta-ho amb una foto més petita.';
         } else {
           missatgeError.value = 'Error del servidor (status: ' + res.status + ').';
         }
@@ -282,7 +282,7 @@ async function guardarPersonatge() {
     }
   } catch (err) {
     console.error('[AdminPersonatges] Error en guardar:', err);
-    missatgeError.value = 'Error de connexio. Comprova que el servidor funciona.';
+    missatgeError.value = 'Error de connexió. Comprova que el servidor funciona.';
   }
 
   estaGuardant.value = false;
