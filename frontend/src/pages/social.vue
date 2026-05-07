@@ -417,7 +417,7 @@ import { useLoginModal } from '../composables/useLoginModal';
 import BotonPerfil from '../components/BotonPerfil.vue';
 import { netejarUrl } from '../utils/url';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
 const router = useRouter();
 const { usuari, login } = useAuth();
 const { obrirModal } = useLoginModal();

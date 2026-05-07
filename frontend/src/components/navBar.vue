@@ -53,7 +53,7 @@ import { useAuth } from '../composables/useAuth';
 
 const router = useRouter();
 const { usuari } = useAuth();
-const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
 
 const peticionsPendentsCount = ref(0);
 let intervalId = null;

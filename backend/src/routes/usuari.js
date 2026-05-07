@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-const { Usuario, Perfil } = require('../models');
+const fs = require('fs');
+const path = require('path');
+const { Usuari, Perfil, Post, Ressenya, PeticioRuta } = require('../models');
 
 function calcularNivell(cromos) {
     if (cromos > 30) return "Mestre Urbà";
@@ -159,6 +161,75 @@ router.get('/:id', async (req, res) => {
         }
 
         res.json(perfil);
+    } catch (error) {
+        console.error(error);
+        if (!res.headersSent) res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    }
+});
+
+// ELIMINAR COMPTE (BORRAT TOTAL)
+router.delete('/:id', async (req, res) => {
+    try {
+        const perfilId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(perfilId)) {
+            return res.status(400).send('ID inválido');
+        }
+
+        const perfil = await Perfil.findById(perfilId);
+        if (!perfil) return res.status(404).send('Perfil no trobat');
+
+        const usuariId = perfil.usuari_id;
+
+        // 1. Eliminar archivos de Posts
+        const posts = await Post.find({ id_usuari: perfilId });
+        for (const post of posts) {
+            if (post.imatges_post && post.imatges_post.length > 0) {
+                for (const imgPath of post.imatges_post) {
+                    const fullPath = path.join(__dirname, '../../public', imgPath);
+                    if (fs.existsSync(fullPath)) {
+                        try { fs.unlinkSync(fullPath); } catch (e) { console.error("Error unlinking post img:", e); }
+                    }
+                }
+            }
+            if (post.imatge_post) {
+                const fullPath = path.join(__dirname, '../../public', post.imatge_post);
+                if (fs.existsSync(fullPath)) {
+                    try { fs.unlinkSync(fullPath); } catch (e) { console.error("Error unlinking post img:", e); }
+                }
+            }
+        }
+
+        // 2. Eliminar archivos de Verificación
+        const usuari = await Usuari.findById(usuariId);
+        if (usuari && usuari.verificacio_imatge) {
+            const fullPath = path.join(__dirname, '../../public', usuari.verificacio_imatge);
+            if (fs.existsSync(fullPath)) {
+                try { fs.unlinkSync(fullPath); } catch (e) { console.error("Error unlinking verification img:", e); }
+            }
+        }
+
+        // 3. Eliminar registros de la DB
+        await Post.deleteMany({ id_usuari: perfilId });
+        await Ressenya.deleteMany({ id_usuari: perfilId });
+        await PeticioRuta.deleteMany({ id_usuari: perfilId });
+
+        // 4. Limpiar referencias de amigos
+        await Perfil.updateMany(
+            { amics: perfilId },
+            { $pull: { amics: perfilId } }
+        );
+        
+        // 5. Limpiar solicitudes pendientes
+        await Perfil.updateMany(
+            { "sollicituds_pendents.id_perfil": perfilId },
+            { $pull: { sollicituds_pendents: { id_perfil: perfilId } } }
+        );
+
+        // 6. Eliminar Perfil y Usuario
+        await Perfil.findByIdAndDelete(perfilId);
+        await Usuari.findByIdAndDelete(usuariId);
+
+        res.json({ success: true, message: "Compte eliminat correctament" });
     } catch (error) {
         console.error(error);
         if (!res.headersSent) res.status(500).json({ error: 'Internal Server Error', details: error.message });

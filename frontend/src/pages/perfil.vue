@@ -143,9 +143,14 @@
         </div>
       </div>
 
-      <button @click="tancarSessio" class="w-full mt-10 py-4 border border-red-500/30 text-red-400 rounded-2xl font-bold text-sm hover:bg-red-500/10">
-        TANCAR SESSIÓ
-      </button> 
+      <div class="flex gap-4 mt-10">
+        <button @click="tancarSessio" :class="activeTab === 'posts' ? 'flex-1' : 'w-full'" class="py-4 border border-red-500/30 text-red-400 rounded-2xl font-bold text-sm hover:bg-red-500/10 transition-all">
+          TANCAR SESSIÓ
+        </button> 
+        <button v-if="activeTab === 'posts'" @click="eliminarCompte" class="flex-1 py-4 border border-red-500/30 text-red-400 rounded-2xl font-bold text-sm hover:bg-red-500/10 transition-all">
+          ELIMINAR COMPTE
+        </button>
+      </div> 
 
       </main>
 
@@ -202,7 +207,7 @@ const handleModalCancel = () => {
   if (modalResolve) modalResolve(false);
 };
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
 
 const percentatgeProgres = computed(() => {
   const count = user.value?.inventari_cromos?.length || 0;
@@ -355,6 +360,46 @@ async function acceptarAmic(solicitud) {
 function tancarSessio() {
   logout(); 
   window.location.href = '/'; 
+}
+
+async function eliminarCompte() {
+  const isConfirmed = await mostrarModal({
+    isAlert: false,
+    icon: 'warning',
+    title: 'Eliminar Compte?',
+    message: 'Estàs segur que vols eliminar el teu compte i totes les teves dades? Aquesta acció és irreversible i perdràs tot el teu progrés.',
+    confirmText: 'ELIMINAR',
+    cancelText: 'CANCEL·LAR'
+  });
+
+  if (!isConfirmed) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/usuari/${user.value._id}`, {
+      method: 'DELETE'
+    });
+
+    if (res.ok) {
+      await mostrarModal({
+        isAlert: true,
+        icon: 'success',
+        title: 'Compte Eliminat',
+        message: 'El teu compte ha estat eliminat correctament. Fins aviat!'
+      });
+      tancarSessio();
+    } else {
+      const errorData = await res.json();
+      throw new Error(errorData.message || "No s'ha pogut eliminar el compte");
+    }
+  } catch (err) {
+    console.error("Error al eliminar compte:", err);
+    await mostrarModal({
+      isAlert: true,
+      icon: 'warning',
+      title: 'Error',
+      message: "Hi ha hagut un problema al eliminar el compte."
+    });
+  }
 }
 // Retorna la URL completa de la imatge del cromo
 function imatgeCromo(src) {
