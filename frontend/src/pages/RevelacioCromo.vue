@@ -14,7 +14,7 @@
                 <!-- Contra cromo -->
                 <div class="cromo-face cromo-back rounded-2xl overflow-hidden border-4 border-white/20 shadow-2xl flex flex-col items-center justify-center bg-gradient-to-br from-[#402749] to-[#2a1030]">
                      <div class="absolute inset-0 opacity-20 pointer-events-none pattern-grid"></div>
-                     <span class="text-6xl mb-4">✨</span>
+                     <span class="text-6xl mb-4"></span>
                      <p class="text-white font-black text-sm tracking-widest uppercase">Toca per revelar</p>
                 </div>
                 <!-- Cromo real -->

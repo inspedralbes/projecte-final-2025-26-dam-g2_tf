@@ -1,5 +1,7 @@
 <template>
-  <div id="app-container" class="flex flex-col h-screen overflow-hidden bg-[#9f6795] relative">
+  <SplashScreen v-if="showingSplash" @splash-complete="onSplashComplete" />
+
+  <div v-else id="app-container" class="flex flex-col h-screen overflow-hidden bg-[#402749] relative animate-fade-in">
     <main class="flex-grow overflow-y-auto">
       <router-view />
     </main>
@@ -23,15 +25,22 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import NavBar from './components/navBar.vue';
 import LoginModal from './components/LoginModal.vue';
 import ModalPersonalitzat from './components/ModalPersonalitzat.vue';
+import SplashScreen from './components/SplashScreen.vue';
 import { useCustomModal } from './composables/useCustomModal';
 
 const route = useRoute();
 const { modalVisible, modalProps, handleModalConfirm, handleModalCancel } = useCustomModal();
+
+const showingSplash = ref(true);
+
+const onSplashComplete = () => {
+  showingSplash.value = false;
+};
 
 const mostrarNavBar = computed(() => {
   if (!route.path) return false;
@@ -45,5 +54,20 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>
