@@ -60,6 +60,7 @@
 
 <script>
 import { netejarUrl } from '../utils/url';
+import { useAuth } from '../composables/useAuth';
 
 export default {
   name: 'SobreLore',
@@ -123,9 +124,10 @@ export default {
             });
             if (res.ok) {
               const data = await res.json();
-              // Actualitzar localStorage
+              // Actualitzar estat global i localStorage
               const nouUsuari = { ...usuari, lore_inicial_vist: true };
-              localStorage.setItem('usuari', JSON.stringify(nouUsuari));
+              const { login } = useAuth();
+              login(nouUsuari);
             }
           } catch (e) {
             console.error('[SobreLore] Error marcant lore inicial com a vist:', e);
