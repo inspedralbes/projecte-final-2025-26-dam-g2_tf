@@ -5,31 +5,31 @@ const { PeticioRuta } = require('../models');
 
 // Middleware simple: llegeix l'ID d'usuari de la capçalera X-User-Id
 function verifyToken(req, res, next) {
-  const userId = req.headers['x-user-id'];
-  if (!userId) return res.status(401).json({ message: "Has d'enviar X-User-Id" });
-  req.user = { id: userId };
-  next();
+    const userId = req.headers['x-user-id'];
+    if (!userId) return res.status(401).json({ message: "Has d'enviar X-User-Id" });
+    req.user = { id: userId };
+    next();
 }
- 
+
 router.get('/meves', verifyToken, async (req, res) => {
-  try {
-    // Validació bàsica: req.user ha d'existir
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ message: "Token invàlid o sessió caducada" });
+    try {
+        // Validació bàsica: req.user ha d'existir
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ message: "Token invàlid o sessió caducada" });
+        }
+        const peticions = await PeticioRuta.find({ id_usuari: req.user.id });
+        const result = peticions.map(p => ({
+            _id: p._id,
+            nomLloc: p.nom_proposat,
+            estat: p.estat_validacio,
+            dataCreacio: p.createdAt,
+            motiuRebuig: p.motiuRebuig
+        }));
+        res.json(result);
+    } catch (error) {
+        console.error(error);
+        if (!res.headersSent) res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
-    const peticions = await PeticioRuta.find({ id_usuari: req.user.id });
-    const result = peticions.map(p => ({
-      _id: p._id,
-      nomLloc: p.nom_proposat,
-      estat: p.estat_validacio,
-      dataCreacio: p.createdAt,
-      motiuRebuig: p.motiuRebuig
-    }));
-    res.json(result);
-  } catch (error) {
-    console.error(error);
-    if (!res.headersSent) res.status(500).json({ error: 'Internal Server Error', details: error.message });
-  }
 });
 
 router.post('/', async (req, res) => {
@@ -66,7 +66,7 @@ router.post('/', async (req, res) => {
             message: "Petició guardada correctament!",
             id: nuevaPeticion._id
         });
-    
+
     } catch (error) {
         console.error(error);
         if (error.name === 'ValidationError') {
@@ -76,7 +76,7 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Actualitzar estat de petició (Acceptar/Rebutjar/Preparar)
+// Actualitzar estat de petició (Acceptar/Rebutjar)
 router.put('/:id', async (req, res) => {
     try {
         // Validació crítica de l'ID amb Mongoose
@@ -90,15 +90,15 @@ router.put('/:id', async (req, res) => {
         if (motiuRebuig !== undefined) updateData.motiuRebuig = motiuRebuig;
 
         const peticio = await PeticioRuta.findByIdAndUpdate(
-            req.params.id, 
-            updateData, 
+            req.params.id,
+            updateData,
             { new: true }
         );
 
         if (!peticio) return res.status(404).json({ message: "Petició no trobada" });
 
-        // Lògica d'estats
-        if (estat_validacio === 'preparant') {
+        // Si s'aprova, creem el lloc com a desactivat
+        if (estat_validacio === 'aprovada') {
             const Lloc = require('../models').Lloc;
             let coordinates = [0, 0];
             if (Array.isArray(peticio.ubicacio) && peticio.ubicacio.length === 2) {
@@ -107,60 +107,20 @@ router.put('/:id', async (req, res) => {
                     coordinates = [lng, lat];
                 }
             }
-            // Creem el lloc amb actiu: false
+            // Creem el lloc amb estat: 'desactivat'
             const nouLloc = new Lloc({
                 nom: peticio.nom_proposat || 'Lloc sense nom',
                 descripcio: peticio.motiu || '',
                 ubicacio: { type: 'Point', coordinates: coordinates },
                 fotos_actuals: peticio.fotos_proporcionades || [],
-                peticio_id: peticio._id, // Vinculamos la petición
-                actiu: false,
+                peticio_id: peticio._id,
+                estat: 'desactivat',
                 ordre: 0
             });
             await nouLloc.save();
-        } 
-        
+        }
+
         res.json({ success: true, message: `Petició marcada com a ${estat_validacio}` });
-    } catch (error) {
-        console.error(error);
-        if (!res.headersSent) res.status(500).json({ error: 'Internal Server Error', details: error.message });
-    }
-});
-
-// Canviar petició a 'preparant' (crea el lloc desactivat)
-router.put('/:id/preparant', async (req, res) => {
-    try {
-        if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
-            return res.status(400).send('ID inválido');
-        }
-        const peticio = await PeticioRuta.findById(req.params.id);
-        if (!peticio) return res.status(404).json({ message: "Petició no trobada" });
-
-        peticio.estat_validacio = 'preparant';
-        await peticio.save();
-
-        const Lloc = require('../models').Lloc;
-        
-        // Validem i convertim coordenades
-        let coordinates = [0, 0];
-        if (Array.isArray(peticio.ubicacio) && peticio.ubicacio.length === 2) {
-            const [lat, lng] = peticio.ubicacio;
-            if (typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng)) {
-                coordinates = [lng, lat]; 
-            }
-        }
-
-        const nouLloc = new Lloc({
-            nom: peticio.nom_proposat || 'Lloc sense nom',
-            descripcio: peticio.motiu || '',
-            ubicacio: { type: 'Point', coordinates: coordinates },
-            fotos_actuals: peticio.fotos_proporcionades || [],
-            estat: 'desactivat',
-            ordre: 0
-        });
-        await nouLloc.save();
-        
-        res.json({ success: true, message: "Petició en preparació i lloc creat (desactivat)" });
     } catch (error) {
         console.error(error);
         if (!res.headersSent) res.status(500).json({ error: 'Internal Server Error', details: error.message });

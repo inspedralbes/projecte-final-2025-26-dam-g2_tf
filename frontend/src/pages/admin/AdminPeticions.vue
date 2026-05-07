@@ -38,7 +38,7 @@
                 @click="votar(peticionSeleccionada, 'aprovada')" 
                 class="flex-1 bg-[#402749] text-[#f5cbdd] py-4 rounded-xl font-bold uppercase shadow-lg hover:bg-[#5d3962] transition-all"
               >
-                Aprovar
+                Acceptar
               </button>
               
               <button 
@@ -48,18 +48,16 @@
                 Rebutjar
               </button>
             </div>
-
-            <div v-else-if="peticionSeleccionada.estat_validacio === 'aprovada'" class="flex flex-col sm:flex-row gap-4 pt-4">
-              <button 
-                @click="moureAPreparant(peticionSeleccionada)" 
-                class="flex-1 bg-purple-600 text-white py-4 rounded-xl font-bold uppercase shadow-lg hover:bg-purple-700 transition-all"
-              >
-                Posar en Preparació
-              </button>
-            </div>
             
             <div v-else class="p-4 bg-gray-50 rounded-xl text-center border-2 border-dashed border-gray-200">
-              <span class="font-bold text-gray-400 uppercase">Petició {{ peticionSeleccionada.estat_validacio }}</span>
+              <span 
+                class="font-bold uppercase px-4 py-2 rounded-full text-sm"
+                :class="colorEstado(peticionSeleccionada.estat_validacio)"
+              >
+                {{ peticionSeleccionada.estat_validacio === 'aprovada' ? 'Acceptada' : 
+                   peticionSeleccionada.estat_validacio === 'rebutjada' ? 'Rebutjada' : 
+                   peticionSeleccionada.estat_validacio }}
+              </span>
             </div>
           </div>
 
@@ -145,11 +143,21 @@ const votar = async (peticion, nouEstat) => {
     return;
   }
   
-  const isConfirmat = await mostrarModal({ isAlert: false, title: 'Confirmació', message: `Vols marcar aquesta petició com a ${nouEstat}?` });
+  const missatgeConfirmacio = nouEstat === 'aprovada' 
+    ? "Vols acceptar aquesta petició? Es crearà el lloc (desactivat) a gestió de rutes."
+    : `Vols marcar aquesta petició com a ${nouEstat}?`;
+
+  const isConfirmat = await mostrarModal({ isAlert: false, title: 'Confirmació', message: missatgeConfirmacio });
   if (!isConfirmat) return;
   
   try {
-    const res = await fetch(`${API_URL}/api/admin/peticions/${id}`, {
+    // Per a 'aprovada', usem la ruta de peticions que crea el lloc
+    // Per a 'rebutjada', usem la ruta d'admin
+    const url = nouEstat === 'aprovada' 
+      ? `${API_URL}/api/peticions/${id}`
+      : `${API_URL}/api/admin/peticions/${id}`;
+
+    const res = await fetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ estat_validacio: nouEstat })
@@ -167,44 +175,9 @@ const votar = async (peticion, nouEstat) => {
   }
 };
 
-const moureAPreparant = async (peticion) => {
-  const id = peticion._id || peticion.id;
-
-  if (!id) {
-    console.error("Dades de la petició:", peticion);
-    await mostrarModal({ isAlert: true, message: "Error: No s'ha pogut trobar l'ID en l'objecte." });
-    return;
-  }
-
-  const isConfirmat = await mostrarModal({ 
-    isAlert: false,
-    title: 'Preparar Lloc', 
-    message: `Vols moure aquesta petició a l'estat de preparació? Es crearà el lloc ocult.` 
-  });
-
-  if (!isConfirmat) return;
-
-  try {
-    const res = await fetch(`${API_URL}/api/peticions/${id}/preparant`, {
-      method: 'PUT'
-    });
-    
-    if (res.ok) {
-      peticionSeleccionada.value = null; 
-      await cargarPeticiones(); 
-    } else {
-      await mostrarModal({ isAlert: true, message: "Error en el servidor." });
-    }
-  } catch (err) {
-    console.error("Error a preparant:", err);
-    await mostrarModal({ isAlert: true, message: "Error de connexió." });
-  }
-};
-
 const colorEstado = (s) => {
   if (s === 'pendent') return 'bg-yellow-100 text-yellow-800'; // Amarillo
-  if (s === 'preparant') return 'bg-purple-100 text-purple-800'; // Morado
-  if (s === 'aprovada') return 'bg-blue-100 text-blue-800'; // Azul
+  if (s === 'aprovada') return 'bg-green-100 text-green-800'; // Verd
   if (s === 'rebutjada') return 'bg-red-100 text-red-800'; // Rojo
   return 'bg-gray-100 text-gray-400';
 };

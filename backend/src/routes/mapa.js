@@ -67,6 +67,8 @@ router.put('/punts/:id', async (req, res) => {
             return res.status(404).json({ error: "Lloc no trobat" });
         }
 
+        // La petició ja és 'aprovada' des que es va acceptar, no cal sincronitzar més
+
         console.log(`[Mapa] Lloc ${req.params.id} actualitzat: ${llocActualitzat.punts_missio.length} punts_missio desats.`);
         res.json(llocActualitzat);
     } catch (error) {

@@ -77,7 +77,8 @@ const LlocSchema = new mongoose.Schema({
   cromo_imatge: { type: String, default: '' },  // ex: '/Cromos/SagradaFamilia_historica.jpg'
   carta_lore: { type: String, default: '' },     // ex: '/assets/Carta_lore/Carta_SagradaFamilia.png'
   estat: { type: String, default: 'actiu' },      // actiu, desactivat, properament
-  ordre: { type: Number, default: 0 }
+  ordre: { type: Number, default: 0 },
+  peticio_id: { type: mongoose.Schema.Types.ObjectId, ref: 'PeticioRuta', default: null }
 });
 
 // 4. SessioJoc (sessions)
@@ -125,7 +126,8 @@ const PeticioRutaSchema = new mongoose.Schema({
   nom_proposat: String,
   motiu: String,
   fotos_proporcionades: [String],
-  estat_validacio: { type: String, default: 'pendent', enum: ['pendent', 'aprovada', 'preparant', 'rebutjada'] }
+  estat_validacio: { type: String, default: 'pendent', enum: ['pendent', 'aprovada', 'rebutjada'] },
+  motiuRebuig: { type: String, default: '' }
 }, { timestamps: true });
 
 

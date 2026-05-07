@@ -22,20 +22,20 @@ router.post('/login', async function (req, res) {
 // 2. GESTIONAR LLOCS
 // Reordenar llocs (Drag & Drop) - HA D'ESTAR ABANS DE /:id
 router.put('/llocs/reordenar', async function (req, res) {
-  try {
-    const { llocs } = req.body; // [{ id: '...', ordre: 1 }, ...]
-    if (!Array.isArray(llocs)) {
-      return res.status(400).json({ message: "Format incorrecte, s'esperava un array 'llocs'" });
+    try {
+        const { llocs } = req.body; // [{ id: '...', ordre: 1 }, ...]
+        if (!Array.isArray(llocs)) {
+            return res.status(400).json({ message: "Format incorrecte, s'esperava un array 'llocs'" });
+        }
+        const updates = llocs.map(item =>
+            Lloc.findByIdAndUpdate(item.id, { ordre: item.ordre })
+        );
+        await Promise.all(updates);
+        res.json({ success: true, message: "Ordre actualitzat correctament" });
+    } catch (error) {
+        console.error("Error al reordenar:", error);
+        res.status(500).json({ message: "Error al reordenar" });
     }
-    const updates = llocs.map(item => 
-      Lloc.findByIdAndUpdate(item.id, { ordre: item.ordre })
-    );
-    await Promise.all(updates);
-    res.json({ success: true, message: "Ordre actualitzat correctament" });
-  } catch (error) {
-    console.error("Error al reordenar:", error);
-    res.status(500).json({ message: "Error al reordenar" });
-  }
 });
 
 router.get('/llocs', async function (req, res) {
@@ -69,30 +69,7 @@ router.put('/llocs/:id', async function (req, res) {
             return res.status(404).json({ message: "Lloc no trobat" });
         }
 
-        // Sincronització: Si s'activa el lloc, actualitzem la petició a 'aprovada'
-        if (req.body.actiu === true) {
-            try {
-                // 1. Per peticio_id (si existeix)
-                if (lloc.peticio_id) {
-                    await PeticioRuta.updateOne(
-                        { _id: lloc.peticio_id },
-                        { $set: { estat_validacio: 'aprovada' } }
-                    );
-                    console.log(`Petició ${lloc.peticio_id} actualitzada a 'aprovada' per peticio_id.`);
-                }
-                // 2. Per nom exacte (com sol·licitat: nom Lloc coincideix amb nom propost)
-                const nameUpdateResult = await PeticioRuta.updateMany(
-                    { nom_proposat: lloc.nom, estat_validacio: { $ne: 'aprovada' } },
-                    { $set: { estat_validacio: 'aprovada' } }
-                );
-                if (nameUpdateResult.modifiedCount > 0) {
-                    console.log(`Actualitzades ${nameUpdateResult.modifiedCount} peticions a 'aprovada' per nom coincident (${lloc.nom}).`);
-                }
-            } catch (syncError) {
-                // No matem el servidor, només registrem l'error
-                console.error("Error en sincronització de petició:", syncError);
-            }
-        }
+        // La petició ja és 'aprovada' des que es va acceptar, no cal sincronitzar més
 
         res.json({ success: true, message: "Lloc actualitzat correctament" });
     } catch (error) {
@@ -102,48 +79,51 @@ router.put('/llocs/:id', async function (req, res) {
 });
 
 router.delete('/llocs/:id', async function (req, res) {
-  try {
-    if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
-        return res.status(400).send('ID inválido');
+    try {
+        if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).send('ID inválido');
+        }
+        await Lloc.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: "Lloc eliminat correctament" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error al eliminar" });
     }
-    await Lloc.findByIdAndDelete(req.params.id);
-    res.json({ success: true, message: "Lloc eliminat correctament" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error al eliminar" });
-  }
 });
 
 // Canviar estat d'un lloc (visibilitat i ordre)
 router.patch('/llocs/:id/estat', async function (req, res) {
-  try {
-    if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
-        return res.status(400).send('ID inválido');
+    try {
+        if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).send('ID inválido');
+        }
+        const { estat, ordre } = req.body;
+        const updateData = { estat };
+        if (ordre !== undefined) updateData.ordre = ordre;
+        const lloc = await Lloc.findByIdAndUpdate(req.params.id, updateData, { new: true });
+
+        // La petició ja és 'aprovada' des que es va acceptar, no cal sincronitzar més
+
+        res.json({ success: true, message: "Estat actualitzat correctament" });
+    } catch (error) {
+        console.error("Error al actualitzar l'estat:", error);
+        res.status(500).json({ message: "Error al actualitzar l'estat" });
     }
-    const { estat, ordre } = req.body;
-    const updateData = { estat };
-    if (ordre !== undefined) updateData.ordre = ordre;
-    await Lloc.findByIdAndUpdate(req.params.id, updateData);
-    res.json({ success: true, message: "Estat actualitzat correctament" });
-  } catch (error) {
-    console.error("Error al actualitzar l'estat:", error);
-    res.status(500).json({ message: "Error al actualitzar l'estat" });
-  }
 });
 
 // Canviar restricció horària
 router.patch('/llocs/:id/restriccio', async function (req, res) {
-  try {
-    if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
-        return res.status(400).send('ID inválido');
+    try {
+        if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).send('ID inválido');
+        }
+        const { actiu } = req.body;
+        await Lloc.findByIdAndUpdate(req.params.id, { 'control_horari.actiu': actiu });
+        res.json({ success: true, message: "Restricció horària actualitzada" });
+    } catch (error) {
+        console.error("Error al actualitzar la restricció:", error);
+        res.status(500).json({ message: "Error al actualitzar la restricció" });
     }
-    const { actiu } = req.body;
-    await Lloc.findByIdAndUpdate(req.params.id, { 'control_horari.actiu': actiu });
-    res.json({ success: true, message: "Restricció horària actualitzada" });
-  } catch (error) {
-    console.error("Error al actualitzar la restricció:", error);
-    res.status(500).json({ message: "Error al actualitzar la restricció" });
-  }
 });
 
 // 3. GESTIONAR PETICIONS
@@ -162,32 +142,19 @@ router.put('/peticions/:id', async function (req, res) {
             return res.status(400).send('ID inválido');
         }
         const idPeticio = req.params.id;
-        const estatNou = req.body.estat_validacio;
+        const { estat_validacio, motiuRebuig } = req.body;
 
-        const peticio = await PeticioRuta.findByIdAndUpdate(idPeticio, { estat_validacio: estatNou }, { new: true });
+        const updateData = {};
+        if (estat_validacio !== undefined) updateData.estat_validacio = estat_validacio;
+        if (motiuRebuig !== undefined) updateData.motiuRebuig = motiuRebuig;
+
+        const peticio = await PeticioRuta.findByIdAndUpdate(idPeticio, updateData, { new: true });
 
         if (!peticio) {
             return res.status(404).json({ message: "Petició no trobada" });
         }
 
-        // Si s'aprova, no creem el lloc aquí, es crearà a 'preparant' i s'activarà després
-        if (estatNou === 'preparant') {
-            const nouLlocOficial = new Lloc({
-                nom: peticio.nom_proposat,
-                descripcio: peticio.motiu,
-                imatge_referencia: peticio.fotos_proporcionades[0] || "",
-                ubicacio: {
-                    type: 'Point',
-                    coordinates: peticio.ubicacio
-                },
-                dificultat: "Mitjana",
-                tags: [],
-                peticio_id: peticio._id,
-                actiu: false
-            });
-            await nouLlocOficial.save();
-        }
-        res.json({ success: true, message: "La petició ha estat " + estatNou });
+        res.json({ success: true, message: "La petició ha estat " + estat_validacio });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Error al processar la petició" });

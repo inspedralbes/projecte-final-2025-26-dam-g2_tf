@@ -126,12 +126,10 @@
               <span 
                 class="text-[10px] font-bold px-2 py-0.5 rounded-full"
                 :class="p.estat === 'pendent' ? 'bg-yellow-100 text-yellow-800' : 
-                        p.estat === 'preparant' ? 'bg-purple-100 text-purple-800' : 
-                        p.estat === 'aprovada' ? 'bg-blue-100 text-blue-800' : 
+                        p.estat === 'aprovada' ? 'bg-green-100 text-green-800' : 
                         'bg-red-100 text-red-800'"
               >
                 {{ p.estat === 'pendent' ? 'Pendent' : 
-                   p.estat === 'preparant' ? 'Treballant-hi' : 
                    p.estat === 'aprovada' ? 'Acceptada' : 
                    'Rebutjada' }}
               </span>
