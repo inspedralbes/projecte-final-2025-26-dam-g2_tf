@@ -1,3 +1,4 @@
+<template>
   <transition name="fade-in">
     <div v-if="ready" class="sobre-wrapper" :class="{ 'fase-carta': mostrarCarta }">
 
