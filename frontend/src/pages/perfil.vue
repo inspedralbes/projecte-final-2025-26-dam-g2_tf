@@ -20,7 +20,7 @@
         
         <h2 class="text-2xl font-bold mb-1">{{ user?.nom_usuari || 'Explorador' }}</h2>
         
-        <p class="text-[#402749] text-xs font-bold tracking-widest uppercase mb-4">{{ user?.nivell || 'Explorador Novell' }}</p>
+        <p class="text-[#bc85ab] text-xs font-bold tracking-widest uppercase mb-4">{{ user?.nivell || 'Explorador Novell' }}</p>
 
         <div class="max-w-[200px] mx-auto mb-6">
           <div class="w-full bg-[#f5cbdd] h-3 rounded-full overflow-hidden border border-white/5 shadow-inner">
@@ -30,10 +30,10 @@
             ></div>
           </div>
           
-          <p v-if="cromosPerSeguentNivell > 0" class="text-[9px] text-[#402749] mt-2 font-medium">
-            Et falten <span class="font-bold text-[#804f7f]">{{ cromosPerSeguentNivell }}</span> cromos per al següent nivell
+          <p v-if="cromosPerSeguentNivell > 0" class="text-[9px] text-white/60 mt-2 font-medium">
+            Et falten <span class="font-bold text-[#f5cbdd]">{{ cromosPerSeguentNivell }}</span> cromos per al següent nivell
           </p>
-          <p v-else class="text-[9px] text-[#402749] mt-2 font-bold uppercase tracking-wider">
+          <p v-else class="text-[9px] text-[#f5cbdd] mt-2 font-bold uppercase tracking-wider">
             Ets un Mestre Urbà!
           </p>
           
@@ -143,13 +143,22 @@
         </div>
       </div>
 
-      <div class="flex gap-4 mt-10">
-        <button @click="tancarSessio" :class="activeTab === 'posts' ? 'flex-1' : 'w-full'" class="py-4 border border-red-500/30 text-red-400 rounded-2xl font-bold text-sm hover:bg-red-500/10 transition-all">
+      <div class="mt-12 space-y-4">
+        <button 
+          @click="tancarSessio" 
+          class="w-full py-4 bg-white/5 border border-white/10 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-3 shadow-lg"
+        >
           TANCAR SESSIÓ
         </button> 
-        <button v-if="activeTab === 'posts'" @click="eliminarCompte" class="flex-1 py-4 border border-red-500/30 text-red-400 rounded-2xl font-bold text-sm hover:bg-red-500/10 transition-all">
-          ELIMINAR COMPTE
-        </button>
+        
+        <div class="pt-4 border-t border-white/5 flex justify-center">
+          <button 
+            @click="eliminarCompte" 
+            class="text-[10px] text-red-500/50 font-black uppercase tracking-widest hover:text-red-500 transition-colors py-2 px-4"
+          >
+            Eliminar el meu compte definitivament
+          </button>
+        </div>
       </div> 
 
       </main>
