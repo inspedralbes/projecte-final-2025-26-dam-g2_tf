@@ -250,7 +250,7 @@ async function compartirInvitacio() {
     const url = `${window.location.origin}/join/${roomCode.value}`;
     if (navigator.share) {
         navigator.share({
-            title: 'Juga amb mi a Barcelona Secreta!',
+            title: 'Juga amb mi a North!',
             text: `Uneix-te a la meva partida amb el codi: ${roomCode.value}`,
             url: url
         }).catch(err => console.log('Error compartint', err));
