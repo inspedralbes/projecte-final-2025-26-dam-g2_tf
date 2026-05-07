@@ -260,10 +260,8 @@ export default {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(15, 8, 28, 0.9); /* Un peu més opac per dependre menys del blur */
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  will-change: opacity, backdrop-filter;
+  background: rgba(15, 8, 28, 0.96); /* Un pel més opac per compensar la falta de blur */
+  will-change: opacity;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -288,6 +286,7 @@ export default {
   box-shadow: 0 20px 64px rgba(0, 0, 0, 0.7);
   object-fit: contain;
   will-change: transform, opacity;
+  transform: translateZ(0); /* Forçar acceleració GPU */
 }
 
 .carta-sense-imatge {
@@ -352,10 +351,10 @@ export default {
 }
 
 .carta-surt-enter-active {
-  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.6s ease-out;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease-out;
 }
 .carta-surt-enter-from {
   opacity: 0;
-  transform: translateY(-40px) scale(0.92);
+  transform: translateY(40px) scale(0.9); /* Surt des de baix de forma més natural */
 }
 </style>
