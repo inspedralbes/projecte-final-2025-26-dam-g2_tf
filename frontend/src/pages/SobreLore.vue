@@ -92,15 +92,25 @@
     </transition>
 
     </div>
+
+    <!-- NOTIFICACIÓ CROMO INICIAL -->
+    <CromoInicialNotification 
+      :visible="mostrarNotificacioCromo"
+      @accept="finalitzarBenvinguda"
+    />
   </transition>
 </template>
 
 <script>
 import { netejarUrl, BASE_API_URL } from '../utils/url';
 import { useAuth } from '../composables/useAuth';
+import CromoInicialNotification from '../components/CromoInicialNotification.vue';
 
 export default {
   name: 'SobreLore',
+  components: {
+    CromoInicialNotification
+  },
   data() {
     return {
       sessioId: this.$route.params.sessioId,
@@ -111,7 +121,8 @@ export default {
       mostrarCarta: false,
       mostrarTitol: false,
       recursosCarregats: false,
-      cartaImatgeLlista: false
+      cartaImatgeLlista: false,
+      mostrarNotificacioCromo: false
     };
   },
   async mounted() {
@@ -196,12 +207,19 @@ export default {
             console.error('[SobreLore] Error marcant lore inicial:', e);
           }
         }
-        setTimeout(() => { this.$router.push('/'); }, 500);
+        setTimeout(() => { 
+          this.mostrarNotificacioCromo = true; 
+        }, 800);
         return;
       }
 
       setTimeout(() => { this.$router.push('/carta-personatge/' + this.sessioId); }, 500);
     },
+
+    finalitzarBenvinguda() {
+      this.$router.push('/');
+    },
+
     netejarUrl
   }
 };
