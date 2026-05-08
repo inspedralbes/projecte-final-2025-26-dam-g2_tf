@@ -2,7 +2,14 @@
   <div class="min-h-screen bg-[#402749] flex flex-col items-center justify-center p-8 overflow-y-auto overflow-x-hidden">
     <!-- Fons sense gradients extres -->
     
-    <div v-if="personatge" class="relative z-10 w-full max-w-sm flex flex-col items-center justify-center min-h-full py-12">
+      <!-- TEXT INSTRUCCIÓ MISTERIÓS -->
+      <transition name="fade-down">
+        <div v-if="!isFlipped" class="mb-8 text-center px-4">
+          <h2 class="detective-font text-xl md:text-2xl text-white tracking-[0.2em] uppercase opacity-90 animate-pulse">
+            Descobreix el teu paper en la missió...
+          </h2>
+        </div>
+      </transition>
       
       <!-- CONTENIDOR DE LA CARTA (Només la carta) -->
       <div class="perspective-1000 w-full max-w-[320px] aspect-[2/3] min-h-[480px] mb-10 shadow-none">
@@ -188,6 +195,14 @@ export default {
 .fade-up-enter-from {
   opacity: 0;
   transform: translateY(20px);
+}
+
+.fade-down-enter-active, .fade-down-leave-active {
+  transition: all 0.6s ease-out;
+}
+.fade-down-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
 }
 
 .min-h-screen {
