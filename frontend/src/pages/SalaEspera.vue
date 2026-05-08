@@ -59,7 +59,7 @@
             </button>
         </div>
 
-        <div v-if="isCreator && showModeSelection" class="mt-8 bg-black/30 border border-white/10 rounded-3xl p-6 text-left backdrop-blur-md">
+        <div v-if="isCreator && showModeSelection" class="mt-8 bg-[#402749]/40 border border-white/20 rounded-[2.5rem] p-8 text-left backdrop-blur-xl shadow-2xl">
             <div v-if="locationCoords || adrecaInici" class="mb-8">
                 <button @click="obrirGoogleMaps" class="w-full bg-white/5 text-[#bc85ab] font-black py-4 rounded-2xl shadow-sm border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center gap-3 text-xs uppercase tracking-widest">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -70,48 +70,48 @@
             </div>
             
             <h3 class="text-xs font-black text-white/40 uppercase tracking-[0.3em] mb-4">Selecciona la Durada</h3>
-            <div class="grid grid-cols-2 gap-3 mb-8">
+            <div class="grid grid-cols-2 gap-3 mb-10">
                 <button v-for="opt in durationOptions" :key="opt.value" 
                     @click="selectedDuration = opt.value"
-                    class="p-4 rounded-2xl border-2 transition-all text-sm font-black flex flex-col items-center gap-1"
-                    :class="selectedDuration === opt.value ? 'border-[#bc85ab] bg-[#bc85ab]/20 text-white' : 'border-white/5 text-white/40 hover:border-white/20'">
+                    class="p-4 rounded-2xl border-2 transition-all text-sm font-black flex flex-col items-center gap-1 shadow-md"
+                    :class="selectedDuration === opt.value ? 'border-white bg-white text-[#1a0e2e]' : 'border-white/10 bg-white/5 text-white/50 hover:border-white/30'">
                     <span class="text-xs uppercase tracking-widest">{{ opt.label }}</span>
-                    <span class="text-[9px] font-medium opacity-60">{{ opt.desc }}</span>
+                    <span class="text-[9px] font-medium" :class="selectedDuration === opt.value ? 'text-[#1a0e2e]/60' : 'opacity-60'">{{ opt.desc }}</span>
                 </button>
             </div>
 
             <h3 class="text-xs font-black text-white/40 uppercase tracking-[0.3em] mb-4">Mode de Joc</h3>
-            <div class="space-y-3 mb-10">
-                <label class="flex items-center space-x-4 p-4 rounded-2xl border transition-all cursor-pointer" :class="{'border-[#bc85ab] bg-[#bc85ab]/10': selectedMode === 'Individual', 'border-white/5': selectedMode !== 'Individual'}">
-                    <input type="radio" v-model="selectedMode" value="Individual" class="text-[#bc85ab] focus:ring-[#bc85ab] w-5 h-5 bg-black/40 border-white/10">
+            <div class="space-y-4 mb-12">
+                <label class="flex items-center space-x-4 p-5 rounded-3xl border-2 transition-all cursor-pointer shadow-md" :class="{'border-white bg-white/10': selectedMode === 'Individual', 'border-white/5 bg-white/5': selectedMode !== 'Individual'}">
+                    <input type="radio" v-model="selectedMode" value="Individual" class="text-[#bc85ab] focus:ring-white w-6 h-6 bg-black/40 border-white/20">
                     <div>
-                        <span class="block font-black text-sm text-white uppercase tracking-wide">Individual</span>
-                        <span class="block text-[11px] text-white/40 mt-1">Cada jugador fa servir el seu propi mòbil.</span>
+                        <span class="block font-black text-sm text-white uppercase tracking-wider">Individual</span>
+                        <span class="block text-[11px] text-white/50 mt-1">Cada jugador fa servir el seu propi mòbil.</span>
                     </div>
                 </label>
-                <label class="flex items-center space-x-4 p-4 rounded-2xl border transition-all cursor-pointer" :class="{'border-[#bc85ab] bg-[#bc85ab]/10': selectedMode === 'Grup', 'border-white/5': selectedMode !== 'Grup'}">
-                    <input type="radio" v-model="selectedMode" value="Grup" class="text-[#bc85ab] focus:ring-[#bc85ab] w-5 h-5 bg-black/40 border-white/10">
+                <label class="flex items-center space-x-4 p-5 rounded-3xl border-2 transition-all cursor-pointer shadow-md" :class="{'border-white bg-white/10': selectedMode === 'Grup', 'border-white/5 bg-white/5': selectedMode !== 'Grup'}">
+                    <input type="radio" v-model="selectedMode" value="Grup" class="text-[#bc85ab] focus:ring-white w-6 h-6 bg-black/40 border-white/20">
                     <div class="flex justify-between items-center w-full">
                         <div>
-                            <span class="block font-black text-sm text-white uppercase tracking-wide">Grup</span>
-                            <span class="block text-[11px] text-white/40 mt-1">Tots jugueu junts amb un sol mòbil.</span>
+                            <span class="block font-black text-sm text-white uppercase tracking-wider">Grup</span>
+                            <span class="block text-[11px] text-white/50 mt-1">Tots jugueu junts amb un sol mòbil.</span>
                         </div>
-                        <button v-if="selectedMode === 'Grup'" @click.stop.prevent="showGroupsModal = true" class="text-[9px] bg-white text-black px-3 py-2 rounded-xl font-black uppercase tracking-widest shadow-lg ml-2 active:scale-95 transition-all">VEURE</button>
+                        <button v-if="selectedMode === 'Grup'" @click.stop.prevent="showGroupsModal = true" class="text-[9px] bg-white text-black px-4 py-2 rounded-xl font-black uppercase tracking-widest shadow-xl ml-2 active:scale-95 transition-all">VEURE</button>
                     </div>
                 </label>
-                <label class="flex items-center space-x-4 p-4 rounded-2xl border transition-all cursor-pointer" :class="{'border-[#bc85ab] bg-[#bc85ab]/10': selectedMode === 'Grups', 'border-white/5': selectedMode !== 'Grups'}">
-                    <input type="radio" v-model="selectedMode" value="Grups" class="text-[#bc85ab] focus:ring-[#bc85ab] w-5 h-5 bg-black/40 border-white/10">
+                <label class="flex items-center space-x-4 p-5 rounded-3xl border-2 transition-all cursor-pointer shadow-md" :class="{'border-white bg-white/10': selectedMode === 'Grups', 'border-white/5 bg-white/5': selectedMode !== 'Grups'}">
+                    <input type="radio" v-model="selectedMode" value="Grups" class="text-[#bc85ab] focus:ring-white w-6 h-6 bg-black/40 border-white/20">
                     <div class="flex justify-between items-center w-full">
                         <div>
-                            <span class="block font-black text-sm text-white uppercase tracking-wide">Grups</span>
-                            <span class="block text-[11px] text-white/40 mt-1">Equips aleatoris. Un mòbil per grup.</span>
+                            <span class="block font-black text-sm text-white uppercase tracking-wider">Grups</span>
+                            <span class="block text-[11px] text-white/50 mt-1">Equips aleatoris. Un mòbil per grup.</span>
                         </div>
-                        <button v-if="selectedMode === 'Grups'" @click.stop.prevent="showGroupsModal = true" class="text-[9px] bg-white text-black px-3 py-2 rounded-xl font-black uppercase tracking-widest shadow-lg ml-2 active:scale-95 transition-all">VEURE</button>
+                        <button v-if="selectedMode === 'Grups'" @click.stop.prevent="showGroupsModal = true" class="text-[9px] bg-white text-black px-4 py-2 rounded-xl font-black uppercase tracking-widest shadow-xl ml-2 active:scale-95 transition-all">VEURE</button>
                     </div>
                 </label>
             </div>
             
-            <button @click="confirmarModeIComencar" class="w-full bg-[#4ade80] text-black font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all uppercase tracking-[0.2em] text-xs">
+            <button @click="confirmarModeIComencar" class="w-full bg-white text-[#1a0e2e] font-black py-5 rounded-2xl shadow-2xl active:scale-95 transition-all uppercase tracking-[0.2em] text-xs">
                 INICIAR EXPLORACIÓ
             </button>
             <button @click="showModeSelection = false" class="w-full mt-4 bg-white/5 text-white/40 font-black py-3 rounded-2xl hover:bg-white/10 transition-all uppercase tracking-[0.2em] text-[10px]">
