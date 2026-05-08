@@ -1,14 +1,15 @@
 <template>
-  <transition name="cromo-pop">
+  <transition name="cromo-fade">
     <div v-if="visible" class="cromo-notification-overlay">
-      <div class="cromo-card-container">
+      <div class="cromo-content-wrapper">
         <!-- Ambient Glow -->
         <div class="ambient-glow"></div>
 
         <!-- The Card -->
-        <div class="cromo-card" :class="{ 'card-reveal': reveal }">
-          <div class="card-inner">
+        <div class="cromo-card-outer" :class="{ 'reveal': reveal }">
+          <div class="cromo-card-inner">
             <div class="card-shine"></div>
+            <div class="card-border-glow"></div>
             <img 
               :src="cromoUrl" 
               alt="Cromo Inicial" 
@@ -19,15 +20,15 @@
         </div>
 
         <!-- Text Content -->
-        <div class="cromo-text-content" :class="{ 'text-reveal': reveal }">
-          <h2 class="cromo-title">El teu primer cromo!</h2>
+        <div class="cromo-text-area" :class="{ 'reveal': reveal }">
+          <h2 class="cromo-title">El teu primer cromo</h2>
           <p class="cromo-description">
-            Has rebut un cromo especial per unir-te a l'aventura. 
-            Pots consultar la teva col·lecció al <strong>Diari d'Exploració</strong> des del teu perfil.
+            Has rebut una peça del diari per començar el teu viatge. 
+            Trobaràs tota la teva col·lecció al <strong>Diari d'Exploració</strong> dins el teu perfil.
           </p>
           
-          <button @click="onAccept" class="btn-accept">
-            Explorar Rutes
+          <button @click="onAccept" class="btn-action">
+            Continuar
           </button>
         </div>
       </div>
@@ -37,7 +38,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { netejarUrl, BASE_API_URL } from '../utils/url';
+import { netejarUrl } from '../utils/url';
 
 const props = defineProps({
   visible: { type: Boolean, default: false }
@@ -53,10 +54,10 @@ const onImageLoad = () => {
 };
 
 onMounted(() => {
-  // Fallback si la imatge ja està en cache i no dispara @load o per si triga massa
+  // Fallback reveal
   setTimeout(() => {
     reveal.value = true;
-  }, 800);
+  }, 1000);
 });
 
 const onAccept = () => {
@@ -65,72 +66,70 @@ const onAccept = () => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
-
 .cromo-notification-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
-  background: rgba(10, 5, 20, 0.9);
-  backdrop-filter: blur(12px);
+  z-index: 2000; /* Higher than regular overlays */
+  background: rgba(26, 14, 46, 0.95); /* Consistent with SobreLore background */
+  backdrop-filter: blur(15px);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Outfit', sans-serif;
   overflow: hidden;
 }
 
-.cromo-card-container {
+.cromo-content-wrapper {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40px;
+  gap: 35px;
   width: 100%;
-  max-width: 400px;
-  padding: 20px;
+  max-width: 450px;
+  padding: 30px;
 }
 
 .ambient-glow {
   position: absolute;
-  top: 40%;
+  top: 35%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(188, 133, 171, 0.3) 0%, transparent 70%);
-  filter: blur(40px);
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(188, 133, 171, 0.25) 0%, transparent 70%);
+  filter: blur(30px);
   z-index: -1;
-  animation: pulse-glow 4s ease-in-out infinite;
+  animation: pulse-soft 5s ease-in-out infinite;
 }
 
-@keyframes pulse-glow {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
-  50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.8; }
+@keyframes pulse-soft {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
+  50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.6; }
 }
 
-.cromo-card {
-  width: 240px;
+.cromo-card-outer {
+  width: 180px; /* Smaller as requested */
   aspect-ratio: 3/4.5;
-  border-radius: 16px;
-  overflow: hidden;
+  border-radius: 12px;
   position: relative;
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
   opacity: 0;
-  transform: scale(0.8) rotateY(30deg);
-  transition: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
-  perspective: 1000px;
+  transform: scale(0.9) translateY(20px);
+  transition: all 1s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
-.cromo-card.card-reveal {
+.cromo-card-outer.reveal {
   opacity: 1;
-  transform: scale(1) rotateY(0deg);
+  transform: scale(1) translateY(0);
 }
 
-.card-inner {
+.cromo-card-inner {
   width: 100%;
   height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
   position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .cromo-image {
@@ -140,92 +139,106 @@ const onAccept = () => {
   display: block;
 }
 
-.card-shine {
+.card-border-glow {
   position: absolute;
   inset: 0;
+  border-radius: 12px;
+  box-shadow: inset 0 0 15px rgba(245, 203, 221, 0.2);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.card-shine {
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
   z-index: 2;
   background: linear-gradient(
-    135deg,
+    to right,
     transparent 0%,
-    rgba(255, 255, 255, 0.4) 45%,
-    rgba(255, 255, 255, 0.4) 55%,
+    rgba(255, 255, 255, 0) 10%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0) 90%,
     transparent 100%
   );
-  background-size: 200% 200%;
-  background-position: -100% -100%;
-  transition: background-position 1s ease;
+  transform: skewX(-25deg);
+  pointer-events: none;
 }
 
-.cromo-card.card-reveal .card-shine {
-  animation: shine-effect 3s ease-in-out infinite;
+.cromo-card-outer.reveal .card-shine {
+  animation: elegant-shine 4s ease-in-out infinite;
+  animation-delay: 1s;
 }
 
-@keyframes shine-effect {
-  0% { background-position: -100% -100%; }
-  20% { background-position: 100% 100%; }
-  100% { background-position: 100% 100%; }
+@keyframes elegant-shine {
+  0% { left: -150%; }
+  30% { left: 150%; }
+  100% { left: 150%; }
 }
 
-.cromo-text-content {
+.cromo-text-area {
   text-align: center;
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(15px);
   transition: all 0.8s ease;
-  transition-delay: 0.5s;
+  transition-delay: 0.6s;
 }
 
-.cromo-text-content.text-reveal {
+.cromo-text-area.reveal {
   opacity: 1;
   transform: translateY(0);
 }
 
 .cromo-title {
-  font-size: 2rem;
-  font-weight: 900;
+  font-family: 'Georgia', serif; /* Cohesion with SobreLore */
+  font-size: 1.75rem;
+  font-weight: 400;
+  color: #fff;
   margin-bottom: 12px;
-  background: linear-gradient(135deg, #fff 0%, #bc85ab 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 15px rgba(188, 133, 171, 0.3);
 }
 
 .cromo-description {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 1rem;
-  line-height: 1.6;
+  font-family: 'Inter', sans-serif;
+  color: rgba(212, 168, 199, 0.9); /* Subtler purple-white */
+  font-size: 0.95rem;
+  line-height: 1.5;
   margin-bottom: 30px;
 }
 
-.btn-accept {
-  background: #fff;
-  color: #1a0e2e;
+.btn-action {
+  background: #bc85ab; /* Brand color */
+  color: #fff;
   border: none;
-  border-radius: 30px;
-  padding: 14px 40px;
-  font-size: 1rem;
-  font-weight: 800;
+  border-radius: 12px;
+  padding: 14px 45px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
-.btn-accept:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 15px 30px rgba(188, 133, 171, 0.4);
-  background: #bc85ab;
-  color: #fff;
+.btn-action:hover {
+  background: #d4a8c7;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(188, 133, 171, 0.3);
 }
 
-.btn-accept:active {
+.btn-action:active {
   transform: translateY(0);
 }
 
-/* Transitions */
-.cromo-pop-enter-active, .cromo-pop-leave-active {
-  transition: opacity 0.5s ease;
+/* Base Transitions */
+.cromo-fade-enter-active, .cromo-fade-leave-active {
+  transition: opacity 0.8s ease;
 }
-.cromo-pop-enter-from, .cromo-pop-leave-to {
+.cromo-fade-enter-from, .cromo-fade-leave-to {
   opacity: 0;
 }
 </style>
