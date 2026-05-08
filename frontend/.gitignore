@@ -7,8 +7,3 @@ back/node_modules/
 .env
 .DS_Store
 dist/
-# Capacitor files
-/capacitor.config.json
-/capacitor.config.ts
-/android
-/ios
