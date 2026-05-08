@@ -1,7 +1,8 @@
 <template>
   <div
-    class="min-h-screen flex flex-col items-center justify-center p-6 overflow-hidden relative"
+    class="min-h-screen flex flex-col items-center justify-start p-6 pt-12 pb-20 overflow-y-auto relative"
     style="background: #1a0e2e;"
+    :class="{ 'opacity-0 scale-95 transition-all duration-700': isLeaving }"
   >
     <!-- Burst effect behind cromo -->
     <div v-if="cromoFlipped" class="absolute inset-0 flex items-center justify-center pointer-events-none animate-burst">
@@ -13,10 +14,10 @@
       <div v-if="readyToShow" class="relative z-10 w-full max-w-sm flex flex-col items-center">
           <div class="mb-2 flex flex-col items-center">
             <span class="text-[10px] font-black text-pink-300 uppercase tracking-[0.4em] mb-2 animate-pulse">Missió Completada</span>
-            <h2 class="text-white font-black text-3xl mb-2 text-center drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)] italic uppercase">Recompensa Desbloquejada</h2>
+            <h2 class="text-white font-black text-2xl mb-2 text-center drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)] italic uppercase">Enhorabona, la ciutat resta segura gràcies a tu.</h2>
           </div>
           
-          <p class="text-white/60 text-xs mb-10 text-center px-8 leading-relaxed">Has demostrat ser un gran explorador. Aquí tens el teu premi.</p>
+          <p class="text-white/60 text-xs mb-10 text-center px-8 leading-relaxed">Aquí tens la teva insignia. Ens veurem aviat.</p>
 
           <div class="cromo-container mb-12 w-full max-w-[300px] aspect-[3/4.2] relative perspective-2000">
               <div class="cromo-card w-full h-full" :class="{ flipped: cromoFlipped }" @click="revelarCromo">
@@ -78,6 +79,7 @@ const router = useRouter();
 const baseApi = BASE_API_URL;
 const cromoFlipped = ref(false);
 const readyToShow = ref(false);
+const isLeaving = ref(false);
 
 // Obtenim les dades de la query
 const idLloc = route.params.id;
@@ -97,7 +99,10 @@ function revelarCromo() {
 }
 
 function anarAValoracions() {
-    router.push('/valorar-lloc/' + idLloc);
+    isLeaving.value = true;
+    setTimeout(() => {
+        router.push('/valorar-lloc/' + idLloc);
+    }, 600);
 }
 
 onMounted(() => {
