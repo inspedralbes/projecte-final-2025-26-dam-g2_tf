@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-[#402749] flex flex-col items-center justify-center p-8 overflow-y-auto overflow-x-hidden">
+  <div class="min-h-screen bg-[#1a0e2e] flex flex-col items-center justify-center p-8 overflow-y-auto overflow-x-hidden">
     <!-- Fons sense gradients extres -->
     
     <div v-if="personatge" class="relative z-10 w-full max-w-sm flex flex-col items-center justify-center min-h-full py-12">
@@ -20,7 +20,7 @@
           @click="isFlipped = true"
         >
           <!-- CARA DAVANT (ContraCarta) -->
-          <div class="card-front w-full h-full flex items-center justify-center overflow-hidden bg-[#402749] shadow-none">
+          <div class="card-front w-full h-full flex items-center justify-center overflow-hidden bg-[#1a0e2e] shadow-none">
             <img 
               :src="contraCartaUrl" 
               alt="Contra Carta"
@@ -33,14 +33,14 @@
           </div>
 
           <!-- CARA DARRERE (Personatge) -->
-          <div class="card-back w-full h-full flex items-center justify-center overflow-hidden bg-[#402749] shadow-none">
+          <div class="card-back w-full h-full flex items-center justify-center overflow-hidden bg-[#1a0e2e] shadow-none">
             <img 
               v-if="personatge.imatge" 
               :src="netejarUrl(personatge.imatge)" 
               :alt="personatge.nom"
               class="w-full h-full object-contain shadow-none"
             />
-            <div v-else class="w-full h-full flex items-center justify-center bg-[#402749] text-indigo-300 shadow-none">
+            <div v-else class="w-full h-full flex items-center justify-center bg-[#1a0e2e] text-indigo-300 shadow-none">
               <span class="text-6xl shadow-none">👤</span>
             </div>
           </div>
@@ -59,7 +59,7 @@
 
           <button 
             @click="continuarAlMapa"
-            class="w-full bg-white text-[#402749] font-black py-5 rounded-2xl transition-all active:scale-95 uppercase tracking-widest text-sm shadow-none"
+            class="w-full bg-white text-[#1a0e2e] font-black py-5 rounded-2xl transition-all active:scale-95 uppercase tracking-widest text-sm shadow-none"
           >
             COMENÇAR A JUGAR
           </button>
@@ -84,7 +84,7 @@ export default {
       personatge: null,
       isFlipped: false,
       baseUrl: BASE_API_URL,
-      brandColor: '#402749'
+      brandColor: '#1a0e2e'
     };
   },
   computed: {
