@@ -82,6 +82,9 @@ import { useAuth } from '../composables/useAuth';
 import BotonPerfil from '../components/BotonPerfil.vue';
 import { netejarUrl, BASE_API_URL } from '../utils/url';
 
+const router = useRouter();
+const { usuari } = useAuth();
+
 const llistaLlocs = ref([]);
 const activeIndex = ref(0);
 const scrollContainer = ref(null);
