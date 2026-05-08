@@ -1,69 +1,63 @@
 <template>
+  <div class="fixed inset-0 bg-[#1a0e2e] -z-10"></div>
   <div
-    class="min-h-screen flex flex-col items-center justify-start p-6 pt-12 pb-20 overflow-y-auto relative"
-    style="background: #1a0e2e;"
+    class="h-screen w-full overflow-y-auto overflow-x-hidden relative"
     :class="{ 'opacity-0 scale-95 transition-all duration-700': isLeaving }"
   >
-    <!-- Burst effect behind cromo -->
-    <div v-if="cromoFlipped" class="absolute inset-0 flex items-center justify-center pointer-events-none animate-burst">
-      <div class="w-[600px] h-[600px] bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-transparent rounded-full blur-[100px]"></div>
-    </div>
+    <div class="min-h-full w-full flex flex-col items-center px-6 pt-16 pb-40 relative">
+        <div v-if="cromoFlipped" class="fixed inset-0 flex items-center justify-center pointer-events-none animate-burst z-0">
+          <div class="w-[600px] h-[600px] bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-transparent rounded-full blur-[100px]"></div>
+        </div>
 
-    <!-- Entrance Transition -->
-    <Transition name="premium-fade">
-      <div v-if="readyToShow" class="relative z-10 w-full max-w-sm flex flex-col items-center">
-          <div class="mb-2 flex flex-col items-center">
-            <span class="text-[10px] font-black text-pink-300 uppercase tracking-[0.4em] mb-2 animate-pulse">Missió Completada</span>
-            <h2 class="text-white font-black text-2xl mb-2 text-center drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)] italic uppercase">Enhorabona, la ciutat resta segura gràcies a tu.</h2>
-          </div>
-          
-          <p class="text-white/60 text-xs mb-10 text-center px-8 leading-relaxed">Aquí tens la teva insignia. Ens veurem aviat.</p>
+        <Transition name="premium-fade">
+          <div v-if="readyToShow" class="relative z-10 w-full max-w-sm flex flex-col items-center">
+              <div class="mb-6 flex flex-col items-center">
+                <span class="text-[10px] font-black text-pink-300 uppercase tracking-[0.4em] mb-3 animate-pulse">Missió Completada</span>
+                <h2 class="text-white font-black text-2xl mb-2 text-center italic uppercase leading-tight drop-shadow-lg">Enhorabona, la ciutat resta segura gràcies a tu.</h2>
+              </div>
+              
+              <p class="text-white/60 text-xs mb-12 text-center px-4 leading-relaxed">Aquí tens la teva insignia. Ens veurem aviat.</p>
 
-          <div class="cromo-container mb-12 w-full max-w-[300px] aspect-[3/4.2] relative perspective-2000">
-              <div class="cromo-card w-full h-full" :class="{ flipped: cromoFlipped }" @click="revelarCromo">
-                  <!-- Contra cromo -->
-                  <div class="cromo-face cromo-back rounded-[2.5rem] overflow-hidden border-[6px] border-white/10 shadow-2xl flex flex-col items-center justify-center bg-[#1a0820]">
-                       <div class="absolute inset-0 opacity-30 pointer-events-none pattern-grid"></div>
-                       <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10">
-                          <div class="w-12 h-12 bg-white/10 rounded-full animate-ping"></div>
-                       </div>
-                       <p class="text-white font-black text-xs tracking-[0.3em] uppercase animate-bounce">Toca per revelar</p>
-                  </div>
-                  <!-- Cromo real -->
-                  <div class="cromo-face cromo-front rounded-[2.5rem] overflow-hidden border-[6px] border-white/20 shadow-[0_0_80px_rgba(255,255,255,0.1)]">
-                      <img :src="baseApi + imatgeCromo" class="w-full h-full object-cover" alt="Cromo guanyat" />
-                      
-                      <!-- Holographic shine -->
-                      <div class="absolute inset-0 shine-effect pointer-events-none"></div>
-
-                      <div class="absolute inset-0 bg-gradient-to-t from-[#1a0e2e] via-transparent to-transparent flex flex-col justify-end p-8">
-                          <p class="text-pink-300 font-black text-[9px] uppercase tracking-[0.4em] mb-1">Cromo d'Explorador</p>
-                          <p class="text-white font-black text-2xl leading-tight italic uppercase tracking-tighter">{{ nomLloc }}</p>
+              <div class="cromo-container mb-12 w-full max-w-[300px] aspect-[3/4.2] relative perspective-2000">
+                  <div class="cromo-card w-full h-full" :class="{ flipped: cromoFlipped }" @click="revelarCromo">
+                      <div class="cromo-face cromo-back rounded-[2.5rem] overflow-hidden border-[6px] border-white/10 shadow-2xl flex flex-col items-center justify-center bg-[#1a0820]">
+                           <div class="absolute inset-0 opacity-30 pointer-events-none pattern-grid"></div>
+                           <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10">
+                              <div class="w-12 h-12 bg-white/10 rounded-full animate-ping"></div>
+                           </div>
+                           <p class="text-white font-black text-xs tracking-[0.3em] uppercase animate-bounce">Toca per revelar</p>
+                      </div>
+                      <div class="cromo-face cromo-front rounded-[2.5rem] overflow-hidden border-[6px] border-white/20 shadow-[0_0_80px_rgba(255,255,255,0.1)]">
+                          <img :src="baseApi + imatgeCromo" class="w-full h-full object-cover" alt="Cromo guanyat" />
+                          <div class="absolute inset-0 shine-effect pointer-events-none"></div>
+                          <div class="absolute inset-0 bg-gradient-to-t from-[#1a0e2e] via-transparent to-transparent flex flex-col justify-end p-8">
+                              <p class="text-pink-300 font-black text-[9px] uppercase tracking-[0.4em] mb-1">Cromo d'Explorador</p>
+                              <p class="text-white font-black text-2xl leading-tight italic uppercase tracking-tighter">{{ nomLloc }}</p>
+                          </div>
                       </div>
                   </div>
               </div>
+
+              <Transition name="fade-up">
+                  <div v-if="cromoFlipped" class="w-full flex flex-col items-center">
+                      <p class="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-8 bg-white/5 py-3 px-6 rounded-full border border-white/5 text-center leading-relaxed">
+                        ✨ Pots trobar aquest cromo al teu diari d'exploració
+                      </p>
+                      <button
+                          @click="anarAValoracions"
+                          class="w-full py-5 rounded-2xl bg-white text-[#1a0e2e] font-black text-xs uppercase tracking-[0.3em] transition-all active:scale-95 shadow-2xl hover:bg-pink-50"
+                      >
+                          CONTINUAR
+                      </button>
+                  </div>
+              </Transition>
           </div>
+        </Transition>
 
-          <Transition name="fade-up">
-              <div v-if="cromoFlipped" class="w-full flex flex-col items-center">
-                  <p class="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-6 bg-white/5 py-2 px-4 rounded-full border border-white/5">
-                    ✨ Pots trobar aquest cromo al teu diari d'exploració
-                  </p>
-                  <button
-                      @click="anarAValoracions"
-                      class="w-full py-5 rounded-2xl bg-white text-[#1a0e2e] font-black text-xs uppercase tracking-[0.3em] transition-all active:scale-95 shadow-2xl hover:bg-pink-50"
-                  >
-                      CONTINUAR
-                  </button>
-              </div>
-          </Transition>
-      </div>
-    </Transition>
-
-    <!-- Pre-reveal state (Mysterious delay) -->
-    <div v-if="!readyToShow" class="flex flex-col items-center justify-center gap-6">
-      <div class="w-12 h-12 border-2 border-white/10 border-t-pink-500 rounded-full animate-spin"></div>
-      <p class="text-white/30 font-black text-[10px] uppercase tracking-[0.4em] animate-pulse">Sincronitzant dades de la missió...</p>
+        <div v-if="!readyToShow" class="flex flex-col items-center justify-center gap-6 flex-1 min-h-[60vh]">
+          <div class="w-12 h-12 border-2 border-white/10 border-t-pink-500 rounded-full animate-spin"></div>
+          <p class="text-white/30 font-black text-[10px] uppercase tracking-[0.4em] animate-pulse">Sincronitzant dades de la missió...</p>
+        </div>
     </div>
   </div>
 </template>
