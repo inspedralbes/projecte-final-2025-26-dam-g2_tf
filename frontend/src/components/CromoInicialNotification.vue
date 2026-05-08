@@ -49,10 +49,15 @@ const cromoUrl = netejarUrl('/CromoInicial.jpg');
 const reveal = ref(false);
 
 const onImageLoad = () => {
+  reveal.value = true;
+};
+
+onMounted(() => {
+  // Fallback si la imatge ja està en cache i no dispara @load o per si triga massa
   setTimeout(() => {
     reveal.value = true;
-  }, 300);
-};
+  }, 800);
+});
 
 const onAccept = () => {
   emit('accept');

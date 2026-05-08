@@ -88,16 +88,16 @@
             {{ sessioId === 'inicial' ? "Començar l'aventura" : "Continuar" }}
           </button>
         </div>
-      </div>
+        </div>
     </transition>
-
-    </div>
 
     <!-- NOTIFICACIÓ CROMO INICIAL -->
     <CromoInicialNotification 
       :visible="mostrarNotificacioCromo"
       @accept="finalitzarBenvinguda"
     />
+
+    </div>
   </transition>
 </template>
 
@@ -156,6 +156,13 @@ export default {
       const imgSobre = new Image();
       imgSobre.src = netejarUrl(this.baseUrl + '/assets/Sobre/Sobre_Obert.png');
       if (imgSobre.decode) imgSobre.decode().catch(() => {});
+
+      // Pre-carregar el cromo inicial
+      if (this.sessioId === 'inicial') {
+        const imgCromo = new Image();
+        imgCromo.src = netejarUrl('/CromoInicial.jpg');
+        if (imgCromo.decode) imgCromo.decode().catch(() => {});
+      }
     },
 
     async carregarCartaEnBackground() {
@@ -189,8 +196,6 @@ export default {
     },
 
     async continuarAlPersonatge() {
-      this.mostrarCarta = true;
-
       if (this.sessioId === 'inicial') {
         const usuariRaw = localStorage.getItem('usuari');
         if (usuariRaw) {
@@ -207,12 +212,12 @@ export default {
             console.error('[SobreLore] Error marcant lore inicial:', e);
           }
         }
-        setTimeout(() => { 
-          this.mostrarNotificacioCromo = true; 
-        }, 800);
+        // Mostrem la notificació immediatament
+        this.mostrarNotificacioCromo = true;
         return;
       }
 
+      this.mostrarCarta = true;
       setTimeout(() => { this.$router.push('/carta-personatge/' + this.sessioId); }, 500);
     },
 
