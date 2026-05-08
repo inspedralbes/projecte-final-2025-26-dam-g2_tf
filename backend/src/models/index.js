@@ -38,7 +38,8 @@ const PerfilSchema = new mongoose.Schema({
     data_obtencio: { type: Date, default: Date.now },
     imatge_usuari: String,
     imatge_cromo: { type: String, default: '' }  // ruta del cromo col·leccionable de la ruta
-  }]
+  }],
+  lore_inicial_vist: { type: Boolean, default: false }
 });
 
 

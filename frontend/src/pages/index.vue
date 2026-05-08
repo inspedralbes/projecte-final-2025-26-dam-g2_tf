@@ -76,13 +76,22 @@
   </div> </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuth } from '../composables/useAuth';
 import BotonPerfil from '../components/BotonPerfil.vue';
 import { netejarUrl, BASE_API_URL } from '../utils/url';
 
 const llistaLlocs = ref([]);
 const activeIndex = ref(0);
 const scrollContainer = ref(null);
+
+// Vigilem si l'usuari canvia (per exemple en fer login/registre)
+watch(usuari, (nouUsuari) => {
+  if (nouUsuari && nouUsuari.lore_inicial_vist === false) {
+    router.push('/sobre-lore/inicial');
+  }
+}, { immediate: true });
 
 // Comprova si una ruta està bloquejada en aquest moment
 const esBloqueig = (lloc) => {
