@@ -116,46 +116,34 @@ function configureSocket(server) {
         console.log('[Socket] Usuari connectat:', socket.id);
 
         socket.on('create-room', function (dades) {
-            console.log('[Socket] Rebent create-room amb dades:', dades);
-            
-            // Generació de codi de 6 caràcters més robusta
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let roomCode = '';
             for (let i = 0; i < 6; i++) {
                 roomCode += chars.charAt(Math.floor(Math.random() * chars.length));
             }
             
-            console.log('[Socket] Generat roomCode:', roomCode);
-
             sales[roomCode] = {
                 creatorId: socket.id,
                 idLloc: dades.idLloc,
-                duracio: dades.duracio || 60, // Per defecte 1 hora
+                duracio: dades.duracio || 60, 
                 players: [{ id: socket.id, nom: dades.nomUsuari, perfilId: dades.perfilId }]
             };
 
             socket.join(roomCode);
-            console.log(`[Socket] Socket ${socket.id} s'ha unit a la room ${roomCode}`);
-
             socket.emit('room-created', roomCode);
             socket.emit('room-info', { idLloc: dades.idLloc });
             io.to(roomCode).emit('update-players', sales[roomCode].players);
-            console.log(`[Socket] Notificacions enviades per a la sala ${roomCode}`);
         });
 
         socket.on('join-room', function (dades) {
-            console.log('[Socket] Rebent join-room amb dades:', dades);
             const room = sales[dades.roomCode];
             if (room) {
                 room.players.push({ id: socket.id, nom: dades.nomUsuari, perfilId: dades.perfilId });
                 socket.join(dades.roomCode);
-                console.log(`[Socket] Socket ${socket.id} s'ha unit a la room existent ${dades.roomCode}`);
-                
                 socket.emit('room-joined', dades.roomCode);
                 socket.emit('room-info', { idLloc: room.idLloc });
                 io.to(dades.roomCode).emit('update-players', room.players);
             } else {
-                console.warn(`[Socket] Intent d'unir-se a sala inexistent: ${dades.roomCode}`);
                 socket.emit('error-room', 'La sala no existeix');
             }
         });

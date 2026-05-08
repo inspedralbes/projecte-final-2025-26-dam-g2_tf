@@ -124,18 +124,10 @@
         </p>
       </div>
 
-      <div v-if="error && !gameStarted" class="mt-4 p-4 bg-red-100 text-red-700 rounded-lg text-sm">
+      <div v-if="error && !gameStarted" class="mt-4 p-4 bg-red-100 text-red-700 rounded-lg text-sm text-center">
         <p class="font-bold">Error:</p>
         <p>{{ error }}</p>
-        <button @click="$router.push('/joc/inici')" class="underline mt-2 block">Tornar</button>
-      </div>
-
-      <!-- DEBUG INFO (Només visible en desenvolupament o si hi ha problemes) -->
-      <div class="mt-8 pt-4 border-t border-gray-100 text-[10px] text-gray-400 font-mono text-left opacity-50">
-        <p>Status: <span :class="socketStatus === 'connectat' ? 'text-green-500' : 'text-orange-500'">{{ socketStatus }}</span></p>
-        <p>API: {{ API_URL }}</p>
-        <p>Capacitor: {{ isCapacitor ? 'SÍ' : 'NO' }}</p>
-        <p v-if="socketId">Socket ID: {{ socketId }}</p>
+        <button @click="$router.push('/joc/inici')" class="underline mt-2 block w-full">Tornar</button>
       </div>
     </div>
 
@@ -401,7 +393,6 @@ onMounted(() => {
   });
 
   const handleConnection = () => {
-    console.log('[SalaEspera] Socket connectat correctament. ID:', socket.value.id);
     socketStatus.value = 'connectat';
     socketId.value = socket.value.id;
     const param = route.params.id; 
@@ -410,8 +401,6 @@ onMounted(() => {
     const userObj = userStr ? JSON.parse(userStr) : {};
     const perfilId = userObj._id || null;
 
-    console.log('[SalaEspera] Paràmetres:', { param, idLlocRuta, nomUsuari, perfilId });
-
     if (param === 'crear') {
         const dadesPerEnviar = {
             nomUsuari: nomUsuari,
@@ -419,11 +408,9 @@ onMounted(() => {
             perfilId: perfilId,
             duracio: selectedDuration.value
         };
-        console.log('[SalaEspera] Emitent create-room...', dadesPerEnviar);
         socket.value.emit('create-room', dadesPerEnviar);
         isCreator.value = true;
     } else {
-        console.log('[SalaEspera] Emitent join-room...', param);
         socket.value.emit('join-room', { roomCode: param, nomUsuari: nomUsuari, perfilId: perfilId });
     }
   };
@@ -435,25 +422,21 @@ onMounted(() => {
   socket.value.on('connect', handleConnection);
 
   socket.value.on('connect_error', (err) => {
-      console.error('[SalaEspera] Error de connexió socket:', err);
       error.value = 'Error de connexió amb el servidor de jocs: ' + err.message;
       loading.value = false;
   });
 
   socket.value.on('room-created', (code) => {
-    console.log('[SalaEspera] Sala creada amb codi:', code);
     roomCode.value = code;
     loading.value = false;
   });
 
   socket.value.on('room-joined', (code) => {
-      console.log('[SalaEspera] Unit a la sala amb codi:', code);
       roomCode.value = code;
       loading.value = false;
   });
 
   socket.value.on('room-info', async (data) => {
-      console.log('[SalaEspera] Info de la sala rebuda:', data);
       if (data && data.idLloc) {
           currentIdLloc.value = data.idLloc;
           try {
@@ -473,18 +456,16 @@ onMounted(() => {
                   }
               }
           } catch (e) {
-              console.error("[SalaEspera] Error obtenint ubicació", e);
+              // Silenciar error en producció o deixar log mínim
           }
       }
   });
 
   socket.value.on('update-players', (playerList) => {
-    console.log('[SalaEspera] Llista de jugadors actualitzada:', playerList);
     players.value = playerList;
   });
 
   socket.value.on('error-room', (msg) => {
-    console.warn('[SalaEspera] Error de sala:', msg);
     error.value = msg;
     loading.value = false;
   });
