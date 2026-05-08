@@ -179,6 +179,7 @@
 import { io } from 'socket.io-client';
 import PantallaDerrota from './PantallaDerrota.vue';
 import { useCustomModal } from '../composables/useCustomModal';
+import { BASE_API_URL } from '../utils/url';
 
 export default {
   components: { PantallaDerrota },
@@ -195,7 +196,7 @@ export default {
       modalVisible: false,
       puntSeleccionat: null,
       fotoActual: null,
-      baseApi: import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat'),
+      baseApi: BASE_API_URL,
 
       // Game-over
       mostrarGameOver: false,

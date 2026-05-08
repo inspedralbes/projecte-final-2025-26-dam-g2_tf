@@ -4,7 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const { connectDB } = require('./src/config/db');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8088;
 
 // Manejo global de excepciones para evitar que el servidor se caiga
 process.on('uncaughtException', (err) => {

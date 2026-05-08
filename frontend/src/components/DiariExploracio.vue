@@ -79,13 +79,13 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { PageFlip } from 'page-flip/dist/js/page-flip.module.js';
-import { netejarUrl } from '../utils/url';
+import { netejarUrl, BASE_API_URL } from '../utils/url';
 
 const props = defineProps({
   cromos: { type: Array, default: () => [] }
 });
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+const API_URL = BASE_API_URL;
 const bookElement = ref(null);
 const pagesContainer = ref(null);
 const currentPage = ref(0);

@@ -47,7 +47,7 @@
 </template>
 
 <script>
-import { netejarUrl } from '../utils/url';
+import { netejarUrl, BASE_API_URL } from '../utils/url';
 
 export default {
   name: 'PantallaDerrota',
@@ -58,7 +58,7 @@ export default {
     },
     baseApi: {
       type: String,
-      default: import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat'
+      default: BASE_API_URL
     }
   },
   emits: ['tornar-inici'],

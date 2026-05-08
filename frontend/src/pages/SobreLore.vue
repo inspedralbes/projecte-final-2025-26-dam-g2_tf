@@ -59,14 +59,14 @@
 </template>
 
 <script>
-import { netejarUrl } from '../utils/url';
+import { netejarUrl, BASE_API_URL } from '../utils/url';
 
 export default {
   name: 'SobreLore',
   data() {
     return {
       sessioId: this.$route.params.sessioId,
-      baseUrl: import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat',
+      baseUrl: BASE_API_URL,
       cartaLoreUrl: '',
       sobreObert: false,
       cartaVisible: false,

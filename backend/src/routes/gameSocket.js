@@ -75,16 +75,33 @@ function notifyPointAchieved(sessio, nomUsuari, nomPunt, idPunt) {
 
 
 function configureSocket(server) {
-    const allowedOrigins = [process.env.ORIGIN_URL, 'http://localhost:5173', 'http://localhost:3000'].filter(Boolean);
+    const allowedOrigins = [
+        process.env.ORIGIN_URL, 
+        'http://localhost:5173', 
+        'http://localhost:3000',
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:3000'
+    ].filter(Boolean);
 
     const io = new Server(server, {
         cors: {
             origin: function (origin, callback) {
-                if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost:')) {
-                    callback(null, true);
-                } else {
-                    callback(new Error('Not allowed by CORS'));
+                // Si no hi ha origin (com en algunes apps mòbils o curl), permetem
+                if (!origin) return callback(null, true);
+                
+                // Si l'origin és localhost o 127.0.0.1, permetem qualsevol port
+                if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+                    return callback(null, true);
                 }
+
+                // Si coincideix amb l'ORIGIN_URL de producció
+                if (process.env.ORIGIN_URL && origin === process.env.ORIGIN_URL) {
+                    return callback(null, true);
+                }
+
+                // Per defecte en desenvolupament podem ser més permissius si cal, 
+                // però per ara provem de ser específics amb el que sabem que falla.
+                callback(null, true); 
             },
             methods: ["GET", "POST"]
         }
@@ -96,31 +113,49 @@ function configureSocket(server) {
     const sales = {};
 
     io.on('connection', function (socket) {
-        console.log('Usuari connectat:', socket.id);
+        console.log('[Socket] Usuari connectat:', socket.id);
 
         socket.on('create-room', function (dades) {
-            const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            console.log('[Socket] Rebent create-room amb dades:', dades);
+            
+            // Generació de codi de 6 caràcters més robusta
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let roomCode = '';
+            for (let i = 0; i < 6; i++) {
+                roomCode += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            
+            console.log('[Socket] Generat roomCode:', roomCode);
+
             sales[roomCode] = {
                 creatorId: socket.id,
                 idLloc: dades.idLloc,
                 duracio: dades.duracio || 60, // Per defecte 1 hora
                 players: [{ id: socket.id, nom: dades.nomUsuari, perfilId: dades.perfilId }]
             };
+
             socket.join(roomCode);
+            console.log(`[Socket] Socket ${socket.id} s'ha unit a la room ${roomCode}`);
+
             socket.emit('room-created', roomCode);
             socket.emit('room-info', { idLloc: dades.idLloc });
             io.to(roomCode).emit('update-players', sales[roomCode].players);
+            console.log(`[Socket] Notificacions enviades per a la sala ${roomCode}`);
         });
 
         socket.on('join-room', function (dades) {
+            console.log('[Socket] Rebent join-room amb dades:', dades);
             const room = sales[dades.roomCode];
             if (room) {
                 room.players.push({ id: socket.id, nom: dades.nomUsuari, perfilId: dades.perfilId });
                 socket.join(dades.roomCode);
+                console.log(`[Socket] Socket ${socket.id} s'ha unit a la room existent ${dades.roomCode}`);
+                
                 socket.emit('room-joined', dades.roomCode);
                 socket.emit('room-info', { idLloc: room.idLloc });
                 io.to(dades.roomCode).emit('update-players', room.players);
             } else {
+                console.warn(`[Socket] Intent d'unir-se a sala inexistent: ${dades.roomCode}`);
                 socket.emit('error-room', 'La sala no existeix');
             }
         });

@@ -190,7 +190,8 @@ import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import BotonPerfil from '../components/BotonPerfil.vue';
 
-const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
+import { BASE_API_URL } from '../utils/url';
+const API_URL = BASE_API_URL;
 const router = useRouter();
 const { login } = useAuth();
 

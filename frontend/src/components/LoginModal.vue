@@ -266,7 +266,9 @@ const {
   confirmarScanneig: confirmarScanneigIA
 } = useFaceDetection();
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+import { BASE_API_URL } from '../utils/url';
+
+const API_URL = BASE_API_URL;
 
 async function confirmarScanneig() {
   try {

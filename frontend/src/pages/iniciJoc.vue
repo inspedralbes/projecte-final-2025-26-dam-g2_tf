@@ -74,6 +74,8 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import { useCustomModal as useAlertModal } from '../composables/useCustomModal'
 
+import { BASE_API_URL } from '../utils/url'
+
 const router = useRouter()
 const route = useRoute()
 const { mostrarModal: showCustomModal } = useAlertModal()
@@ -94,8 +96,6 @@ function unirseSala() {
   if (!codigoSala.value) return; 
   router.push({ name: 'sala-espera', params: { id: codigoSala.value } })
 }
-
-// Funció per unir-se si l'usuari ha escrit un codi
 
 // Funció que es crida en prémer "Som-hi" al modal 
 function confirmarInicio() {
@@ -121,7 +121,7 @@ async function irAlJuego() {
     }
 
     // 2. Creem la sessió real a la base de dades
-    const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
+    const API_URL = BASE_API_URL;
     const resposta = await fetch(`${API_URL}/api/sessionsJoc/crear`, {
 
       method: 'POST',

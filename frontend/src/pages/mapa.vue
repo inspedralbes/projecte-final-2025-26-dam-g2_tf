@@ -20,7 +20,7 @@
 <script setup>
 import { onMounted, ref, nextTick, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { netejarUrl } from '../utils/url';
+import { netejarUrl, BASE_API_URL } from '../utils/url';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -42,7 +42,7 @@ const laMevaPosicio = ref(BCN_CENTRE);
 const cargando = ref(true); 
 let mapa = null;
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+const API_URL = BASE_API_URL;
 
 onMounted(async () => {
   window.anarADetall = (id) => router.push(`/lloc/${id}`);

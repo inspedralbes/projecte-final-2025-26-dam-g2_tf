@@ -45,11 +45,12 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { BASE_API_URL } from '../utils/url';
 
 const route = useRoute();
 const router = useRouter();
 
-const baseApi = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+const baseApi = BASE_API_URL;
 const cromoFlipped = ref(false);
 
 // Obtenim les dades de la query

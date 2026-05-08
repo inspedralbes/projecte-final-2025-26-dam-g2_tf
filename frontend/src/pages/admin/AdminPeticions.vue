@@ -114,7 +114,8 @@
 import { ref, onMounted } from 'vue';
 import AdminNav from './components/AdminNav.vue';
 import { useCustomModal } from '../../composables/useCustomModal';
-const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+import { BASE_API_URL } from '../../utils/url';
+const API_URL = BASE_API_URL;
 const { mostrarModal } = useCustomModal();
 
 const peticions = ref([]);

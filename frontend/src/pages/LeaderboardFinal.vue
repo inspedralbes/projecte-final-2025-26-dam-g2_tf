@@ -58,10 +58,12 @@ import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useCustomModal } from '../composables/useCustomModal';
 
+import { BASE_API_URL } from '../utils/url';
+
 const router = useRouter();
 const route = useRoute();
 const { mostrarModal } = useCustomModal();
-const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+const API_URL = BASE_API_URL;
 
 const resultatsSessio = ref([]);
 const puntuacio = ref(0);
