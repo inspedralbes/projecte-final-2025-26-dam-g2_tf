@@ -1,47 +1,48 @@
 <template>
-  <div class="min-h-screen bg-white flex flex-col p-6">
+  <div class="min-h-screen bg-[#1a0e2e] flex flex-col p-6 text-white font-outfit">
     <div class="flex items-center mb-8">
       <button 
         @click="$router.back()" 
-        class="bg-gray-100 p-3 rounded-full shadow-md active:scale-95 transition-transform"
+        class="bg-white/10 p-3 rounded-full shadow-md backdrop-blur-md active:scale-95 transition-transform border border-white/20"
       >
-        <span class="text-xl text-gray-800">←</span>
+        <span class="text-xl text-white">←</span>
       </button>
-      <h1 class="ml-4 text-2xl font-black text-gray-800">Sala de Joc</h1>
+      <h1 class="ml-4 text-2xl font-black text-white tracking-tight">Sala de Joc</h1>
     </div>
 
     <div class="flex-1 flex flex-col justify-center space-y-8">
       <!-- Secció per CREAR una sala nova -->
-      <div class="bg-purple-50 p-6 rounded-[25px] border border-purple-100 shadow-sm text-center">
-        <h2 class="text-xl font-bold text-[rgba(64,39,73)] mb-2">Crear nova sala</h2>
-        <p class="text-gray-600 mb-6 text-sm">Convida els teus amics compartint un codi.</p>
+      <div class="bg-white/5 p-8 rounded-[35px] border border-white/10 backdrop-blur-xl shadow-2xl text-center">
+        <div class="w-16 h-16 bg-[#bc85ab]/20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">✨</div>
+        <h2 class="text-xl font-black text-white mb-2 uppercase tracking-wide">Crear nova sala</h2>
+        <p class="text-white/50 mb-8 text-sm">Convida els teus amics compartint un codi únic i jugueu junts.</p>
         <button 
           @click="crearSala"
-          class="w-full bg-[rgba(64,39,73)] text-white font-bold py-4 rounded-xl shadow-lg shadow-purple-200 active:scale-95 transition-all uppercase tracking-wide"
+          class="w-full bg-gradient-to-r from-[#bc85ab] to-[#804f7f] text-white font-black py-5 rounded-2xl shadow-lg shadow-purple-900/50 active:scale-95 transition-all uppercase tracking-[0.2em] text-xs"
         >
           Crear Sala
         </button>
       </div>
 
-      <div class="relative flex py-2 items-center">
-        <div class="flex-grow border-t border-gray-200"></div>
-        <span class="flex-shrink-0 mx-4 text-gray-400 text-sm">O</span>
-        <div class="flex-grow border-t border-gray-200"></div>
+      <div class="relative flex py-4 items-center">
+        <div class="flex-grow border-t border-white/10"></div>
+        <span class="flex-shrink-0 mx-4 text-white/30 text-xs font-black tracking-widest">O</span>
+        <div class="flex-grow border-t border-white/10"></div>
       </div>
 
       <!-- Secció per UNIR-SE a una sala existent -->
-      <div class="bg-white p-6 rounded-[25px] border border-gray-100 shadow-lg text-center">
-        <h2 class="text-xl font-bold text-gray-800 mb-4">Unir-se a una sala</h2>
+      <div class="bg-white/5 p-8 rounded-[35px] border border-white/10 backdrop-blur-xl shadow-2xl text-center">
+        <h2 class="text-xl font-black text-white mb-6 uppercase tracking-wide">Unir-se a una sala</h2>
         <input 
           v-model="codigoSala"
           type="text" 
           placeholder="Introdueix el codi aquí"
-          class="w-full bg-gray-50 border border-gray-200 text-center text-lg font-mono py-4 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-purple-400"
+          class="w-full bg-black/30 border border-white/10 text-white text-center text-2xl font-mono py-5 rounded-2xl mb-6 focus:outline-none focus:ring-2 focus:ring-[#bc85ab] placeholder:text-white/20 uppercase tracking-[0.3em]"
         >
         <button 
           @click="unirseSala"
           :disabled="!codigoSala"
-          class="w-full bg-gray-800 text-white font-bold py-4 rounded-xl shadow-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full bg-white text-[#1a0e2e] font-black py-5 rounded-2xl shadow-xl active:scale-95 transition-all disabled:opacity-20 disabled:cursor-not-allowed uppercase tracking-[0.2em] text-xs"
         >
           Unir-se
         </button>
@@ -51,14 +52,14 @@
     <!-- Botó per saltar la sala i jugar sol (eliminat per petició de l'usuari, el flux s'unifica a la sala) -->
 
     <!-- Modal que mostra confirmació a l'usuari -->
-    <div v-if="mostrarModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
-      <div class="bg-white p-8 rounded-[30px] w-10/12 max-w-sm text-center shadow-2xl">
-        <div class="text-4xl mb-4"></div>
-        <h3 class="text-xl font-black text-gray-800 mb-2">{{ mensajeModal }}</h3>
-        <p class="text-gray-500 mb-6">{{ submensajeModal }}</p>
+    <div v-if="mostrarModal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 animate-fade-in p-6">
+      <div class="bg-[#1a0820] border border-white/10 p-8 rounded-[40px] w-full max-w-sm text-center shadow-2xl">
+        <div class="text-5xl mb-6">🚀</div>
+        <h3 class="text-2xl font-black text-white mb-2 tracking-tight">{{ mensajeModal }}</h3>
+        <p class="text-white/60 mb-8 leading-relaxed">{{ submensajeModal }}</p>
         <button 
           @click="confirmarInicio"
-          class="w-full bg-green-500 text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-all"
+          class="w-full bg-[#4ade80] text-black font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all uppercase tracking-widest text-xs"
         >
           Som-hi!
         </button>
