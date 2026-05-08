@@ -114,7 +114,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-<style scoped>
 .perspective-2000 {
     perspective: 2000px;
 }
@@ -203,5 +202,4 @@ onMounted(() => {
     background-image: radial-gradient(circle, #fff 1px, transparent 1px);
     background-size: 30px 30px;
 }
-</style>
 </style>
