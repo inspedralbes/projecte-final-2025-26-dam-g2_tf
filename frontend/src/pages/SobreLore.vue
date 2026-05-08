@@ -71,6 +71,7 @@
 
 <script>
 import { netejarUrl, BASE_API_URL } from '../utils/url';
+import { useAuth } from '../composables/useAuth';
 
 export default {
   name: 'SobreLore',
@@ -82,6 +83,7 @@ export default {
       sobreObert: false,
       cartaVisible: false,
       mostrarCarta: false,
+      mostrarTitol: false,
       ready: false,
     };
   },
@@ -90,7 +92,7 @@ export default {
     this.ready = true;
 
     // Animació d'entrada del títol
-    setTimeout(() => { this.mostrarTitol = true; }, 400);
+    setTimeout(() => { this.mostrarTitol = true; }, 100);
   },
   methods: {
     async carregarCartaLore() {
@@ -141,7 +143,7 @@ export default {
       if (this.sobreObert) return;
       this.sobreObert = true;
       // La carta surt del sobre amb un petit retard per deixar veure el sobre obert primer
-      setTimeout(() => { this.cartaVisible = true; }, 500);
+    setTimeout(() => { this.cartaVisible = true; }, 300);
     },
 
     async continuarAlPersonatge() {
