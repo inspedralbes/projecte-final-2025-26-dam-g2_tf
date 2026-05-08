@@ -12,8 +12,7 @@
 
     <div class="flex-1 flex flex-col justify-center space-y-8">
       <!-- Secció per CREAR una sala nova -->
-      <div class="bg-white/5 p-8 rounded-[35px] border border-white/10 backdrop-blur-xl shadow-2xl text-center">
-        <div class="w-16 h-16 bg-[#bc85ab]/20 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">✨</div>
+      <div class="bg-[#402749]/60 p-8 rounded-[35px] border border-white/10 backdrop-blur-xl shadow-2xl text-center">
         <h2 class="text-xl font-black text-white mb-2 uppercase tracking-wide">Crear nova sala</h2>
         <p class="text-white/50 mb-8 text-sm">Convida els teus amics compartint un codi únic i jugueu junts.</p>
         <button 
@@ -31,13 +30,13 @@
       </div>
 
       <!-- Secció per UNIR-SE a una sala existent -->
-      <div class="bg-white/5 p-8 rounded-[35px] border border-white/10 backdrop-blur-xl shadow-2xl text-center">
+      <div class="bg-[#402749]/60 p-8 rounded-[35px] border border-white/10 backdrop-blur-xl shadow-2xl text-center">
         <h2 class="text-xl font-black text-white mb-6 uppercase tracking-wide">Unir-se a una sala</h2>
         <input 
           v-model="codigoSala"
           type="text" 
-          placeholder="Introdueix el codi aquí"
-          class="w-full bg-black/30 border border-white/10 text-white text-center text-2xl font-mono py-5 rounded-2xl mb-6 focus:outline-none focus:ring-2 focus:ring-[#bc85ab] placeholder:text-white/20 uppercase tracking-[0.3em]"
+          placeholder="CODI DE SALA"
+          class="w-full bg-black/30 border border-white/10 text-white text-center text-xl font-mono py-5 rounded-2xl mb-6 focus:outline-none focus:ring-2 focus:ring-[#bc85ab] placeholder:text-white/30 placeholder:tracking-widest uppercase tracking-[0.1em]"
         >
         <button 
           @click="unirseSala"
@@ -54,7 +53,6 @@
     <!-- Modal que mostra confirmació a l'usuari -->
     <div v-if="mostrarModal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 animate-fade-in p-6">
       <div class="bg-[#1a0820] border border-white/10 p-8 rounded-[40px] w-full max-w-sm text-center shadow-2xl">
-        <div class="text-5xl mb-6">🚀</div>
         <h3 class="text-2xl font-black text-white mb-2 tracking-tight">{{ mensajeModal }}</h3>
         <p class="text-white/60 mb-8 leading-relaxed">{{ submensajeModal }}</p>
         <button 
