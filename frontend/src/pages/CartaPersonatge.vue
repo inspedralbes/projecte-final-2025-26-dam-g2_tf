@@ -2,6 +2,7 @@
   <div class="min-h-screen bg-[#402749] flex flex-col items-center justify-center p-8 overflow-y-auto overflow-x-hidden">
     <!-- Fons sense gradients extres -->
     
+    <div v-if="personatge" class="relative z-10 w-full max-w-sm flex flex-col items-center justify-center min-h-full py-12">
       <!-- TEXT INSTRUCCIÓ MISTERIÓS -->
       <transition name="fade-down">
         <div v-if="!isFlipped" class="mb-8 text-center px-4">
