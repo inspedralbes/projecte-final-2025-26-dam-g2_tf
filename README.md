@@ -22,8 +22,7 @@
 
 ## 🎬 Demostració Visual
 
-> 
-> *[ESPAI PER A GIF DE L'APP EN FUNCIONAMENT]*
+![alt text](image.png) ![alt text](image-removebg-preview.png)
 
 ## ✨ Característiques Principals
 
