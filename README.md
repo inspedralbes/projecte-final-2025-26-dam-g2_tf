@@ -1,58 +1,68 @@
-# 📍 North - Explora Barcelona
+# North - Explora Barcelona
 
 [![CI Status](https://github.com/inspedralbes/projecte-final-2025-26-dam-g2_tf/actions/workflows/ci.yml/badge.svg)](https://github.com/inspedralbes/projecte-final-2025-26-dam-g2_tf/actions/workflows/ci.yml)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
 [![Framework: Vue 3](https://img.shields.io/badge/framework-Vue%203-4fc08d)](https://vuejs.org/)
+[![MongoDB](https://img.shields.io/badge/database-MongoDB-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Docker](https://img.shields.io/badge/deploy-Docker-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
 
-## 📝 Descripció i Context
+## Descripció i Context
 
 **North** és una plataforma interactiva de descobriment urbà que gamifica l'exploració de Barcelona. Resol la falta de connexió històrica i cultural mitjançant rutes interactives, col·leccionisme de cromos digitals i desafiaments en temps real validats per Intel·ligència Artificial.
 
-## 🗺️ Taula de Continguts
+## Taula de Continguts
 
-1. [🎬 Demostració Visual](#-demostració-visual)
-2. [✨ Característiques Principals](#-característiques-principals)
-3. [🛠️ Tecnologies Utilitzades](#️-tecnologies-utilitzades)
-4. [🏗️ Arquitectura del Sistema](#️-arquitectura-del-sistema)
-5. [📂 Documentació i Gestió](#-documentació-i-gestió)
-6. [💻 Documentació Tècnica](#-documentació-tècnica)
-7. [🚀 Guia d'Instal·lació](#-guia-dinstallació)
-8. [🧪 Proves (Testing)](#-proves-testing)
-9. [👥 Autors](#-autors)
+1. [Demostració Visual](#demostració-visual)
+2. [Característiques Principals](#característiques-principals)
+3. [Tecnologies Utilitzades](#tecnologies-utilitzades)
+4. [Arquitectura del Sistema](#arquitectura-del-sistema)
+5. [Documentació i Gestió](#documentació-i-gestió)
+6. [Documentació Tècnica](#documentació-tècnica)
+7. [Guia d'Instal·lació](#guia-dinstallació)
+8. [Proves (Testing)](#proves-testing)
+9. [Autors](#autors)
 
-## 🎬 Demostració Visual
+## Demostració Visual
 
 ![alt text](<image-removebg-preview (1).png>) ![alt text](image-removebg-preview.png)
 
-## ✨ Característiques Principals
+## Característiques Principals
 
-* **📍 Mapa Interactiu:** Visualització de POIs amb Leaflet i geolocalització.
-* **🃏 Sistema de Cromos:** Col·leccionisme d'actius digitals basats en fites històriques.
-* **🤖 Validació per IA:** Detecció facial i reconeixement d'objectes amb TensorFlow/MobileNet.
-* **⏰ Control Horari:** Restriccions dinàmiques d'accés per a la seguretat de l'usuari.
+* **Mapa Interactiu:** Visualització de POIs amb Leaflet i geolocalització en temps real.
+* **Sistema de Cromos:** Col·leccionisme d'actius digitals basats en fites històriques de Barcelona.
+* **Validació per IA:** Reconeixement d'imatges amb TensorFlow/MobileNet per verificar visites.
+* **Multijugador:** Partides individuals i en grup amb sales en temps real via Socket.io.
+* **Xarxa Social:** Feed de posts, comentaris, likes, amics i rànquing global.
+* **Control Horari:** Restriccions dinàmiques d'accés (toc de queda) per a la seguretat.
+* **App Mòbil:** Versió Android nativa generada amb Capacitor.
 
-## 🛠️ Tecnologies Utilitzades
+## Tecnologies Utilitzades
 
 | Capa | Tecnologies |
 | --- | --- |
-| **Frontend** | Vue 3, Vite, Tailwind CSS, Leaflet |
-| **Backend** | Node.js, Express, Socket.io (Temps real) |
-| **Base de Dades** | MongoDB, Mongoose |
-| **Infraestructura** | Docker, Docker Compose, Nginx |
+| **Frontend** | Vue 3, Vite, Tailwind CSS 4, Leaflet |
+| **Backend** | Node.js, Express 5, Socket.io 4 (Temps real) |
+| **IA** | TensorFlow.js, MobileNet v2 (validació de fotos) |
+| **Base de Dades** | MongoDB Atlas, Mongoose 9 |
+| **Mòbil** | Capacitor 8 (Android/iOS) |
+| **Infraestructura** | Docker, Docker Compose, Nginx, Let's Encrypt |
+| **Testing** | Jest, Supertest, Vitest, Vue Test Utils |
+| **CI/CD** | GitHub Actions |
 
-## 🏗️ Arquitectura del Sistema
+## Arquitectura del Sistema
 
 El sistema utilitza una arquitectura de microserveis orquestrada per Docker, amb un proxy invers Nginx que gestiona el trànsit SSL i redirigeix les peticions al frontend o a l'API.
 
-## 📂 Documentació i Gestió
+## Documentació i Gestió
 
-* **🎨 Prototip Gràfic:** [Figma - Projecte North]()
-* **📋 Gestió de Tasques:** [Taiga Backlog]()
-* **🌐 URL de Producció:** [https://north.dam.inspedralbes.cat/]()
+* **Prototip Gràfic:** [Figma - Projecte North]()
+* **Gestió de Tasques:** [Taiga Backlog]()
+* **URL de Producció:** [https://north.dam.inspedralbes.cat](https://north.dam.inspedralbes.cat)
 
-## 💻 Documentació Tècnica
+## Documentació Tècnica
 
-Aquesta secció serveix com a punt d'entrada per a qualsevol desenvolupador que vulgui col·laborar. Per a especificacions detallades, consulta la carpeta [`/doc`]().
+Aquesta secció serveix com a punt d'entrada per a qualsevol desenvolupador que vulgui col·laborar. Per a especificacions detallades, consulta la carpeta [`/doc`](./doc/).
 
 ### 1. Organització del Codi
 
@@ -72,7 +82,7 @@ Les entitats principals estan definides a `backend/src/models/index.js`:
 
 El sistema utilitza **Socket.io** per sincronitzar l'estat del joc entre múltiples jugadors, configurat centralment per gestionar esdeveniments de sala i progrés.
 
-## 🚀 Guia d'Instal·lació
+## Guia d'Instal·lació
 
 ```bash
 # 1. Clonar el repositori
@@ -89,7 +99,7 @@ docker compose -f docker-compose.dev.yml up --build
 
 ```
 
-## 🧪 Proves (Testing)
+## Proves (Testing)
 
 Suite automatitzada integrada en el flux de CI/CD:
 
@@ -102,11 +112,37 @@ cd frontend && npm test
 
 ```
 
-## 👥 Autors
+## Estructura del Projecte
+
+```
+├── backend/          # API REST + Socket.io + IA
+│   ├── src/
+│   │   ├── routes/   # Endpoints per dominis (auth, social, mapa...)
+│   │   ├── models/   # Esquemes Mongoose (Usuari, Perfil, Lloc...)
+│   │   ├── utils/    # Cron jobs, control horari
+│   │   └── config/   # Connexió MongoDB
+│   └── public/       # Fitxers estàtics (fotos, cromos, personatges)
+├── frontend/         # SPA Vue 3 + Capacitor
+│   ├── src/
+│   │   ├── pages/        # Vistes principals
+│   │   ├── components/   # Components reutilitzables
+│   │   ├── composables/  # Lògica compartida
+│   │   └── router/       # Rutes + guàrdies de navegació
+│   └── android/      # Projecte Android (Capacitor)
+├── proxy/            # Configuració Nginx
+├── doc/              # Documentació tècnica i diagrames
+└── docker-compose.yml
+```
+
+## Autors
 
 * **Judit Sarrat Andújar**
 * **Fiona Mondelo Giaramita**
 * **Marta Haro Font**
 * **Fabrizzio Rodriguez González**
+
+## Llicència
+
+Aquest projecte està llicenciat sota la [Apache License 2.0](./LICENSE).
 
 ---

@@ -88,5 +88,3 @@ El fitxer `backend/src/routes/gameSocket.js` gestiona la lògica de les sales:
 3. **Accés**:
    - Client: `http://localhost:5173`
    - API: `http://localhost:8088` (segons la configuració actual de Docker)
-
--
