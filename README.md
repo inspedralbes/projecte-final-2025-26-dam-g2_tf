@@ -10,14 +10,15 @@
 
 ## 🗺️ Taula de Continguts
 
-1. [🎬 Demostració Visual]()
-2. [✨ Característiques Principals]()
-3. [🛠️ Tecnologies Utilitzades]()
-4. [🏗️ Arquitectura del Sistema]()
-5. [📂 Documentació i Gestió]()
-6. [💻 Documentació Tècnica (Dev Guide)]()
-7. [🚀 Guia d'Instal·lació]()
-8. [👥 Autors]()
+1. [🎬 Demostració Visual](#-demostració-visual)
+2. [✨ Característiques Principals](#-característiques-principals)
+3. [🛠️ Tecnologies Utilitzades](#️-tecnologies-utilitzades)
+4. [🏗️ Arquitectura del Sistema](#️-arquitectura-del-sistema)
+5. [📂 Documentació i Gestió](#-documentació-i-gestió)
+6. [💻 Documentació Tècnica](#-documentació-tècnica)
+7. [🚀 Guia d'Instal·lació](#-guia-dinstallació)
+8. [🧪 Proves (Testing)](#-proves-testing)
+9. [👥 Autors](#-autors)
 
 ## 🎬 Demostració Visual
 
