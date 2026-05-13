@@ -22,7 +22,7 @@
 
 ## 🎬 Demostració Visual
 
-![alt text](image.png) ![alt text](image-removebg-preview.png)
+![alt text](<image-removebg-preview (1).png>) ![alt text](image-removebg-preview.png)
 
 ## ✨ Característiques Principals
 
