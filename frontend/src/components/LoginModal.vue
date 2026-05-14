@@ -179,7 +179,7 @@
                   <button 
                     type="button" 
                     @click="confirmarScanneig" 
-                    :disabled="analitzant || !faceApiLlesta || !edatDetectada"
+                    :disabled="analitzant"
                     class="flex-[2] py-3 bg-[#402749] text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all disabled:opacity-50"
                   >
                     {{ analitzantFinal ? 'Processant...' : 'Confirmar i Finalitzar' }}
