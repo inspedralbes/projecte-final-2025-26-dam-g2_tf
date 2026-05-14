@@ -180,6 +180,8 @@ import { netejarUrl } from '../utils/url';
 import DiariExploracio from '../components/DiariExploracio.vue';
 import ModalPersonalitzat from '../components/ModalPersonalitzat.vue';
 
+import { BASE_API_URL } from '../utils/url';
+
 const router = useRouter();
 const { usuari: authUsuari, logout } = useAuth();
 
@@ -216,7 +218,7 @@ const handleModalCancel = () => {
   if (modalResolve) modalResolve(false);
 };
 
-const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
+const API_URL = BASE_API_URL;
 
 const percentatgeProgres = computed(() => {
   const count = user.value?.inventari_cromos?.length || 0;

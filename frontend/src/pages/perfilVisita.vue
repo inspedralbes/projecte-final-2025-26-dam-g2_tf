@@ -87,12 +87,14 @@ import { useRoute } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import { useCustomModal } from '../composables/useCustomModal';
 
+import { BASE_API_URL } from '../utils/url';
+
 const route = useRoute();
 const { usuari: usuariLoguejat } = useAuth();
 const { mostrarModal } = useCustomModal();
 const user = ref(null);
 const estatAmistat = ref('cap'); 
-const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+const API_URL = BASE_API_URL;
 
 onMounted(async () => {
   const userIdVisita = route.params.id;

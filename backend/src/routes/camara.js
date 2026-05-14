@@ -178,7 +178,8 @@ router.post('/', async function (req, res) {
 
         // --- LÒGICA DE JOC I BASE DE DADES ---
         try {
-            if (similitud >= 50) {
+            // Llindar de similitud: baixat de 50 a 35 per ser més permissiu amb les fotos dels usuaris
+            if (similitud >= 35) {
                 // Trobem el jugador dins la sessió
                 let jugador = null;
                 for (let i = 0; i < sessio.jugadors.length; i++) {

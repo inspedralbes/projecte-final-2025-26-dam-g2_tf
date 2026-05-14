@@ -332,6 +332,7 @@ import 'leaflet/dist/leaflet.css';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import { BASE_API_URL } from '../../../utils/url';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -340,7 +341,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const baseApi = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+const baseApi = BASE_API_URL;
 const imatgeMapaRef = ref(null);
 const puntPendent = ref(null);
 const fotosDisponibles = ref([]);

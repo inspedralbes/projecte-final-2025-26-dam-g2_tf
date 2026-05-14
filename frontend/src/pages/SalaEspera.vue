@@ -1,14 +1,14 @@
 <template>
-  <div class="min-h-screen bg-[#402749]/5 flex items-center justify-center p-4">
-    <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-lg text-center relative">
-      <h1 class="text-3xl font-bold mb-6 text-[#402749]">
+  <div class="min-h-screen bg-[#1a0e2e] flex items-center justify-center p-4 text-white font-outfit">
+    <div class="bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-[40px] shadow-2xl w-full max-w-lg text-center relative">
+      <h1 class="text-3xl font-black mb-8 text-white tracking-tight italic">
         <span v-if="!showModeSelection">Sala d'Espera</span>
         <span v-else>Configuració de la Partida</span>
-        <div v-if="roomCode && !showModeSelection" class="mt-4">
-          <span class="text-[#402749] block text-4xl font-mono font-black tracking-widest">{{ roomCode }}</span>
+        <div v-if="roomCode && !showModeSelection" class="mt-6">
+          <span class="text-[#bc85ab] block text-5xl font-mono font-black tracking-[0.2em] mb-4 drop-shadow-lg">{{ roomCode }}</span>
           <button 
             @click="compartirInvitacio" 
-            class="mt-4 bg-[#804f7f] text-white px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest shadow-md active:scale-95 transition-all flex items-center gap-2 mx-auto"
+            class="bg-white/10 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all flex items-center gap-2 mx-auto border border-white/10 hover:bg-white/20"
           >
             <span>🔗</span> COMPARTIR INVITACIÓ
           </button>
@@ -38,30 +38,30 @@
 
       <div v-else-if="!gameStarted">
 
-        <div v-if="!showModeSelection" class="mb-8">
-          <h2 class="text-xl font-bold text-gray-800 mb-4">Jugadors Connectats</h2>
-          <ul class="space-y-2">
-            <li v-for="player in players" :key="player.id" class="flex items-center bg-gray-50 p-3 rounded-lg">
-              <div class="w-10 h-10 bg-[#402749]/10 rounded-full flex items-center justify-center text-[#402749] font-bold mr-3">
+        <div v-if="!showModeSelection" class="mb-10">
+          <h2 class="text-xs font-black text-white/40 uppercase tracking-[0.3em] mb-6">Jugadors Connectats</h2>
+          <ul class="space-y-3">
+            <li v-for="player in players" :key="player.id" class="flex items-center bg-white/5 p-4 rounded-2xl border border-white/5">
+              <div class="w-10 h-10 bg-[#bc85ab]/20 rounded-xl flex items-center justify-center text-[#bc85ab] font-black mr-4 shadow-inner">
                 {{ player.nom.charAt(0).toUpperCase() }}
               </div>
-              <span class="font-medium text-gray-700">{{ player.nom }}</span>
+              <span class="font-bold text-white/80">{{ player.nom }}</span>
             </li>
           </ul>
-           <div v-if="players.length === 0" class="text-gray-400 italic">
-            Esperant jugadors...
+           <div v-if="players.length === 0" class="text-white/20 italic text-sm mt-4 animate-pulse">
+            Esperant exploradors...
           </div>
         </div>
 
-        <div v-if="isCreator && !showModeSelection" class="mt-8">
-            <button @click="showModeSelection = true" class="w-full bg-[#402749] text-white font-bold py-4 rounded-xl shadow-lg hover:bg-[#402749]/80 transition-colors">
+        <div v-if="isCreator && !showModeSelection" class="mt-10">
+            <button @click="showModeSelection = true" class="w-full bg-white text-[#1a0e2e] font-black py-5 rounded-2xl shadow-2xl active:scale-95 transition-all uppercase tracking-[0.2em] text-xs">
                  COMENÇAR PARTIDA
             </button>
         </div>
 
-        <div v-if="isCreator && showModeSelection" class="mt-8 bg-white border-2 border-[#402749]/10 rounded-xl p-4 text-left">
-            <div v-if="locationCoords || adrecaInici" class="mb-6">
-                <button @click="obrirGoogleMaps" class="w-full bg-[#402749]/5 text-[#402749] font-bold py-3 rounded-xl shadow-sm border border-[#402749]/20 hover:bg-[#402749]/10 transition-colors flex items-center justify-center gap-2">
+        <div v-if="isCreator && showModeSelection" class="mt-8 bg-[#402749]/40 border border-white/20 rounded-[2.5rem] p-8 text-left backdrop-blur-xl shadow-2xl">
+            <div v-if="locationCoords || adrecaInici" class="mb-8">
+                <button @click="obrirGoogleMaps" class="w-full bg-white/5 text-[#bc85ab] font-black py-4 rounded-2xl shadow-sm border border-white/10 hover:bg-white/10 transition-all flex items-center justify-center gap-3 text-xs uppercase tracking-widest">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/>
                     </svg>
@@ -69,52 +69,52 @@
                 </button>
             </div>
             
-            <h3 class="text-xl font-bold text-[#402749] mb-4">Selecciona la Durada</h3>
-            <div class="grid grid-cols-3 gap-3 mb-6">
+            <h3 class="text-xs font-black text-white/40 uppercase tracking-[0.3em] mb-4">Selecciona la Durada</h3>
+            <div class="grid grid-cols-2 gap-3 mb-10">
                 <button v-for="opt in durationOptions" :key="opt.value" 
                     @click="selectedDuration = opt.value"
-                    class="p-3 rounded-xl border-2 transition-all text-sm font-bold"
-                    :class="selectedDuration === opt.value ? 'border-[#402749] bg-[#402749]/5 text-[#402749]' : 'border-gray-100 text-gray-500 hover:border-[#402749]/30'">
-                    {{ opt.label }}<br>
-                    <span class="text-[10px] font-normal">{{ opt.desc }}</span>
+                    class="p-4 rounded-2xl border-2 transition-all text-sm font-black flex flex-col items-center gap-1 shadow-md"
+                    :class="selectedDuration === opt.value ? 'border-white bg-white text-[#1a0e2e]' : 'border-white/10 bg-white/5 text-white/50 hover:border-white/30'">
+                    <span class="text-xs uppercase tracking-widest">{{ opt.label }}</span>
+                    <span class="text-[9px] font-medium" :class="selectedDuration === opt.value ? 'text-[#1a0e2e]/60' : 'opacity-60'">{{ opt.desc }}</span>
                 </button>
             </div>
 
-            <h3 class="text-xl font-bold text-[#402749] mb-4">Selecciona el Mode de Joc</h3>
-            <div class="space-y-3 mb-6">
-                <label class="flex items-center space-x-3 p-3 rounded-lg border hover:bg-[#402749]/5 cursor-pointer" :class="{'border-[#402749] bg-[#402749]/5': selectedMode === 'Individual', 'border-gray-200': selectedMode !== 'Individual'}">
-                    <input type="radio" v-model="selectedMode" value="Individual" class="text-[#402749] focus:ring-[#402749] w-5 h-5">
+            <h3 class="text-xs font-black text-white/40 uppercase tracking-[0.3em] mb-4">Mode de Joc</h3>
+            <div class="space-y-4 mb-12">
+                <label class="flex items-center space-x-4 p-5 rounded-3xl border-2 transition-all cursor-pointer shadow-md" :class="{'border-white bg-white/10': selectedMode === 'Individual', 'border-white/5 bg-white/5': selectedMode !== 'Individual'}">
+                    <input type="radio" v-model="selectedMode" value="Individual" class="text-[#bc85ab] focus:ring-white w-6 h-6 bg-black/40 border-white/20">
                     <div>
-                        <span class="block font-bold text-gray-800">Individual</span>
-                        <span class="block text-sm text-gray-500">Cada jugador fa servir el seu propi mòbil.</span>
+                        <span class="block font-black text-sm text-white uppercase tracking-wider">Individual</span>
+                        <span class="block text-[11px] text-white/50 mt-1">Cada jugador fa servir el seu propi mòbil.</span>
                     </div>
                 </label>
-                <label class="flex items-center space-x-3 p-3 rounded-lg border hover:bg-[#402749]/5 cursor-pointer" :class="{'border-[#402749] bg-[#402749]/5': selectedMode === 'Grup', 'border-gray-200': selectedMode !== 'Grup'}">
-                    <input type="radio" v-model="selectedMode" value="Grup" class="text-[#402749] focus:ring-[#402749] w-5 h-5">
+                <label class="flex items-center space-x-4 p-5 rounded-3xl border-2 transition-all cursor-pointer shadow-md" :class="{'border-white bg-white/10': selectedMode === 'Grup', 'border-white/5 bg-white/5': selectedMode !== 'Grup'}">
+                    <input type="radio" v-model="selectedMode" value="Grup" class="text-[#bc85ab] focus:ring-white w-6 h-6 bg-black/40 border-white/20">
                     <div class="flex justify-between items-center w-full">
                         <div>
-                            <span class="block font-bold text-gray-800">Grup</span>
-                            <span class="block text-sm text-gray-500">Tots jugueu junts amb un sol mòbil.</span>
+                            <span class="block font-black text-sm text-white uppercase tracking-wider">Grup</span>
+                            <span class="block text-[11px] text-white/50 mt-1">Tots jugueu junts amb un sol mòbil.</span>
                         </div>
-                        <button v-if="selectedMode === 'Grup'" @click.stop.prevent="showGroupsModal = true" class="text-[10px] bg-[#402749] text-white px-3 py-1.5 rounded-lg font-black uppercase tracking-widest shadow-sm ml-2 active:scale-95 transition-all">VEURE</button>
+                        <button v-if="selectedMode === 'Grup'" @click.stop.prevent="showGroupsModal = true" class="text-[9px] bg-white text-black px-4 py-2 rounded-xl font-black uppercase tracking-widest shadow-xl ml-2 active:scale-95 transition-all">VEURE</button>
                     </div>
                 </label>
-                <label class="flex items-center space-x-3 p-3 rounded-lg border hover:bg-[#402749]/5 cursor-pointer" :class="{'border-[#402749] bg-[#402749]/5': selectedMode === 'Grups', 'border-gray-200': selectedMode !== 'Grups'}">
-                    <input type="radio" v-model="selectedMode" value="Grups" class="text-[#402749] focus:ring-[#402749] w-5 h-5">
+                <label class="flex items-center space-x-4 p-5 rounded-3xl border-2 transition-all cursor-pointer shadow-md" :class="{'border-white bg-white/10': selectedMode === 'Grups', 'border-white/5 bg-white/5': selectedMode !== 'Grups'}">
+                    <input type="radio" v-model="selectedMode" value="Grups" class="text-[#bc85ab] focus:ring-white w-6 h-6 bg-black/40 border-white/20">
                     <div class="flex justify-between items-center w-full">
                         <div>
-                            <span class="block font-bold text-gray-800">Grups</span>
-                            <span class="block text-sm text-gray-500">Es formaran grups de forma aleatòria. Un mòbil per grup.</span>
+                            <span class="block font-black text-sm text-white uppercase tracking-wider">Grups</span>
+                            <span class="block text-[11px] text-white/50 mt-1">Equips aleatoris. Un mòbil per grup.</span>
                         </div>
-                        <button v-if="selectedMode === 'Grups'" @click.stop.prevent="showGroupsModal = true" class="text-[10px] bg-[#402749] text-white px-3 py-1.5 rounded-lg font-black uppercase tracking-widest shadow-sm ml-2 active:scale-95 transition-all">VEURE</button>
+                        <button v-if="selectedMode === 'Grups'" @click.stop.prevent="showGroupsModal = true" class="text-[9px] bg-white text-black px-4 py-2 rounded-xl font-black uppercase tracking-widest shadow-xl ml-2 active:scale-95 transition-all">VEURE</button>
                     </div>
                 </label>
             </div>
             
-            <button @click="confirmarModeIComencar" class="w-full bg-[#402749] text-white font-bold py-3 rounded-xl shadow hover:bg-[#402749]/80 transition-colors">
-                CONFIRMAR I INICIAR
+            <button @click="confirmarModeIComencar" class="w-full bg-white text-[#1a0e2e] font-black py-5 rounded-2xl shadow-2xl active:scale-95 transition-all uppercase tracking-[0.2em] text-xs">
+                INICIAR EXPLORACIÓ
             </button>
-            <button @click="showModeSelection = false" class="w-full mt-2 bg-gray-100 text-gray-600 font-bold py-2 rounded-xl hover:bg-gray-200 transition-colors">
+            <button @click="showModeSelection = false" class="w-full mt-4 bg-white/5 text-white/40 font-black py-3 rounded-2xl hover:bg-white/10 transition-all uppercase tracking-[0.2em] text-[10px]">
                 Cancel·lar
             </button>
         </div>
@@ -124,37 +124,39 @@
         </p>
       </div>
 
-      <div v-if="error && !gameStarted" class="mt-4 p-4 bg-red-100 text-red-700 rounded-lg">
-        {{ error }}
-        <button @click="$router.push('/joc/inici')" class="underline ml-2">Tornar</button>
+      <div v-if="error && !gameStarted" class="mt-8 p-6 bg-red-500/10 border border-red-500/20 text-red-400 rounded-3xl text-sm text-center backdrop-blur-md">
+        <p class="font-black uppercase tracking-widest mb-1">Error de Connexió</p>
+        <p class="opacity-80">{{ error }}</p>
+        <button @click="$router.push('/joc/inici')" class="mt-4 bg-white/5 text-white px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/10 active:scale-95 transition-all">Tornar</button>
       </div>
     </div>
 
     <!-- MODAL DE PREVIEW DE GRUPS -->
     <Transition name="fade">
-      <div v-if="showGroupsModal" class="fixed inset-0 z-[150] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl overflow-y-auto max-h-[80vh] border border-white/20 animate-fade-in">
-          <h2 class="text-2xl font-black text-[#402749] mb-6 uppercase tracking-tighter text-center italic text-shadow-sm">Equips Generats</h2>
+      <div v-if="showGroupsModal" class="fixed inset-0 z-[150] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-[#1a0820] rounded-[3rem] p-8 w-full max-w-md shadow-2xl overflow-y-auto max-h-[85vh] border border-white/10 animate-fade-in relative">
+          <button @click="showGroupsModal = false" class="absolute top-6 right-6 text-white/20 hover:text-white transition-colors">✕</button>
+          <h2 class="text-2xl font-black text-white mb-8 uppercase tracking-tighter text-center italic">Equips Generats</h2>
           
           <div class="space-y-4">
-            <div v-for="grup in previewGroups" :key="grup.grup_id" class="bg-[#402749]/5 p-5 rounded-3xl border border-[#402749]/10 shadow-md">
-              <h3 class="text-[10px] font-black text-[#402749] uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
-                <span class="bg-[#402749] text-white w-6 h-6 rounded-lg flex items-center justify-center text-[10px] shadow-sm">
+            <div v-for="grup in previewGroups" :key="grup.grup_id" class="bg-white/5 p-6 rounded-[2rem] border border-white/10 shadow-lg">
+              <h3 class="text-[10px] font-black text-[#bc85ab] uppercase tracking-[0.3em] mb-5 flex items-center gap-3">
+                <span class="bg-[#bc85ab] text-[#1a0e2e] w-6 h-6 rounded-lg flex items-center justify-center text-[10px] shadow-sm">
                   {{ grup.grup_id }}
                 </span>
                 Equip {{ grup.grup_id }}
               </h3>
               
               <div class="space-y-3">
-                <div v-for="(nom, idx) in grup.members_nom" :key="idx" class="flex items-center gap-3 bg-white/60 p-2 rounded-2xl border border-white shadow-sm">
-                  <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#bc85ab] to-[#f5cbdd] flex items-center justify-center text-xs font-black text-[#402749] shadow-sm">
+                <div v-for="(nom, idx) in grup.members_nom" :key="idx" class="flex items-center gap-3 bg-black/20 p-3 rounded-2xl border border-white/5 shadow-inner">
+                  <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#bc85ab] to-[#804f7f] flex items-center justify-center text-xs font-black text-white shadow-sm">
                     {{ nom.charAt(0).toUpperCase() }}
                   </div>
                   <div class="flex-1 flex items-center justify-between">
-                    <span class="text-sm font-bold text-gray-800">
+                    <span class="text-sm font-bold text-white/80">
                       {{ nom }}
                     </span>
-                    <span v-if="nom === grup.capita_nom" class="text-[8px] bg-[#402749] text-white px-2 py-1 rounded-lg font-black uppercase tracking-widest shadow-sm">CAPITÀ</span>
+                    <span v-if="nom === grup.capita_nom" class="text-[8px] bg-[#bc85ab] text-[#1a0e2e] px-2 py-1 rounded-lg font-black uppercase tracking-widest shadow-sm">CAPITÀ</span>
                   </div>
                 </div>
               </div>
@@ -162,10 +164,10 @@
           </div>
 
           <div class="mt-8 flex gap-3">
-            <button @click="obrirPreviewGrups" class="flex-1 bg-gray-100 text-gray-600 font-bold py-4 rounded-2xl hover:bg-gray-200 transition-all text-[10px] uppercase tracking-widest">
+            <button @click="obrirPreviewGrups" class="flex-1 bg-white/5 text-white/40 font-black py-4 rounded-2xl hover:bg-white/10 transition-all text-[9px] uppercase tracking-[0.2em] border border-white/5">
               RE-GENERAR
             </button>
-            <button @click="showGroupsModal = false" class="flex-2 bg-[#402749] text-white font-bold py-4 px-8 rounded-2xl shadow-lg hover:bg-[#402749]/80 transition-all active:scale-95 uppercase tracking-widest text-[10px]">
+            <button @click="showGroupsModal = false" class="flex-1 bg-white text-[#1a0e2e] font-black py-4 px-8 rounded-2xl shadow-xl active:scale-95 transition-all uppercase tracking-[0.2em] text-[9px]">
               D'ACORD
             </button>
           </div>
@@ -181,14 +183,14 @@
 
     <!-- MODAL GAME OVER (Per quan guanya un altre equip en mode competitiu) -->
     <Transition name="fade">
-      <div v-if="showGameOver" class="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl text-center border border-white/20">
-          <div class="text-6xl mb-4"></div>
-          <h2 class="text-2xl font-black text-[#402749] mb-4 uppercase tracking-tighter">La partida ha acabat!</h2>
-          <p class="text-gray-600 mb-8">
-            <strong class="text-[#402749]">{{ nomGuanyador }}</strong> ha completat la ruta primer.
+      <div v-if="showGameOver" class="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
+        <div class="bg-[#1a0820] border border-white/10 rounded-[3rem] p-10 w-full max-w-sm shadow-2xl text-center">
+          <div class="text-6xl mb-6">🏆</div>
+          <h2 class="text-2xl font-black text-white mb-4 uppercase tracking-tighter italic">La partida ha acabat!</h2>
+          <p class="text-white/60 mb-10 leading-relaxed">
+            <strong class="text-[#bc85ab]">{{ nomGuanyador }}</strong> ha completat la ruta primer.
           </p>
-          <button @click="anarAValorar" class="w-full bg-[#402749] text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-[#402749]/80 transition-all active:scale-95 uppercase tracking-widest text-xs">
+          <button @click="anarAValorar" class="w-full bg-white text-[#1a0e2e] font-black py-5 rounded-2xl shadow-xl active:scale-95 transition-all uppercase tracking-[0.2em] text-xs">
             CONTINUAR
           </button>
         </div>
@@ -203,13 +205,14 @@ import { useRoute, useRouter } from 'vue-router';
 import { io } from 'socket.io-client';
 import { useCustomModal } from '../composables/useCustomModal';
 import PantallaDerrota from './PantallaDerrota.vue';
+import { BASE_API_URL, isCapacitor } from '../utils/url';
 
-const route = useRoute();
 const router = useRouter();
+const route = useRoute();
 const socket = ref(null);
 const { mostrarModal } = useCustomModal();
 
-const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
+const API_URL = BASE_API_URL;
 
 
 const roomCode = ref(route.params.id !== 'crear' ? route.params.id : '');
@@ -217,6 +220,8 @@ const players = ref([]);
 const loading = ref(true);
 const error = ref('');
 const isCreator = ref(false);
+const socketStatus = ref('desconnectat');
+const socketId = ref('');
 
 const locationCoords = ref(null);
 const adrecaInici = ref('');
@@ -381,9 +386,15 @@ async function confirmarModeIComencar() {
 }
 
 onMounted(() => {
-  socket.value = io(API_URL);
+  console.log('[SalaEspera] Iniciant socket a:', API_URL);
+  socket.value = io(API_URL, {
+      transports: ['websocket', 'polling'], // Forçar websocket primer però permetre fallback
+      reconnectionAttempts: 5
+  });
 
-  socket.value.on('connect', function() {
+  const handleConnection = () => {
+    socketStatus.value = 'connectat';
+    socketId.value = socket.value.id;
     const param = route.params.id; 
     const idLlocRuta = route.query.idLloc;
     const userStr = localStorage.getItem('usuari');
@@ -402,6 +413,17 @@ onMounted(() => {
     } else {
         socket.value.emit('join-room', { roomCode: param, nomUsuari: nomUsuari, perfilId: perfilId });
     }
+  };
+
+  if (socket.value.connected) {
+      handleConnection();
+  }
+
+  socket.value.on('connect', handleConnection);
+
+  socket.value.on('connect_error', (err) => {
+      error.value = 'Error de connexió amb el servidor de jocs: ' + err.message;
+      loading.value = false;
   });
 
   socket.value.on('room-created', (code) => {
@@ -434,7 +456,7 @@ onMounted(() => {
                   }
               }
           } catch (e) {
-              console.error("Error obtenint ubicació", e);
+              // Silenciar error en producció o deixar log mínim
           }
       }
   });

@@ -38,8 +38,8 @@
       </div>
     </div>
 
-    <div v-else style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-      <h1 class="titol">Mapa de la Ruta</h1>
+    <div v-else class="mapa-wrapper-central">
+      <h1 class="titol-mapa">Mapa de la Ruta</h1>
 
       <!-- Contenidor del mapa amb marcadors superposats -->
       <div class="contenidor-imatge" ref="contenidorRef">
@@ -179,6 +179,7 @@
 import { io } from 'socket.io-client';
 import PantallaDerrota from './PantallaDerrota.vue';
 import { useCustomModal } from '../composables/useCustomModal';
+import { BASE_API_URL } from '../utils/url';
 
 export default {
   components: { PantallaDerrota },
@@ -195,7 +196,7 @@ export default {
       modalVisible: false,
       puntSeleccionat: null,
       fotoActual: null,
-      baseApi: import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat'),
+      baseApi: BASE_API_URL,
 
       // Game-over
       mostrarGameOver: false,
@@ -649,14 +650,34 @@ export default {
 
 <style scoped>
 .pantalla-mapa {
-  background-color: #402749;
+  background-color: #1a0e2e;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 20px;
+  padding: 0;
   color: white;
-  position: relative; /* Per al temporitzador absolut */
+  position: relative;
+}
+
+.mapa-wrapper-central {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px 40px; /* Padding superior per evitar el timer */
+  min-height: 100vh;
+}
+
+.titol-mapa {
+  font-family: 'Georgia', serif;
+  font-size: 1.6rem;
+  margin-bottom: 30px;
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 15px rgba(188, 133, 171, 0.4);
 }
 
 .temporitzador {
@@ -829,12 +850,14 @@ export default {
 
 .contenidor-imatge {
   position: relative;
-  background-color: white;
-  padding: 10px;
-  border-radius: 15px;
-  border: 4px solid #d9a6c2;
-  max-width: 90%;
-  width: 90%;
+  background-color: #1a0820; /* Més fosc que el fons */
+  padding: 8px;
+  border-radius: 18px;
+  border: 3px solid rgba(217, 166, 194, 0.3);
+  max-width: 95%;
+  width: 100%;
+  max-width: 450px; /* Evitem que sigui gegant en desktop */
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
 .imatge-mapa {

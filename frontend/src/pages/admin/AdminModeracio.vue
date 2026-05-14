@@ -223,7 +223,7 @@
                     <button @click="decidirIdentitat(user._id, 'aprovat')" class="flex-1 bg-[#402749] hover:bg-[#5d3962] text-white py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95">
                         Aprovar Usuari
                     </button>
-                    <button @click="decidirIdentitat(user._id, 'rebutjar')" class="flex-1 bg-red-50 text-red-500 border border-red-100 hover:bg-red-500 hover:text-white py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95">
+                    <button @click="decidirIdentitat(user._id, 'rebutjat')" class="flex-1 bg-red-50 text-red-500 border border-red-100 hover:bg-red-500 hover:text-white py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95">
                         Rebutjar
                     </button>
                 </div>
@@ -309,8 +309,9 @@
 import { ref, onMounted, computed } from 'vue';
 import AdminNav from './components/AdminNav.vue';
 import { useCustomModal } from '../../composables/useCustomModal';
+import { BASE_API_URL } from '../../utils/url';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat'; 
+const API_URL = BASE_API_URL;
 const { mostrarModal } = useCustomModal();
 const tabActual = ref('posts');
 const notificacio = ref('');

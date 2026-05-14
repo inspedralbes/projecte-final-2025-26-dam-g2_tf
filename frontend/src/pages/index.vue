@@ -80,10 +80,11 @@ import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import BotonPerfil from '../components/BotonPerfil.vue';
-import { netejarUrl } from '../utils/url';
+import { netejarUrl, BASE_API_URL } from '../utils/url';
 
-const { usuari } = useAuth();
 const router = useRouter();
+const { usuari } = useAuth();
+
 const llistaLlocs = ref([]);
 const activeIndex = ref(0);
 const scrollContainer = ref(null);
@@ -112,7 +113,7 @@ const esBloqueig = (lloc) => {
   return minutsActuals >= minutsInici && minutsActuals < minutsFi;
 };
 
-const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
+const API_URL = BASE_API_URL;
 
 onMounted(async () => {
   try {

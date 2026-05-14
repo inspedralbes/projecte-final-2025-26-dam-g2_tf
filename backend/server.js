@@ -1,10 +1,16 @@
 require('dotenv').config();
+// Fix per a TensorFlow.js en Node 22/24 (isNullOrUndefined ha estat eliminat de Node)
+const util = require('util');
+if (!util.isNullOrUndefined) {
+    util.isNullOrUndefined = (val) => val === null || val === undefined;
+}
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { connectDB } = require('./src/config/db');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8088;
 
 // Manejo global de excepciones para evitar que el servidor se caiga
 process.on('uncaughtException', (err) => {

@@ -1,10 +1,21 @@
 <template>
   <transition name="fade-in">
-    <div v-if="ready" class="sobre-wrapper" :class="{ 'fase-carta': mostrarCarta }">
+    <div class="sobre-wrapper" :class="{ 'fase-carta': mostrarCarta }">
+
+    <!-- ─────────── PANTALLA DE CÀRREGA ─────────── -->
+    <transition name="fade-loading">
+      <div v-if="!recursosCarregats" class="loading-overlay">
+        <div class="loader-container">
+          <div class="loader-ring"></div>
+          <div class="loader-icon">✉️</div>
+          <p class="loader-text">Muntant la teva aventura...</p>
+        </div>
+      </div>
+    </transition>
 
     <!-- ─────────── FASE 1: SOBRE ─────────── -->
     <transition name="fade-out">
-      <div v-if="!mostrarCarta" class="sobre-escena">
+      <div v-if="recursosCarregats && !mostrarCarta" class="sobre-escena">
 
         <!-- Títol ambiental -->
         <transition name="slide-down">
@@ -21,7 +32,6 @@
 
         <!-- SOBRE -->
         <div class="sobre-container" :class="{ 'obert': sobreObert }" @click="obrirSobre">
-          <!-- Fem servir ambdós per evitar el 'jump' i assegurar pre-càrrega -->
           <img
             :src="netejarUrl(baseUrl + '/assets/Sobre/Sobre Tancat.png')"
             alt="Sobre tancat"
@@ -48,65 +58,114 @@
     <transition name="carta-surt">
       <div v-if="cartaVisible && !mostrarCarta" class="carta-overlay">
         <div class="carta-overlay-inner">
-          <img
-            v-if="cartaLoreUrl"
-            :src="cartaLoreUrl"
-            alt="Carta de lore"
-            class="carta-lore-imatge"
-          />
-          <div v-else class="carta-sense-imatge">
+          
+          <div class="carta-imatge-wrapper">
+            <img
+              v-if="cartaLoreUrl"
+              :src="cartaLoreUrl"
+              alt="Carta de lore"
+              class="carta-lore-imatge"
+              :class="{ 'imatge-carregada': cartaImatgeLlista }"
+              @load="cartaImatgeLlista = true"
+            />
+            
+            <!-- Skeleton mentre la carta (que pot ser pesada) carrega -->
+            <div v-if="!cartaImatgeLlista" class="skeleton-carta">
+              <div class="skeleton-shine"></div>
+              <div class="skeleton-content">
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line short"></div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="!cartaLoreUrl" class="carta-sense-imatge">
             <p>Sense carta assignada per a aquesta ruta.</p>
           </div>
 
-          <button @click="continuarAlPersonatge" class="boto-continuar">
+          <button @click="continuarAlPersonatge" class="boto-continuar" :class="{ 'visible': cartaImatgeLlista || !cartaLoreUrl }">
             {{ sessioId === 'inicial' ? "Començar l'aventura" : "Continuar" }}
           </button>
         </div>
-      </div>
+        </div>
     </transition>
+
+    <!-- NOTIFICACIÓ CROMO INICIAL -->
+    <CromoInicialNotification 
+      :visible="mostrarNotificacioCromo"
+      @accept="finalitzarBenvinguda"
+    />
 
     </div>
   </transition>
 </template>
 
 <script>
-import { netejarUrl } from '../utils/url';
+import { netejarUrl, BASE_API_URL } from '../utils/url';
 import { useAuth } from '../composables/useAuth';
+import CromoInicialNotification from '../components/CromoInicialNotification.vue';
 
 export default {
   name: 'SobreLore',
+  components: {
+    CromoInicialNotification
+  },
   data() {
     return {
       sessioId: this.$route.params.sessioId,
-      baseUrl: import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat',
+      baseUrl: BASE_API_URL,
       cartaLoreUrl: '',
       sobreObert: false,
       cartaVisible: false,
       mostrarCarta: false,
-      ready: false,
+      mostrarTitol: false,
+      recursosCarregats: false,
+      cartaImatgeLlista: false,
+      mostrarNotificacioCromo: false
     };
   },
   async mounted() {
-    await this.carregarCartaLore();
-    this.ready = true;
+    // 1. Carreguem el lore (API) i el sobre (Imatges crítiques)
+    await this.prepararEscena();
+    
+    // 2. Mostrem l'escena del sobre
+    this.recursosCarregats = true;
 
-    // Animació d'entrada del títol
-    setTimeout(() => { this.mostrarTitol = true; }, 400);
+    // 3. Animació d'entrada del títol
+    setTimeout(() => { this.mostrarTitol = true; }, 300);
+    
+    // 4. Carreguem la carta pesada en segon pla
+    this.carregarCartaEnBackground();
   },
   methods: {
-    async carregarCartaLore() {
-      // 1. Pre-carregar l'imatge del sobre tancat (el primer que es veu)
+    async prepararEscena() {
+      // Pre-carregar l'imatge del sobre tancat (el primer que es veu)
       const imgTancat = new Image();
       imgTancat.src = netejarUrl(this.baseUrl + '/assets/Sobre/Sobre Tancat.png');
+      
+      // Esperem a que el sobre tancat estigui llest per no mostrar res buit
       try {
         if (imgTancat.decode) await imgTancat.decode();
-      } catch (e) {}
+        else await new Promise(r => imgTancat.onload = r);
+      } catch (e) {
+        console.warn('[SobreLore] Error carregant sobre:', e);
+      }
 
-      // 2. Pre-carregar l'imatge del sobre obert
+      // El sobre obert el carreguem sense esperar-lo (background)
       const imgSobre = new Image();
       imgSobre.src = netejarUrl(this.baseUrl + '/assets/Sobre/Sobre_Obert.png');
       if (imgSobre.decode) imgSobre.decode().catch(() => {});
 
+      // Pre-carregar el cromo inicial
+      if (this.sessioId === 'inicial') {
+        const imgCromo = new Image();
+        imgCromo.src = netejarUrl('/CromoInicial.jpg');
+        if (imgCromo.decode) imgCromo.decode().catch(() => {});
+      }
+    },
+
+    async carregarCartaEnBackground() {
       let url = '';
       if (this.sessioId === 'inicial') {
         url = netejarUrl(this.baseUrl + '/assets/Carta_lore/carta_inicial.png');
@@ -125,68 +184,53 @@ export default {
       }
 
       if (url) {
-        // Pre-carregar i pre-decodificar la imatge (molt important per a fitxers pesats com el de 4MB)
-        const img = new Image();
-        img.src = url;
-        try {
-          // Això prepara la imatge en memòria abans que la transició comenci
-          if (img.decode) await img.decode();
-        } catch (e) {
-          console.warn('[SobreLore] Error pre-decodificant imatge:', e);
-        }
         this.cartaLoreUrl = url;
+        // La imatge es carregarà via l'element <img> amb @load
       }
     },
 
     obrirSobre() {
       if (this.sobreObert) return;
       this.sobreObert = true;
-      // La carta surt del sobre amb un petit retard per deixar veure el sobre obert primer
-      setTimeout(() => { this.cartaVisible = true; }, 500);
+      setTimeout(() => { this.cartaVisible = true; }, 400);
     },
 
     async continuarAlPersonatge() {
-      this.mostrarCarta = true;
-
       if (this.sessioId === 'inicial') {
-        // Marcar com a vist al backend
         const usuariRaw = localStorage.getItem('usuari');
         if (usuariRaw) {
           const usuari = JSON.parse(usuariRaw);
           try {
-            const res = await fetch(`${this.baseUrl}/api/usuari/marcar-lore-vist/${usuari._id}`, {
+            await fetch(`${this.baseUrl}/api/usuari/marcar-lore-vist/${usuari._id}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' }
             });
-            if (res.ok) {
-              const data = await res.json();
-              // Actualitzar estat global i localStorage
-              const nouUsuari = { ...usuari, lore_inicial_vist: true };
-              const { login } = useAuth();
-              login(nouUsuari);
-            }
+            const nouUsuari = { ...usuari, lore_inicial_vist: true };
+            const { login } = useAuth();
+            login(nouUsuari);
           } catch (e) {
-            console.error('[SobreLore] Error marcant lore inicial com a vist:', e);
+            console.error('[SobreLore] Error marcant lore inicial:', e);
           }
         }
-
-        setTimeout(() => {
-          this.$router.push('/');
-        }, 500);
+        // Mostrem la notificació immediatament
+        this.mostrarNotificacioCromo = true;
         return;
       }
 
-      setTimeout(() => {
-        this.$router.push('/carta-personatge/' + this.sessioId);
-      }, 500);
+      this.mostrarCarta = true;
+      setTimeout(() => { this.$router.push('/carta-personatge/' + this.sessioId); }, 500);
     },
+
+    finalitzarBenvinguda() {
+      this.$router.push('/');
+    },
+
     netejarUrl
   }
 };
 </script>
 
 <style scoped>
-/* ── Layout general ── */
 .sobre-wrapper {
   min-height: 100vh;
   background: #1a0e2e;
@@ -197,95 +241,129 @@ export default {
   position: relative;
 }
 
+/* ── Pantalla de càrrega ── */
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  background: #1a0e2e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.loader-ring {
+  width: 60px;
+  height: 60px;
+  border: 3px solid rgba(188, 133, 171, 0.2);
+  border-top-color: #bc85ab;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loader-icon {
+  position: absolute;
+  font-size: 24px;
+  margin-top: 15px; /* Ajust per centrar dins el ring */
+  animation: pulse-icon 2s ease-in-out infinite;
+}
+
+.loader-text {
+  color: #bc85ab;
+  font-family: 'Georgia', serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse-icon { 
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+
+/* ── Escena del sobre ── */
 .sobre-escena {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 28px;
+  gap: 32px;
   width: 100%;
   padding: 24px;
 }
 
-/* ── Textos ambientals ── */
 .text-misteri {
-  font-family: 'Georgia', 'Times New Roman', serif;
+  font-family: 'Georgia', serif;
   color: #d4a8c7;
   font-size: 1.1rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  opacity: 0.85;
   text-align: center;
 }
 
 .text-misteri-especial {
   font-family: 'Georgia', serif;
   color: #fff;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   text-align: center;
   margin-bottom: 8px;
-  text-shadow: 0 0 20px rgba(188, 133, 171, 0.6);
+  text-shadow: 0 0 20px rgba(188, 133, 171, 0.4);
 }
 
 .text-subtitol-especial {
   font-family: 'Georgia', serif;
   color: #d4a8c7;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-style: italic;
-  letter-spacing: 0.05em;
   text-align: center;
-  opacity: 0.9;
-}
-
-.capsalera-text {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 0 20px;
+  opacity: 0.8;
 }
 
 .text-instruccio {
   font-family: 'Georgia', serif;
   color: #a07090;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  animation: pols 2.2s ease-in-out infinite;
+  animation: pols 2s ease-in-out infinite;
 }
 
 @keyframes pols {
-  0%, 100% { opacity: 0.5; }
+  0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }
 }
 
 /* ── Sobre ── */
 .sobre-container {
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition: transform 0.3s ease;
-  will-change: transform;
+  position: relative;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .sobre-container:not(.obert):hover {
-  transform: scale(1.04) translateY(-4px);
+  transform: scale(1.05) translateY(-5px);
 }
 
 .sobre-imatge {
-  width: min(340px, 88vw);
-  object-fit: contain;
-  border-radius: 4px;
-  filter: drop-shadow(0 12px 40px rgba(180, 100, 160, 0.35));
-  transition: opacity 0.1s ease; /* Transició ultra-ràpida per suavitzar el canvi */
+  width: min(340px, 85vw);
+  filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.5));
+  transition: opacity 0.2s ease;
 }
 
 .hidden-image {
   position: absolute;
+  inset: 0;
   opacity: 0;
   pointer-events: none;
 }
@@ -295,108 +373,123 @@ export default {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: rgba(15, 8, 28, 0.96); /* Un pel més opac per compensar la falta de blur */
-  will-change: opacity;
+  background: rgba(10, 5, 20, 0.97);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px 16px;
-  overflow-y: auto;
+  padding: 24px;
 }
 
 .carta-overlay-inner {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
-  width: 100%;
-  max-width: 440px;
-}
-
-/* ── Carta de lore ── */
-.carta-lore-imatge {
+  gap: 30px;
   width: 100%;
   max-width: 420px;
-  border-radius: 10px;
-  box-shadow: 0 20px 64px rgba(0, 0, 0, 0.7);
-  object-fit: contain;
-  will-change: transform, opacity;
-  transform: translateZ(0); /* Forçar acceleració GPU */
 }
 
-.carta-sense-imatge {
-  background: #f5ede0;
-  border-radius: 10px;
-  padding: 32px 24px;
-  text-align: center;
-  color: #7a5c3a;
-  font-family: 'Georgia', serif;
-  font-size: 0.9rem;
+.carta-imatge-wrapper {
+  position: relative;
   width: 100%;
+  aspect-ratio: 3/4.5;
+  display: flex;
+  justify-content: center;
 }
 
-/* ── Botó continuar ── */
+.carta-lore-imatge {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.carta-lore-imatge.imatge-carregada {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Skeleton ── */
+.skeleton-carta {
+  position: absolute;
+  inset: 0;
+  background: #2a1a3a;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 30px;
+}
+
+.skeleton-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+  animation: shine 1.5s infinite;
+}
+
+.skeleton-line {
+  height: 12px;
+  background: rgba(188, 133, 171, 0.1);
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.skeleton-line.short { width: 60%; }
+
+@keyframes shine { to { left: 100%; } }
+
+/* ── Botó ── */
 .boto-continuar {
   background: #bc85ab;
   color: #fff;
   border: none;
-  border-radius: 16px;
-  padding: 16px 0;
+  border-radius: 18px;
+  padding: 18px;
   width: 100%;
-  max-width: 320px;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 800;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease;
-}
-
-.boto-continuar:hover {
-  background: #9f6795;
-  transform: scale(1.02);
-}
-
-.boto-continuar:active {
-  transform: scale(0.97);
-}
-
-/* ── Transicions Vue ── */
-.fade-in-enter-active {
-  transition: opacity 1s ease;
-}
-.fade-in-enter-from {
   opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.4s ease;
 }
 
-.fade-out-leave-active {
-  transition: opacity 0.4s ease;
+.boto-continuar.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
-.fade-out-leave-to {
-  opacity: 0;
-}
+
+.boto-continuar:active { transform: scale(0.96); }
+
+/* ── Transicions ── */
+.fade-in-enter-active { transition: opacity 0.8s ease; }
+.fade-in-enter-from { opacity: 0; }
+
+.fade-loading-leave-active { transition: opacity 0.5s ease; }
+.fade-loading-leave-to { opacity: 0; }
+
+.fade-out-leave-active { transition: opacity 0.4s ease; }
+.fade-out-leave-to { opacity: 0; }
 
 .slide-down-enter-active {
-  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.6s ease;
 }
-.slide-down-enter-from {
-  opacity: 0;
-  transform: translateY(-16px);
-}
-
-.fade-up-enter-active {
-  transition: transform 0.5s ease-out, opacity 0.5s ease-out;
-}
-.fade-up-enter-from {
-  opacity: 0;
-  transform: translateY(14px);
-}
+.slide-down-enter-from { opacity: 0; transform: translateY(-20px); }
 
 .carta-surt-enter-active {
-  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease-out;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
 }
-.carta-surt-enter-from {
-  opacity: 0;
-  transform: translateY(40px) scale(0.9); /* Surt des de baix de forma més natural */
-}
+.carta-surt-enter-from { opacity: 0; transform: scale(0.95); }
 </style>
+

@@ -148,11 +148,13 @@
 </template>
 
 <script>
+import { BASE_API_URL } from '../../utils/url';
+
 export default {
   data() {
     return {
       idLloc: this.$route.params.id,
-      baseApi: import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat',
+      baseApi: BASE_API_URL,
       urlMapa: '',
       nomLloc: '',
       puntsMissio: [],

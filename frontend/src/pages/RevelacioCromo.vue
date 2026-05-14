@@ -1,43 +1,63 @@
 <template>
+  <div class="fixed inset-0 bg-[#1a0e2e] -z-10"></div>
   <div
-    class="min-h-screen flex flex-col items-center justify-center p-6 overflow-y-auto"
-    style="background: radial-gradient(circle at center, #402749 0%, #1a0820 100%);"
+    class="h-screen w-full overflow-y-auto overflow-x-hidden relative"
+    :class="{ 'opacity-0 scale-95 transition-all duration-700': isLeaving }"
   >
-    <div class="glow-effect absolute pointer-events-none"></div>
-    
-    <div class="relative z-10 w-full max-w-sm flex flex-col items-center">
-        <h2 class="text-white font-black text-2xl mb-2 text-center drop-shadow-lg">HAS GUANYAT EL CROMO!</h2>
-        <p class="text-pink-300 text-sm mb-8 text-center px-4">Enhorabona! Has completat tota la ruta i has desbloquejat aquesta recompensa.</p>
-
-        <div class="cromo-container mb-10 w-full max-w-[280px] aspect-[3/4] relative perspective-1000">
-            <div class="cromo-card w-full h-full" :class="{ flipped: cromoFlipped }" @click="revelarCromo">
-                <!-- Contra cromo -->
-                <div class="cromo-face cromo-back rounded-2xl overflow-hidden border-4 border-white/20 shadow-2xl flex flex-col items-center justify-center bg-gradient-to-br from-[#402749] to-[#2a1030]">
-                     <div class="absolute inset-0 opacity-20 pointer-events-none pattern-grid"></div>
-                     <span class="text-6xl mb-4"></span>
-                     <p class="text-white font-black text-sm tracking-widest uppercase">Toca per revelar</p>
-                </div>
-                <!-- Cromo real -->
-                <div class="cromo-face cromo-front rounded-2xl overflow-hidden border-4 border-yellow-400 shadow-[0_0_50px_rgba(245,158,11,0.5)]">
-                    <img :src="baseApi + imatgeCromo" class="w-full h-full object-cover" alt="Cromo guanyat" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-4">
-                        <p class="text-yellow-400 font-black text-[10px] uppercase tracking-widest">CROMO DE RUTA</p>
-                        <p class="text-white font-bold text-lg leading-tight">{{ nomLloc }}</p>
-                    </div>
-                </div>
-            </div>
+    <div class="min-h-full w-full flex flex-col items-center px-6 pt-16 pb-40 relative">
+        <div v-if="cromoFlipped" class="fixed inset-0 flex items-center justify-center pointer-events-none animate-burst z-0">
+          <div class="w-[600px] h-[600px] bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-transparent rounded-full blur-[100px]"></div>
         </div>
 
-        <Transition name="fade-up">
-            <button
-                v-if="cromoFlipped"
-                @click="anarAValoracions"
-                class="w-full py-5 rounded-2xl font-black text-base uppercase tracking-widest transition-all active:scale-95 shadow-[0_10px_30px_rgba(0,0,0,0.4)]"
-                style="background-color: #d9a6c2; color: #2a1030;"
-            >
-                CONTINUAR A VALORACIONS
-            </button>
+        <Transition name="premium-fade">
+          <div v-if="readyToShow" class="relative z-10 w-full max-w-sm flex flex-col items-center">
+              <div class="mb-6 flex flex-col items-center">
+                <span class="text-[10px] font-black text-pink-300 uppercase tracking-[0.4em] mb-3 animate-pulse">Missió Completada</span>
+                <h2 class="text-white font-black text-2xl mb-2 text-center italic uppercase leading-tight drop-shadow-lg">Enhorabona, la ciutat resta segura gràcies a tu.</h2>
+              </div>
+              
+              <p class="text-white/60 text-xs mb-12 text-center px-4 leading-relaxed">Aquí tens la teva insignia. Ens veurem aviat.</p>
+
+              <div class="cromo-container mb-12 w-full max-w-[300px] aspect-[3/4.2] relative perspective-2000">
+                  <div class="cromo-card w-full h-full" :class="{ flipped: cromoFlipped }" @click="revelarCromo">
+                      <div class="cromo-face cromo-back rounded-[2.5rem] overflow-hidden border-[6px] border-white/10 shadow-2xl flex flex-col items-center justify-center bg-[#1a0820]">
+                           <div class="absolute inset-0 opacity-30 pointer-events-none pattern-grid"></div>
+                           <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10">
+                              <div class="w-12 h-12 bg-white/10 rounded-full animate-ping"></div>
+                           </div>
+                           <p class="text-white font-black text-xs tracking-[0.3em] uppercase animate-bounce">Toca per revelar</p>
+                      </div>
+                      <div class="cromo-face cromo-front rounded-[2.5rem] overflow-hidden border-[6px] border-white/20 shadow-[0_0_80px_rgba(255,255,255,0.1)]">
+                          <img :src="baseApi + imatgeCromo" class="w-full h-full object-cover" alt="Cromo guanyat" />
+                          <div class="absolute inset-0 shine-effect pointer-events-none"></div>
+                          <div class="absolute inset-0 bg-gradient-to-t from-[#1a0e2e] via-transparent to-transparent flex flex-col justify-end p-8">
+                              <p class="text-pink-300 font-black text-[9px] uppercase tracking-[0.4em] mb-1">Cromo d'Explorador</p>
+                              <p class="text-white font-black text-2xl leading-tight italic uppercase tracking-tighter">{{ nomLloc }}</p>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+              <Transition name="fade-up">
+                  <div v-if="cromoFlipped" class="w-full flex flex-col items-center">
+                      <p class="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-8 bg-white/5 py-3 px-6 rounded-full border border-white/5 text-center leading-relaxed">
+                        ✨ Pots trobar aquest cromo al teu diari d'exploració
+                      </p>
+                      <button
+                          @click="anarAValoracions"
+                          class="w-full py-5 rounded-2xl bg-white text-[#1a0e2e] font-black text-xs uppercase tracking-[0.3em] transition-all active:scale-95 shadow-2xl hover:bg-pink-50"
+                      >
+                          CONTINUAR
+                      </button>
+                  </div>
+              </Transition>
+          </div>
         </Transition>
+
+        <div v-if="!readyToShow" class="flex flex-col items-center justify-center gap-6 flex-1 min-h-[60vh]">
+          <div class="w-12 h-12 border-2 border-white/10 border-t-pink-500 rounded-full animate-spin"></div>
+          <p class="text-white/30 font-black text-[10px] uppercase tracking-[0.4em] animate-pulse">Sincronitzant dades de la missió...</p>
+        </div>
     </div>
   </div>
 </template>
@@ -45,12 +65,15 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { BASE_API_URL } from '../utils/url';
 
 const route = useRoute();
 const router = useRouter();
 
-const baseApi = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+const baseApi = BASE_API_URL;
 const cromoFlipped = ref(false);
+const readyToShow = ref(false);
+const isLeaving = ref(false);
 
 // Obtenim les dades de la query
 const idLloc = route.params.id;
@@ -70,20 +93,28 @@ function revelarCromo() {
 }
 
 function anarAValoracions() {
-    router.push('/valorar-lloc/' + idLloc);
+    isLeaving.value = true;
+    setTimeout(() => {
+        router.push('/valorar-lloc/' + idLloc);
+    }, 600);
 }
 
 onMounted(() => {
     if (!imatgeCromo) {
-        // Si per algun motiu no hi ha imatge, anem directe a valorar
         anarAValoracions();
+        return;
     }
+    
+    // Artificial delay for smoother transition
+    setTimeout(() => {
+        readyToShow.value = true;
+    }, 1500);
 });
 </script>
 
 <style scoped>
-.perspective-1000 {
-    perspective: 1000px;
+.perspective-2000 {
+    perspective: 2000px;
 }
 
 .cromo-container {
@@ -94,7 +125,7 @@ onMounted(() => {
     position: relative;
     width: 100%;
     height: 100%;
-    transition: transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: transform 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
     transform-style: preserve-3d;
     cursor: pointer;
 }
@@ -116,39 +147,58 @@ onMounted(() => {
 }
 
 .cromo-back {
-    background: #2a1030;
+    background: #1a0820;
 }
 
-.glow-effect {
-    width: 150%;
-    height: 150%;
-    background: radial-gradient(circle, rgba(217, 166, 194, 0.2) 0%, transparent 70%);
-    animation: pulse-glow 4s infinite alternate;
+.shine-effect {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0) 45%,
+        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0) 55%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 250% 250%;
+    animation: shine 4s infinite linear;
 }
 
-@keyframes pulse-glow {
-    from { transform: scale(0.8); opacity: 0.3; }
-    to { transform: scale(1.2); opacity: 0.7; }
+@keyframes shine {
+    0% { background-position: -150% -150%; }
+    100% { background-position: 150% 150%; }
+}
+
+@keyframes burst {
+    0% { transform: scale(0.5); opacity: 0; }
+    50% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.2); opacity: 0.5; }
+}
+
+.animate-burst {
+    animation: burst 2s ease-out forwards;
+}
+
+/* Entrance Animation */
+.premium-fade-enter-active {
+    transition: all 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.premium-fade-enter-from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+    filter: blur(10px);
 }
 
 .fade-up-enter-active {
-    transition: all 0.8s ease-out;
+    transition: all 1s ease-out;
+    transition-delay: 0.5s;
 }
 .fade-up-enter-from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px);
 }
 
 .pattern-grid {
     background-image: radial-gradient(circle, #fff 1px, transparent 1px);
-    background-size: 20px 20px;
-}
-
-/* Transicions bàsiques */
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.5s ease;
-}
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
+    background-size: 30px 30px;
 }
 </style>

@@ -1,21 +1,27 @@
-/**
- * Utilitat per netejar i normalitzar les URLs de les imatges.
- * Substitueix localhost per la URL de producció si cal i assegura que els espais estiguin codificats.
- */
+export const isCapacitor = typeof window !== 'undefined' && (!!window.Capacitor || window.location.protocol === 'capacitor:');
+
+export const BASE_API_URL = import.meta.env.VITE_API_URL || 
+  (isCapacitor 
+    ? 'https://north.dam.inspedralbes.cat' 
+    : (window.location.hostname === 'north.dam.inspedralbes.cat' 
+        ? 'https://north.dam.inspedralbes.cat' 
+        : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:8088'
+            : `http://${window.location.hostname}:8088`)));
+
 export function netejarUrl(url) {
   if (!url) return '';
 
-  const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  const API_URL = (import.meta.env && import.meta.env.VITE_API_URL) || (isLocalhost ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
+  const API_URL = BASE_API_URL;
 
   let cleanUrl = url;
 
-  if (isLocalhost && (!import.meta.env || !import.meta.env.VITE_API_URL)) {
-    // Si estem en localhost, reescrivim qualsevol URL de producció a localhost perquè ens carreguin les fotos locals
+  if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && !window.Capacitor && (!import.meta.env || !import.meta.env.VITE_API_URL)) {
+    // Si estem en localhost (Web), reescrivim qualsevol URL de producció a localhost perquè ens carreguin les fotos locals
     cleanUrl = url.replace(/https:\/\/north\.dam\.inspedralbes\.cat/g, 'http://localhost:8088');
     cleanUrl = cleanUrl.replace(/http:\/\/localhost:\d+/g, 'http://localhost:8088');
   } else {
-    // 1. Substituir localhost per la API_URL si es troba a la cadena
+    // 1. Substituir qualsevol referència a localhost per la BASE_API_URL correcta (Producció si estem en mòbil)
     cleanUrl = url.replace(/http:\/\/localhost:\d+/g, API_URL);
   }
 

@@ -126,7 +126,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router' 
 import { useAuth } from '../composables/useAuth';
 import { useLoginModal } from '../composables/useLoginModal';
-import { netejarUrl } from '../utils/url';
+import { netejarUrl, BASE_API_URL } from '../utils/url';
 
 const route = useRoute()
 const router = useRouter() 
@@ -142,7 +142,7 @@ const ressenyesVisibles = computed(() => {
 const { usuari } = useAuth();
 const { obrirModal } = useLoginModal();
 
-const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
+const API_URL = BASE_API_URL;
 
 // Comprova si la ruta està bloquejada en funció de l'hora actual
 const esBloqueig = computed(() => {

@@ -70,7 +70,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css'; 
 import BotonPerfil from '../components/BotonPerfil.vue';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+import { BASE_API_URL } from '../utils/url';
+const API_URL = BASE_API_URL;
 const router = useRouter();
 const { usuari, login } = useAuth();
 const { obrirModal } = useLoginModal();

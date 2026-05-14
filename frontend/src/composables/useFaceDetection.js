@@ -1,7 +1,8 @@
 import { ref, nextTick } from 'vue';
+import { BASE_API_URL } from '../utils/url';
 
 // Patró del projecte per a la URL de l'API (útil si hostegem models o fem crides)
-const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+const API_URL = BASE_API_URL;
 
 /**
  * Composable per gestionar la detecció facial amb face-api.js
@@ -168,13 +169,13 @@ export function useFaceDetection() {
    * Captura el frame actual i confirma els resultats
    */
   const confirmarScanneig = async () => {
-    if (!videoRef.value || analitzantFinal.value || !edatDetectada.value) return null;
+    if (!videoRef.value || analitzantFinal.value) return null;
     
     analitzantFinal.value = true;
     analitzant.value = true;
 
     try {
-      const edatEstimada = edatDetectada.value;
+      let edatEstimada = edatDetectada.value;
       
       if (canvasRef.value) {
         const canvas = canvasRef.value;
@@ -182,6 +183,25 @@ export function useFaceDetection() {
         canvas.height = videoRef.value.videoHeight;
         canvas.getContext('2d').drawImage(videoRef.value, 0, 0);
         const imatgeBase64 = canvas.toDataURL('image/jpeg', 0.8);
+
+        // Si no s'ha detectat edat encara, intentem fer-ho amb la imatge capturada
+        if (!edatEstimada && faceApiLlesta.value) {
+            try {
+                const detection = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions())
+                  .withFaceLandmarks()
+                  .withAgeAndGender();
+                if (detection) {
+                    edatEstimada = detection.age;
+                }
+            } catch (e) {
+                console.warn("No s'ha pogut forçar la detecció", e);
+            }
+        }
+        
+        // Si tot i així no tenim edat, la definim a 17 perquè passi per verificació manual
+        if (!edatEstimada) {
+            edatEstimada = 17;
+        }
 
         aturarCamera();
         
@@ -194,7 +214,7 @@ export function useFaceDetection() {
       }
       
       aturarCamera();
-      return { edatEstimada, esMajor: edatEstimada >= 18 };
+      return { edatEstimada: edatEstimada || 17, esMajor: (edatEstimada || 17) >= 18 };
 
     } catch (err) {
       console.error("Error durant la captura facial:", err);

@@ -5,6 +5,7 @@ import { useAuth } from '../composables/useAuth';
 import { io } from 'socket.io-client';
 import { useCustomModal } from '../composables/useCustomModal';
 import { netejarUrl } from '../utils/url';
+import { BASE_API_URL } from '../utils/url';
 import PantallaDerrota from './PantallaDerrota.vue';
 
 const route = useRoute();
@@ -14,7 +15,7 @@ const { mostrarModal: showCustomModal } = useCustomModal();
 const idLloc = route.params.id;
 const idPuntParam = route.query.idPunt || null;
 
-const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
+const API_URL = BASE_API_URL;
 
 const videoRef = ref(null);
 const canvasRef = ref(null);

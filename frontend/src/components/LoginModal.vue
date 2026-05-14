@@ -179,7 +179,7 @@
                   <button 
                     type="button" 
                     @click="confirmarScanneig" 
-                    :disabled="analitzant || !faceApiLlesta || !edatDetectada"
+                    :disabled="analitzant"
                     class="flex-[2] py-3 bg-[#402749] text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all disabled:opacity-50"
                   >
                     {{ analitzantFinal ? 'Processant...' : 'Confirmar i Finalitzar' }}
@@ -266,7 +266,9 @@ const {
   confirmarScanneig: confirmarScanneigIA
 } = useFaceDetection();
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+import { BASE_API_URL } from '../utils/url';
+
+const API_URL = BASE_API_URL;
 
 async function confirmarScanneig() {
   try {
@@ -364,6 +366,15 @@ async function executarAccio() {
   // 2. Control de la Càmera (Aquesta part faltava al teu últim missatge)
   // Si és registre i encara no estem al pas de verificació, activem la càmera
   if (esRegistre.value && !pasVerificacio.value) {
+    const { mostrarModal } = useCustomModal();
+    await mostrarModal({
+      isAlert: true,
+      icon: 'info',
+      title: 'Verificació d\'edat',
+      message: 'Per garantir la seguretat dels nostres usuaris i complir amb la normativa, realitzem una verificació ràpida d\'edat mitjançant un escaneig facial abans de finalitzar el registre.',
+      confirmText: 'ENTÈS'
+    });
+
     pasVerificacio.value = true;
     iniciarCamera().catch(err => {
       error.value = err.message;

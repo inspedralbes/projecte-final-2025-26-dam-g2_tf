@@ -75,13 +75,15 @@ import { useRoute, useRouter } from 'vue-router';
 import { useCustomModal } from '../composables/useCustomModal';
 import { useAuth } from '../composables/useAuth';
 
+import { BASE_API_URL } from '../utils/url';
+
 const route = useRoute();
 const router = useRouter();
 const { mostrarModal } = useCustomModal();
 const { usuari } = useAuth();
 
 const idLloc = route.params.id;
-const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8088' : 'https://north.dam.inspedralbes.cat');
+const API_URL = BASE_API_URL;
 
 
 const rating = ref(0);

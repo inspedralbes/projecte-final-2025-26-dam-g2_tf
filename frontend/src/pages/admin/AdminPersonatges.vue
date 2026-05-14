@@ -170,9 +170,10 @@
 import { ref, onMounted } from 'vue';
 import AdminNav from './components/AdminNav.vue';
 import { useCustomModal } from '../../composables/useCustomModal';
+import { BASE_API_URL } from '../../utils/url';
 
 // URL del backend: usa la variable d'entorn si existeix, si no usa localhost per desenvolupament
-const API_URL = import.meta.env.VITE_API_URL || 'https://north.dam.inspedralbes.cat';
+const API_URL = BASE_API_URL;
 const { mostrarModal } = useCustomModal();
 
 const personatges = ref([]);
