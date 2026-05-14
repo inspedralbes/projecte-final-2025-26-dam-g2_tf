@@ -3,7 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const { Lloc, PeticioRuta, Config } = require('../models/index');
 
-// 1. LOGIN DE L'ADMINISTRADOR
+// POST /admin/login: Autenticació hardcoded per a l'accés d'administrador
 router.post('/login', async function (req, res) {
     const correu = req.body.correu;
     const contrasenya = req.body.contrasenya;
@@ -19,11 +19,10 @@ router.post('/login', async function (req, res) {
     }
 });
 
-// 2. GESTIONAR LLOCS
-// Reordenar llocs (Drag & Drop) - HA D'ESTAR ABANS DE /:id
+// PUT /admin/llocs/reordenar: Actualitza en bloc l'ordre dels llocs (drag & drop)
 router.put('/llocs/reordenar', async function (req, res) {
     try {
-        const { llocs } = req.body; // [{ id: '...', ordre: 1 }, ...]
+        const { llocs } = req.body;
         if (!Array.isArray(llocs)) {
             return res.status(400).json({ message: "Format incorrecte, s'esperava un array 'llocs'" });
         }
@@ -38,6 +37,7 @@ router.put('/llocs/reordenar', async function (req, res) {
     }
 });
 
+// GET /admin/llocs: Obté tots els llocs d'interès sense filtres
 router.get('/llocs', async function (req, res) {
     try {
         const llocs = await Lloc.find({});
@@ -47,6 +47,7 @@ router.get('/llocs', async function (req, res) {
     }
 });
 
+// POST /admin/llocs: Crea un nou lloc d'interès des de l'agència
 router.post('/llocs', async function (req, res) {
     try {
         const nouLloc = new Lloc(req.body);
@@ -57,6 +58,7 @@ router.post('/llocs', async function (req, res) {
     }
 });
 
+// PUT /admin/llocs/:id: Actualitza la informació general d'un lloc existent
 router.put('/llocs/:id', async function (req, res) {
     try {
         if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -69,8 +71,6 @@ router.put('/llocs/:id', async function (req, res) {
             return res.status(404).json({ message: "Lloc no trobat" });
         }
 
-        // La petició ja és 'aprovada' des que es va acceptar, no cal sincronitzar més
-
         res.json({ success: true, message: "Lloc actualitzat correctament" });
     } catch (error) {
         console.error(error);
@@ -78,6 +78,7 @@ router.put('/llocs/:id', async function (req, res) {
     }
 });
 
+// DELETE /admin/llocs/:id: Elimina un lloc d'interès permanentment
 router.delete('/llocs/:id', async function (req, res) {
     try {
         if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -91,7 +92,7 @@ router.delete('/llocs/:id', async function (req, res) {
     }
 });
 
-// Canviar estat d'un lloc (visibilitat i ordre)
+// PATCH /admin/llocs/:id/estat: Modifica l'estat (visibilitat) i ordre d'un lloc
 router.patch('/llocs/:id/estat', async function (req, res) {
     try {
         if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -102,8 +103,6 @@ router.patch('/llocs/:id/estat', async function (req, res) {
         if (ordre !== undefined) updateData.ordre = ordre;
         const lloc = await Lloc.findByIdAndUpdate(req.params.id, updateData, { new: true });
 
-        // La petició ja és 'aprovada' des que es va acceptar, no cal sincronitzar més
-
         res.json({ success: true, message: "Estat actualitzat correctament" });
     } catch (error) {
         console.error("Error al actualitzar l'estat:", error);
@@ -111,7 +110,7 @@ router.patch('/llocs/:id/estat', async function (req, res) {
     }
 });
 
-// Canviar restricció horària
+// PATCH /admin/llocs/:id/restriccio: Activa/desactiva la restricció horària del lloc
 router.patch('/llocs/:id/restriccio', async function (req, res) {
     try {
         if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -126,7 +125,7 @@ router.patch('/llocs/:id/restriccio', async function (req, res) {
     }
 });
 
-// 3. GESTIONAR PETICIONS
+// GET /admin/peticions: Obté totes les peticions de ruta, poblant les dades de l'usuari
 router.get('/peticions', async function (req, res) {
     try {
         const peticions = await PeticioRuta.find({}).populate('id_usuari');
@@ -136,6 +135,7 @@ router.get('/peticions', async function (req, res) {
     }
 });
 
+// PUT /admin/peticions/:id: Gestiona la resolució d'una petició (aprovar/rebutjar)
 router.put('/peticions/:id', async function (req, res) {
     try {
         if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -161,7 +161,7 @@ router.put('/peticions/:id', async function (req, res) {
     }
 });
 
-// 4. CONFIGURACIÓ HORARI (TOQUE DE QUEDA)
+// GET /admin/configuracio/horari: Retorna la configuració actual del toc de queda
 router.get('/configuracio/horari', async function (req, res) {
     try {
         const config = await Config.findOne({ key: 'toque_de_queda' });
@@ -171,6 +171,7 @@ router.get('/configuracio/horari', async function (req, res) {
     }
 });
 
+// PUT /admin/configuracio/horari: Actualitza o crea la configuració del toc de queda global
 router.put('/configuracio/horari', async function (req, res) {
     try {
         const { hora_inici, hora_fi, actiu } = req.body;

@@ -2,6 +2,7 @@ require('dotenv').config();
 const mongoose = require('./node_modules/mongoose');
 const { Lloc } = require('./src/models/index');
 
+// Script de manteniment: Migra col·leccions antigues del model Lloc aplicant el camp 'ordre' per defecte a 0.
 async function fix() {
   try {
     await mongoose.connect(process.env.MONGODB_URI);

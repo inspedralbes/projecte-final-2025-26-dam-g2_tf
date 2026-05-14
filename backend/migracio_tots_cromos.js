@@ -3,15 +3,16 @@ const mongoose = require('mongoose');
 const { Lloc } = require('./src/models/index');
 const { connectDB } = require('./src/config/db');
 
+// Sanititza la cadena de text eliminant caràcters especials i diacrítics per assegurar compatibilitat en la construcció de rutes d'arxiu.
 function formatNameForCromo(name) {
     if (!name) return "Lloc";
-    // Remove accents and special characters, then camelcase or just remove spaces
     return name
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "") // remove accents
-        .replace(/[^a-zA-Z0-9]/g, ""); // remove non-alphanumeric (fixed 0-9)
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9]/g, "");
 }
 
+// Script de manteniment: Assigna dinàmicament la propietat 'cromo_imatge' a tots els documents Lloc que no en tinguin una, deduint la ruta segons el seu nom.
 async function migrarTotsCromos() {
     try {
         console.log("Connectant a la base de dades...");

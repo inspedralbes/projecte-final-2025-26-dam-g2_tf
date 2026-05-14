@@ -1,11 +1,7 @@
-/**
- * Middleware dinàmic per al control horari per lloc.
- * S'utilitza passant el lloc ja carregat al req.lloc.
- * Si no hi ha lloc o el lloc no té control_horari actiu, passa al next().
- */
+// Middleware d'intercepció: Bloqueja l'accés a rutes de localitzacions basant-se en les restriccions horàries definides a 'req.lloc.control_horari'.
 const comprovarToqueDeQueda = (req, res, next) => {
     try {
-        const lloc = req.lloc; // El lloc s'ha de posar a req.lloc per la ruta que usa aquest middleware
+        const lloc = req.lloc;
 
         if (!lloc || !lloc.control_horari || !lloc.control_horari.actiu) {
             return next();
@@ -17,12 +13,10 @@ const comprovarToqueDeQueda = (req, res, next) => {
         let bloquejat = false;
 
         if (hora_inici > hora_fi) {
-            // Creua la mitjanit (ex: 22 a 07)
             if (horaActual >= hora_inici || horaActual < hora_fi) {
                 bloquejat = true;
             }
         } else {
-            // Dins del mateix dia (ex: 14 a 16)
             if (horaActual >= hora_inici && horaActual < hora_fi) {
                 bloquejat = true;
             }

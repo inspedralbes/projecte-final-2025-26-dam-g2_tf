@@ -4,12 +4,11 @@ const fs = require('fs');
 const path = require('path');
 const { Usuari, Perfil } = require('../models');
 
-// 1. OBTENIR TOTS ELS USUARIS PENDENTS DE VERIFICACIÓ
+// GET /verificacio/pendents: Recupera la llista d'usuaris amb edat pendent de validació, enllaçant les dades de perfil associades.
 router.get('/pendents', async (req, res) => {
     try {
         const pendents = await Usuari.find({ verificacio_estat: 'pendent' }).select('-contrasenya');
 
-        // Carreguem els perfils per tenir el nom d'usuari
         const resultats = await Promise.all(pendents.map(async (u) => {
             const perfil = await Perfil.findOne({ usuari_id: u._id });
             return {
@@ -27,7 +26,7 @@ router.get('/pendents', async (req, res) => {
     }
 });
 
-// 2. DECIDIR VERIFICACIÓ (APROVAR O REBUTJAR)
+// PUT /verificacio/decidir/:id: Gestiona l'estat d'aprovació d'un usuari. Neteja les imatges pujades per privacitat i, si es rebutja, purga el compte sencer.
 router.put('/decidir/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -44,7 +43,6 @@ router.put('/decidir/:id', async (req, res) => {
             usuari.verificacio_estat = 'aprovat';
             usuari.edat_verificada = true;
 
-            // Si aprovem, esborrem la imatge per privacitat
             if (usuari.verificacio_imatge) {
                 const camiImatge = path.join(__dirname, '../../public', usuari.verificacio_imatge);
                 if (fs.existsSync(camiImatge)) {
@@ -55,14 +53,12 @@ router.put('/decidir/:id', async (req, res) => {
             await usuari.save();
             res.json({ success: true, message: `Usuari aprovat correctament` });
         } else {
-            // REBUTJAR: Esborrem l'usuari completament de la BD per privacitat i neteja
             if (usuari.verificacio_imatge) {
                 const camiImatge = path.join(__dirname, '../../public', usuari.verificacio_imatge);
                 if (fs.existsSync(camiImatge)) {
                     fs.unlinkSync(camiImatge);
                 }
             }
-            // També esborrem el perfil associat
             await Perfil.deleteOne({ usuari_id: id });
             await Usuari.findByIdAndDelete(id);
 

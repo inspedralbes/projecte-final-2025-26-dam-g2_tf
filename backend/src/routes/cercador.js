@@ -3,13 +3,11 @@ const router = express.Router();
 
 const { Lloc, Ressenya } = require('../models');
 
-// Llistat general de llocs (exclou desactivats)
+// GET /cercador: Obté el llistat complet de llocs actius i calcula la mitjana de valoracions mitjançant agregació.
 router.get('/', async (req, res) => {
     try {
-        // Filtra llocs que no estiguin desactivats
         const llocs = await Lloc.find({ estat: { $ne: 'desactivat' } }).sort({ ordre: 1 }).lean();
         
-        // Agregació per calcular la mitjana de valoracions
         const ressenyesAgregades = await Ressenya.aggregate([
             {
                 $group: {
@@ -35,7 +33,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-// Retorna un lloc aleatori que estigui actiu
+// GET /cercador/aleatori: Retorna un lloc actiu de manera aleatòria per a la funcionalitat de destinació sorpresa.
 router.get('/aleatori', async (req, res) => {
     try {
         const filter = { estat: 'actiu' };

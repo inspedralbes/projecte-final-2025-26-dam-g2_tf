@@ -3,7 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const { PeticioRuta } = require('../models');
 
-// Middleware simple: llegeix l'ID d'usuari de la capçalera X-User-Id
+// Middleware d'autenticació lleugera: valida la presència de l'identificador d'usuari a les capçaleres HTTP.
 function verifyToken(req, res, next) {
     const userId = req.headers['x-user-id'];
     if (!userId) return res.status(401).json({ message: "Has d'enviar X-User-Id" });
@@ -11,9 +11,9 @@ function verifyToken(req, res, next) {
     next();
 }
 
+// GET /peticions/meves: Retorna l'històric de peticions de creació de rutes fetes per l'usuari autenticat.
 router.get('/meves', verifyToken, async (req, res) => {
     try {
-        // Validació bàsica: req.user ha d'existir
         if (!req.user || !req.user.id) {
             return res.status(401).json({ message: "Token invàlid o sessió caducada" });
         }
@@ -32,18 +32,16 @@ router.get('/meves', verifyToken, async (req, res) => {
     }
 });
 
+// POST /peticions: Registra una nova sol·licitud per afegir una localització, normalitzant els diferents formats d'entrada de coordenades.
 router.post('/', async (req, res) => {
     try {
-        // Acceptem tant el format antic com el nou del frontend
         const { nomLloc, nom_proposat, latitud, longitud, ubicacio, motiu, fotos_proporcionades, id_usuari } = req.body;
 
-        // Validació crítica: camps requerits
         const nomFinal = nomLloc || nom_proposat;
         if (!nomFinal || !id_usuari) {
             return res.status(400).json({ error: 'Faltan datos (nombre o usuario)' });
         }
 
-        // Gestionem les coordenades (pot venir com a [lat,lng] o lat/lng separats)
         let coords = [0, 0];
         if (Array.isArray(ubicacio) && ubicacio.length === 2) {
             coords = ubicacio;
@@ -76,10 +74,9 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Actualitzar estat de petició (Acceptar/Rebutjar)
+// PUT /peticions/:id: Modifica l'estat d'una sol·licitud (aprovada/rebutjada) i crea la localització inactiva si s'escau.
 router.put('/:id', async (req, res) => {
     try {
-        // Validació crítica de l'ID amb Mongoose
         if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).send('ID inválido');
         }
@@ -97,7 +94,6 @@ router.put('/:id', async (req, res) => {
 
         if (!peticio) return res.status(404).json({ message: "Petició no trobada" });
 
-        // Si s'aprova, creem el lloc com a desactivat
         if (estat_validacio === 'aprovada') {
             const Lloc = require('../models').Lloc;
             let coordinates = [0, 0];
@@ -107,7 +103,6 @@ router.put('/:id', async (req, res) => {
                     coordinates = [lng, lat];
                 }
             }
-            // Creem el lloc amb estat: 'desactivat'
             const nouLloc = new Lloc({
                 nom: peticio.nom_proposat || 'Lloc sense nom',
                 descripcio: peticio.motiu || '',

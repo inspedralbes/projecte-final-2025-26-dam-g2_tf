@@ -3,13 +3,7 @@ const { SessioJoc, Lloc } = require('../models');
 
 let ioInstance = null;
 
-/**
- * Emet l'event 'game-over' a tots els jugadors de la sala associada a la sessió.
- * @param {string} sessioId      - L'_id de la SessioJoc
- * @param {object} sessio        - El document Mongoose de la SessioJoc (ja guardat)
- * @param {string} guanyadorId   - El perfilId del jugador que ha acabat (string)
- * @param {string} nomGuanyador  - El nom d'usuari del guanyador
- */
+// Transmet l'esdeveniment 'game-over' a una sala de WebSockets específica, incloent dades del guanyador i classificació.
 async function notifyGameOver(sessioId, sessio, guanyadorId, nomGuanyador, guanyadorGrupId = null) {
     if (!ioInstance) return;
 
@@ -19,7 +13,6 @@ async function notifyGameOver(sessioId, sessio, guanyadorId, nomGuanyador, guany
         return;
     }
 
-    // Busquem dades extres del lloc si no les tenim
     let imatgeCromo = '';
     let nomLloc = '';
     try {
@@ -32,8 +25,6 @@ async function notifyGameOver(sessioId, sessio, guanyadorId, nomGuanyador, guany
         console.error('[Socket] Error buscant lloc per a notifyGameOver:', e);
     }
 
-    // Preparem la llista de jugadors ordenada:
-    // 1r: més fotos completades; en empat: millor precisió
     const jugadorsOrdenats = [...sessio.jugadors].sort((a, b) => {
         const fotesA = (a.punts_completats || []).length;
         const fotesB = (b.punts_completats || []).length;
@@ -58,9 +49,7 @@ async function notifyGameOver(sessioId, sessio, guanyadorId, nomGuanyador, guany
 }
 
 
-/**
- * Emet l'event 'punt-aconseguit' quan un jugador fa la foto bé.
- */
+// Transmet l'esdeveniment 'punt-aconseguit' per actualitzar en temps real el progrés dels usuaris actius.
 function notifyPointAchieved(sessio, nomUsuari, nomPunt, idPunt) {
     if (!ioInstance || !sessio.codi_sala) return;
     console.log(`[Socket] Notificant punt aconseguit a sala ${sessio.codi_sala}: ${nomUsuari} -> ${nomPunt}`);
@@ -86,22 +75,17 @@ function configureSocket(server) {
     const io = new Server(server, {
         cors: {
             origin: function (origin, callback) {
-                // Si no hi ha origin (com en algunes apps mòbils o curl), permetem
                 if (!origin) return callback(null, true);
                 
-                // Si l'origin és localhost o 127.0.0.1, permetem qualsevol port
                 if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
                     return callback(null, true);
                 }
 
-                // Si coincideix amb l'ORIGIN_URL de producció
                 if (process.env.ORIGIN_URL && origin === process.env.ORIGIN_URL) {
                     return callback(null, true);
                 }
 
-                // Per defecte en desenvolupament podem ser més permissius si cal, 
-                // però per ara provem de ser específics amb el que sabem que falla.
-                callback(null, true); 
+                callback(null, true);
             },
             methods: ["GET", "POST"]
         }
@@ -109,7 +93,7 @@ function configureSocket(server) {
 
     ioInstance = io;
 
-    // Sales en memòria: { roomCode: { creatorId, idLloc, players } }
+    // Estructura d'estat en memòria per a les sales (rooms) de WebSockets
     const sales = {};
 
     io.on('connection', function (socket) {
@@ -157,14 +141,12 @@ function configureSocket(server) {
             if (!room || room.creatorId !== socket.id) return;
 
             try {
-                // 1. Carreguem el lloc per obtenir els punts de missió
                 const lloc = await Lloc.findById(room.idLloc);
                 if (!lloc) {
                     io.to(roomCode).emit('error-room', 'Lloc no trobat a la BD');
                     return;
                 }
 
-                // 2. Carreguem tots els personatges disponibles
                 const { Personatge } = require('../models');
                 let personatgesDisponibles = await Personatge.find({});
                 personatgesDisponibles = personatgesDisponibles.filter(p =>
@@ -184,7 +166,6 @@ function configureSocket(server) {
                     }
                 }
 
-                // 4. Construïm l'array de jugadors
                 const jugadorsDB = [];
                 for (let i = 0; i < room.players.length; i++) {
                     const p = room.players[i];
@@ -203,11 +184,9 @@ function configureSocket(server) {
                             }
                         }
 
-                        // Personatge assignat
                         const personatgeAssignat = assignacioPersonatge[i];
                         const personatgeId = personatgeAssignat ? personatgeAssignat._id : null;
 
-                        // Punts visibles
                         const puntsDelPersonatge = [];
                         if (personatgeId) {
                             for (let k = 0; k < puntsMissio.length; k++) {
@@ -234,9 +213,8 @@ function configureSocket(server) {
                     }
                 }
 
-                // 4. Creem la sessió a la BD
                 const duracioSessio = dades.duracio || room.duracio || 60;
-                room.duracio = duracioSessio; // Actualitzem la durada en memòria per si de cas
+                room.duracio = duracioSessio;
 
                 const ara = new Date();
                 const tempsLimit = new Date(ara.getTime() + duracioSessio * 60000);
@@ -256,17 +234,16 @@ function configureSocket(server) {
 
                 console.log('Sessió de joc creada:', novaSessio._id, '| roomCode:', roomCode);
 
-                // 7. Emetre la carta de personatge a cada socket INDIVIDUALMENT
+                // Emissió individualitzada de les cartes de personatge per establir asimetria en el flux de joc
                 for (let idx = 0; idx < room.players.length; idx++) {
                     const playerInfo = room.players[idx];
                     const assignat = assignacioPersonatge[idx];
                     const jugadorDB = jugadorsDB[idx];
 
                     if (playerInfo && playerInfo.id && assignat) {
-                        // En mode grup/grups, només enviem la carta als capitanys
                         const esCapita = jugadorDB ? jugadorDB.capita : true;
                         if (mode.toLowerCase() !== 'individual' && !esCapita) {
-                            continue; // No enviem carta als acompanyants
+                            continue;
                         }
 
                         const imatgeUrl = assignat.imatge || '';
@@ -283,7 +260,7 @@ function configureSocket(server) {
                     }
                 }
 
-                // 8. Planificar el final per timeout
+                // Programació asíncrona per al tancament forçat de la sessió un cop exhaurit el temps assignat
                 setTimeout(async () => {
                     try {
                         const s = await SessioJoc.findById(novaSessio._id);
@@ -298,7 +275,6 @@ function configureSocket(server) {
                     }
                 }, duracioSessio * 60000);
 
-                // 9. Enviem el sessioId a tots els jugadors (game-started)
                 io.to(roomCode).emit('game-started', {
                     sessioId: novaSessio._id,
                     mode: mode,
@@ -312,8 +288,7 @@ function configureSocket(server) {
             }
         });
 
-        // Event especial: la pàgina de càmera s'uneix a la room del joc actiu
-        // El frontend envia el sessioId (_id de SessioJoc) i el backend busca el roomCode a la BD
+        // Receptor de connexions asíncrones inter-pàgina (ex. mòdul de càmera connectant-se a sessió existent)
         socket.on('join-game-room', async function (idOrCodi) {
             if (!idOrCodi) return;
             try {

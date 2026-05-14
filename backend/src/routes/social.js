@@ -2,15 +2,13 @@ const express = require('express');
 const router = express.Router();
 const { Post, Perfil, SessioJoc, Ressenya, Usuari } = require('../models');
 
-
+// GET /social/leaderboard/global: Retorna el rànquing global (top 3) ordenat descendentment pels punts acumulats als perfils.
 router.get('/leaderboard/global', async (req, res) => {
     try {
-        // Eliminem el filtre 'mostrarAlRanking' si no existeix al model
-        // O el mantenim si penses afegir-lo al PerfilSchema
         const topExploradors = await Perfil.find({}) 
-            .sort({ punts: -1 }) // De més a menys punts
+            .sort({ punts: -1 })
             .limit(3)
-            .select('nom_usuari punts avatar nivell'); // Seleccionem els camps necessaris
+            .select('nom_usuari punts avatar nivell');
 
         res.json(topExploradors);
     } catch (error) {
@@ -19,7 +17,7 @@ router.get('/leaderboard/global', async (req, res) => {
     }
 });
 
-
+// POST /social/ressenyes: Crea una nova instància de ressenya valorativa per a un lloc específic al sistema.
 router.post('/ressenyes', async (req, res) => {
     try {
         const { id_lloc, id_usuari, estrelles, comentari } = req.body;
@@ -37,19 +35,16 @@ router.post('/ressenyes', async (req, res) => {
 });
 
 
-// --- NOVA RUTA: Rànquing de la sessió finalitzada ---
+// GET /social/leaderboard/session/:sessionId: Retorna el llistat de jugadors d'una sessió de joc específica ordenats per puntuació.
 router.get('/leaderboard/session/:sessionId', async (req, res) => {
     try {
         const { sessionId } = req.params;
-        // Busquem la sessió de joc per obtenir els jugadors i els seus temps/punts
-        // Nota: Assumim que tens un model 'SessioJoc' o similar
         const sessio = await SessioJoc.findById(sessionId).populate('jugadors.id_usuari', 'nom_usuari avatar');
 
 
         if (!sessio) return res.status(404).json({ message: "Sessió no trobada" });
 
 
-        // Ordenem els jugadors pels punts obtinguts en aquesta partida específica
         const resultatsPartida = sessio.jugadors.sort((a, b) => b.puntsPartida - a.puntsPartida);
 
 
@@ -60,7 +55,7 @@ router.get('/leaderboard/session/:sessionId', async (req, res) => {
 });
 
 
-// 1. Obtenir tots els posts
+// GET /social/posts: Retorna un feed cronològic de publicacions globals, permetent el filtratge per categories (tags).
 router.get('/posts', async (req, res) => {
     try {
         const { tag } = req.query;
@@ -72,7 +67,6 @@ router.get('/posts', async (req, res) => {
         }
 
 
-        // Mongoose: Busquem posts, ordenem per data descendent
         const posts = await Post.find(query).sort({ timestamp: -1 });
         res.json(posts);
     } catch (error) {
@@ -80,10 +74,9 @@ router.get('/posts', async (req, res) => {
     }
 });
 
-
+// POST /social/posts: Registra i emmagatzema una nova publicació generada per un usuari actiu de la plataforma.
 router.post('/posts', async (req, res) => {
     try {
-        // 1. Extraiem 'imatges_post' (en plural) que és el que envia el frontend
         const { id_usuari, nom_usuari, avatar_usuari, text, imatges_post, tags, ubicacio } = req.body;
 
         if (!id_usuari) {
@@ -95,7 +88,6 @@ router.post('/posts', async (req, res) => {
             nom_usuari,
             avatar_usuari: avatar_usuari || '',
             text: text || '',
-            // Ara fem servir la variable correcta que hem extret a dalt
             imatges_post: imatges_post || [],
             tags: tags || [],
             ubicacio: ubicacio || '',
@@ -106,24 +98,20 @@ router.post('/posts', async (req, res) => {
         await nouPost.save();
         res.status(201).json({ success: true, post: nouPost });
     } catch (error) {
-        // Aquest console.log et mostrarà l'error real a la teva terminal de VS Code
         console.error("Error creando post:", error);
         res.status(500).json({ message: "Error al guardar la publicació", detall: error.message });
     }
 });
 
-// Ruta al fitxer backend/src/routes/social.js
-
+// POST /social/amics/eliminar: Processa l'eliminació bidireccional d'una relació d'amistat entre dos perfils.
 router.post('/amics/eliminar', async (req, res) => {
   const { el_meu_perfil_id, id_amic_a_borrar } = req.body;
 
   try {
-    // 1. Treure l'amic del meu perfil
     await Perfil.findByIdAndUpdate(el_meu_perfil_id, {
       $pull: { amics: id_amic_a_borrar }
     });
 
-    // 2. Treure'm a mi de la llista d'amics de l'altre (amistat bidireccional)
     await Perfil.findByIdAndUpdate(id_amic_a_borrar, {
       $pull: { amics: el_meu_perfil_id }
     });
@@ -135,6 +123,7 @@ router.post('/amics/eliminar', async (req, res) => {
   }
 });
 
+// POST /social/posts/:postId/like: Actualitza (activa/desactiva) l'estat d'interacció de 'M'agrada' per a un usuari sobre una publicació.
 router.post('/posts/:postId/like', async (req, res) => {
     try {
         const { postId } = req.params;
@@ -152,7 +141,6 @@ router.post('/posts/:postId/like', async (req, res) => {
         }
 
         await post.save();
-        // DEVOLVEMOS EL ARRAY ACTUALIZADO
         res.json({ success: true, likes: post.likes });
     } catch (error) {
         res.status(500).json({ message: "Error al gestionar el m'agrada" });
@@ -160,10 +148,9 @@ router.post('/posts/:postId/like', async (req, res) => {
 });
 
 
-// 4. Eliminar post
+// DELETE /social/posts/:postId: Elimina permanentment un document de publicació del sistema.
 router.delete('/posts/:postId', async (req, res) => {
     try {
-        // Mongoose gestiona l'ObjectId sol
         await Post.findByIdAndDelete(req.params.postId);
         res.json({ success: true });
     } catch (error) {
@@ -172,6 +159,7 @@ router.delete('/posts/:postId', async (req, res) => {
 });
 
 
+// POST /social/posts/:postId/comentari: Afegeix un nou comentari a una publicació existent i actualitza l'esquema Mongoose associat.
 router.post('/posts/:postId/comentari', async (req, res) => {
     try {
         const { postId } = req.params;
@@ -190,7 +178,7 @@ router.post('/posts/:postId/comentari', async (req, res) => {
 
 
         post.comentaris.push(nouComentari);
-        post.markModified('comentaris'); // Obligatorio para arrays en Mongoose
+        post.markModified('comentaris');
         await post.save();
 
 
@@ -201,12 +189,9 @@ router.post('/posts/:postId/comentari', async (req, res) => {
     }
 });
 
-// --- MODERACIÓ PER A ADMINISTRADORS ---
-
-// Obtenir totes les ressenyes (per a la vista de moderació)
+// GET /social/admin/ressenyes: Llista totes les ressenyes del sistema amb dades de l'usuari i ubicació per a finalitats de moderació.
 router.get('/admin/ressenyes', async (req, res) => {
     try {
-        // Fem un .populate per veure el nom de l'usuari i el lloc si cal
         const ressenyes = await Ressenya.find()
             .populate('id_usuari', 'nom_usuari')
             .populate('id_lloc', 'nom tags')
@@ -217,7 +202,7 @@ router.get('/admin/ressenyes', async (req, res) => {
     }
 });
 
-// Eliminar una ressenya
+// DELETE /social/admin/ressenyes/:id: Elimina de forma definitiva una ressenya detectada com a inadequada per un administrador.
 router.delete('/admin/ressenyes/:id', async (req, res) => {
     try {
         await Ressenya.findByIdAndDelete(req.params.id);
@@ -227,18 +212,16 @@ router.delete('/admin/ressenyes/:id', async (req, res) => {
     }
 });
 
-// Obtenir tots els posts (per moderar posts sencers)
+// GET /social/admin/posts: Obté el llistat global de publicacions prioritzant aquelles que han estat reportades pels usuaris.
 router.get('/admin/posts', async (req, res) => {
     try {
-        // MODIFICACIÓ: Ordenem primer per 'reportat' (perquè els avisos surtin a dalt)
-        // i després per data (timestamp)
         const posts = await Post.find().sort({ reportat: -1, timestamp: -1 });
         res.json(posts);
     } catch (error) {
         res.status(500).json({ message: "Error al carregar posts" });
     }
 });
-// Esta ruta permite borrar comentarios (tanto para el feed normal como para el panel de admin)
+// DELETE /social/posts/:postId/comentari/:comentariId: Extreu un comentari específic de la matriu de comentaris d'una publicació.
 router.delete('/posts/:postId/comentari/:comentariId', async (req, res) => {
     try {
         const { postId, comentariId } = req.params;
@@ -253,11 +236,10 @@ router.delete('/posts/:postId/comentari/:comentariId', async (req, res) => {
     }
 });
 
-// >>> AFEGEIX AQUESTA RUTA AQUÍ (PER AL BOTÓ VERD "OK/REVISAT") <<<
+// PUT /social/admin/posts/:postId/revisat: Restableix l'estat d'una publicació reportada, marcant-la com a segura després de la revisió.
 router.put('/admin/posts/:postId/revisat', async (req, res) => {
     try {
         const { postId } = req.params;
-        // Treiem la marca de reportat i les dades del report
         await Post.findByIdAndUpdate(postId, {
             $set: { reportat: false },
             $unset: { data_report: "", reportat_per: "" }
@@ -269,21 +251,18 @@ router.put('/admin/posts/:postId/revisat', async (req, res) => {
 });
 
 
-// --- NOVA RUTA: Reportar un comentari ---
+// POST /social/posts/:postId/comentari/:comentariId/report: Marca un comentari específic com a reportat i n'emmagatzema l'autor i la data.
 router.post('/posts/:postId/comentari/:comentariId/report', async (req, res) => {
     try {
         const { postId, comentariId } = req.params;
         const { id_usuari_reporter, motiu } = req.body;
 
-        // Busquem el post i marquem el comentari com a reportat
-        // Nota: Això dependrà de si el teu esquema de Post permet guardar l'estat 'reportat' dins de l'array de comentaris.
         const post = await Post.findById(postId);
         if (!post) return res.status(404).json({ message: "Post no trobat" });
 
         const comentari = post.comentaris.find(c => c.id_comentari === comentariId);
         if (!comentari) return res.status(404).json({ message: "Comentari no trobat" });
 
-        // Afegim una propietat 'reportat' al comentari si no existeix
         comentari.reportat = true;
         comentari.reportat_per = id_usuari_reporter;
         comentari.data_report = new Date();
@@ -298,7 +277,8 @@ router.post('/posts/:postId/comentari/:comentariId/report', async (req, res) => 
     }
 });
 
-router.post('/posts/:postId/report', async (req, res) => { // Canviat de 'report_post' a 'report'
+// POST /social/posts/:postId/report: Registra un avís sobre una publicació global alterant el seu estat a 'reportat' per a la moderació.
+router.post('/posts/:postId/report', async (req, res) => {
     try {
         const { postId } = req.params;
         const { id_usuari_reporter } = req.body;
@@ -318,12 +298,11 @@ router.post('/posts/:postId/report', async (req, res) => { // Canviat de 'report
     }
 });
 
-// Ruta per marcar un COMENTARI com a revisat/segur (treure el flag de reportat)
+// PUT /social/admin/posts/:postId/comentaris/:comentariId/revisat: Valida i restaura la visibilitat d'un comentari previament reportat.
 router.put('/admin/posts/:postId/comentaris/:comentariId/revisat', async (req, res) => {
     try {
         const { postId, comentariId } = req.params;
 
-        // Busquem el post i dins de l'array de comentaris, posem reportat a false
         const post = await Post.findOneAndUpdate(
             { _id: postId, "comentaris.id_comentari": comentariId },
             { $set: { "comentaris.$.reportat": false } },
@@ -339,9 +318,7 @@ router.put('/admin/posts/:postId/comentaris/:comentariId/revisat', async (req, r
     }
 });
 
-// --- GESTIÓ D'AMICS ---
-
-// Cercar usuaris per nom d'usuari (regex parcial)
+// GET /social/search: Cerca perfils d'usuari actius mitjançant expressió regular sobre el nom (insensible a majúscules).
 router.get('/search', async (req, res) => {
     try {
         const { username } = req.query;
@@ -357,7 +334,7 @@ router.get('/search', async (req, res) => {
     }
 });
 
-// Enviar petició d'amistat
+// POST /social/peticions/enviar: Registra una sol·licitud d'amistat pendent a l'esquema del perfil de destinació.
 router.post('/peticions/enviar', async (req, res) => {
     try {
         const { de_perfil_id, de_nom, per_a_perfil_id } = req.body;
@@ -390,7 +367,7 @@ router.post('/peticions/enviar', async (req, res) => {
     }
 });
 
-// Acceptar petició d'amistat
+// POST /social/peticions/acceptar: Valida i consolida l'amistat bidireccional, esborrant la sol·licitud pendent d'ambdós perfils.
 router.post('/peticions/acceptar', async (req, res) => {
     try {
         const { el_meu_perfil_id, id_nou_amic_perfil } = req.body;
@@ -419,7 +396,7 @@ router.post('/peticions/acceptar', async (req, res) => {
     }
 });
 
-// Rebutjar petició d'amistat
+// POST /social/peticions/rebutjar: Denega i elimina de la base de dades una petició d'amistat pendent.
 router.post('/peticions/rebutjar', async (req, res) => {
     try {
         const { el_meu_perfil_id, id_amic_perfil } = req.body;

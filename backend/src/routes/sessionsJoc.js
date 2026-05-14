@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { SessioJoc, Lloc } = require('../models');
-const { Perfil } = require('../models'); // Assegura't d'importar Perfil
+const { Perfil } = require('../models');
 
-// POST /api/sessionsJoc/:id/finalitzar
+// POST /sessionsJoc/:id/finalitzar: Tanca una sessió de joc activa i consolida els punts obtinguts al perfil de l'usuari.
 router.post('/:id/finalitzar', async function (req, res) {
     try {
         const idOrCodi = req.params.id;
@@ -16,7 +16,6 @@ router.post('/:id/finalitzar', async function (req, res) {
         const sessio = await SessioJoc.findOne(query);
         if (!sessio) return res.status(404).json({ missatge: "Sessió no trobada" });
 
-        // 1. Actualitzem l'estat del jugador dins la sessió
         const jugador = sessio.jugadors.find(j => j.id_usuari.toString() === perfilId.toString());
         if (jugador) {
             jugador.completat = true;
@@ -24,13 +23,10 @@ router.post('/:id/finalitzar', async function (req, res) {
             jugador.temps = tempsFinal;
         }
 
-        // 2. IMPORTANT: Sumar punts al rànquing global (Model Perfil)
-        // També podríem actualitzar el nivell aquí si cal
         await Perfil.findByIdAndUpdate(perfilId, {
             $inc: { punts: puntsGuanyats }
         });
 
-        // 3. Comprovem si tots els jugadors han acabat per tancar la sala
         const totsAcabat = sessio.jugadors.every(j => j.completat);
         if (totsAcabat) {
             sessio.estat = 'finalitzada';
@@ -50,7 +46,7 @@ router.post('/:id/finalitzar', async function (req, res) {
     }
 });
 
-// POST /api/sessionsJoc/crear — Crear la sessió quan l'usuari comença a jugar
+// POST /sessionsJoc/crear: Inicialitza una nova sessió de joc en mode individual, vinculant la ubicació i punts de missió al perfil sol·licitant.
 router.post('/crear', async function (req, res) {
     try {
         const idLloc = req.body.idLloc;
@@ -60,13 +56,11 @@ router.post('/crear', async function (req, res) {
             return res.status(400).json({ missatge: "Falten dades: idLloc o perfilId" });
         }
 
-        // Carreguem el lloc per obtenir els IDs dels punts de missió
         const lloc = await Lloc.findById(idLloc);
         if (!lloc) {
             return res.status(404).json({ missatge: "Lloc no trobat" });
         }
 
-        // Extraiem els _id dels punts de missió del lloc
         const puntsIds = [];
         for (let i = 0; i < lloc.punts_missio.length; i++) {
             puntsIds.push(lloc.punts_missio[i]._id);
@@ -103,7 +97,7 @@ router.post('/crear', async function (req, res) {
     }
 });
 
-// POST /api/sessionsJoc/crear-grup — Crear sessió per a un grup (cridat per gameSocket)
+// POST /sessionsJoc/crear-grup: Instància una nova sessió de joc col·laboratiu i hi afegeix múltiples perfils.
 router.post('/crear-grup', async function (req, res) {
     try {
         const idLloc = req.body.idLloc;
@@ -113,13 +107,11 @@ router.post('/crear-grup', async function (req, res) {
             return res.status(400).json({ missatge: "Falten dades: idLloc o jugadors" });
         }
 
-        // Carreguem el lloc per obtenir els IDs dels punts de missió
         const lloc = await Lloc.findById(idLloc);
         if (!lloc) {
             return res.status(404).json({ missatge: "Lloc no trobat" });
         }
 
-        // Extraiem els _id dels punts de missió
         const puntsIds = [];
         for (let i = 0; i < lloc.punts_missio.length; i++) {
             puntsIds.push(lloc.punts_missio[i]._id);
@@ -127,7 +119,6 @@ router.post('/crear-grup', async function (req, res) {
 
         const tempsLimitGlobal = new Date(Date.now() + (req.body.duracio || 60) * 60000);
 
-        // Construïm l'array de jugadors per a la sessió
         const jugadorsDB = [];
         for (let i = 0; i < jugadors.length; i++) {
             jugadorsDB.push({
@@ -162,18 +153,16 @@ router.post('/crear-grup', async function (req, res) {
     }
 });
 
-// GET /api/sessionsJoc/:id — Obtenir la sessió per ID o per Codi de Sala
+// GET /sessionsJoc/:id: Retorna el detall complet d'una sessió de joc existent, admetent cerca tant per ObjectId com per codi de sala generat aleatòriament.
 router.get('/:id', async function (req, res) {
     try {
         const idOrCodi = req.params.id;
         console.log("[SessionsJoc] Buscant sessió amb:", idOrCodi);
 
         let query = {};
-        // Si sembla un ObjectId de MongoDB (24 caràcters hex)
         if (idOrCodi.match(/^[0-9a-fA-F]{24}$/)) {
             query = { _id: idOrCodi };
         } else {
-            // Si no, busquem pel codi de sala de 6 caràcters
             query = { codi_sala: idOrCodi.toUpperCase() };
         }
 
@@ -194,7 +183,7 @@ router.get('/:id', async function (req, res) {
     }
 });
 
-// PATCH /api/sessionsJoc/:id/usar-pista — Incrementar el contador de pistes d'un jugador
+// PATCH /sessionsJoc/:id/usar-pista: Registra la utilització d'una pista per part del jugador i aplica la penalització temporal corresponent al temps límit de sessió.
 router.patch('/:id/usar-pista', async function (req, res) {
     try {
         const idOrCodi = req.params.id;
@@ -211,14 +200,12 @@ router.patch('/:id/usar-pista', async function (req, res) {
         const sessio = await SessioJoc.findOne(query);
         if (!sessio) return res.status(404).json({ missatge: "Sessió no trobada" });
 
-        // Busquem el jugador a la sessió
         const jugador = sessio.jugadors.find(j =>
             j.id_usuari.toString() === perfilId.toString()
         );
 
         if (!jugador) return res.status(404).json({ missatge: "Jugador no trobat a la sessió" });
 
-        // Si el punt ja estava revelat, no fem res especial, només confirmem
         if (jugador.pistes_revelades && jugador.pistes_revelades.includes(idPunt)) {
             return res.json({
                 missatge: "Pista ja revelada anteriorment",
@@ -227,7 +214,6 @@ router.patch('/:id/usar-pista', async function (req, res) {
             });
         }
 
-        // Verifiquem el límit de 3 pistes
         if (jugador.pistes_gastades >= 3) {
             return res.status(400).json({ missatge: "Has esgotat el límit de 3 pistes!", pistes_gastades: jugador.pistes_gastades });
         }
@@ -236,10 +222,8 @@ router.patch('/:id/usar-pista', async function (req, res) {
         if (!jugador.pistes_revelades) jugador.pistes_revelades = [];
         jugador.pistes_revelades.push(idPunt);
 
-        // Apliquem la penalització de temps: -5 minuts (300.000 ms)
         const PENALITZACIO_MS = 5 * 60 * 1000;
 
-        // Si el jugador té un grup, apliquem la penalització a tot el grup
         if (jugador.grup_id !== null && jugador.grup_id !== undefined) {
             sessio.jugadors.forEach(j => {
                 if (j.grup_id === jugador.grup_id) {
@@ -248,7 +232,6 @@ router.patch('/:id/usar-pista', async function (req, res) {
                 }
             });
         } else {
-            // Individual
             const tempsActual = new Date(jugador.temps_limit || sessio.temps_limit).getTime();
             jugador.temps_limit = new Date(tempsActual - PENALITZACIO_MS);
         }

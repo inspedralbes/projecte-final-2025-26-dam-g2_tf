@@ -5,7 +5,7 @@ const fs = require('fs');
 
 const extensionsValides = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
 
-// GET /api/carta-lore/totes — llista totes les cartes de lore disponibles
+// GET /carta-lore/totes: Obté un llistat dels fitxers d'imatge vàlids disponibles al directori local de cartes de lore.
 router.get('/totes', function (req, res) {
     const base = path.join(__dirname, '../../public/assets/Carta_lore');
 

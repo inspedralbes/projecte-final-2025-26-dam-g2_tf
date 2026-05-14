@@ -1,5 +1,5 @@
 require('dotenv').config();
-// Fix per a TensorFlow.js en Node 22/24 (isNullOrUndefined ha estat eliminat de Node)
+// Pedaç de retrocompatibilitat per a util.isNullOrUndefined necessari per a TensorFlow.js en Node >= 22.
 const util = require('util');
 if (!util.isNullOrUndefined) {
     util.isNullOrUndefined = (val) => val === null || val === undefined;
@@ -12,26 +12,24 @@ const { connectDB } = require('./src/config/db');
 const app = express();
 const PORT = process.env.PORT || 8088;
 
-// Manejo global de excepciones para evitar que el servidor se caiga
+// Captura global d'excepcions síncrones per prevenir la caiguda abrupta del procés (process exit).
 process.on('uncaughtException', (err) => {
     console.error('UNCAUGHT EXCEPTION:', err);
-    // No cerramos el proceso, permitimos que el servidor siga vivo
 });
 process.on('unhandledRejection', (err) => {
     console.error('UNHANDLED REJECTION:', err);
 });
 
-// CORS permisivo para desarrollo (ajustar en producción)
+// Configuració de CORS per admetre peticions locals i de la xarxa en fase de desenvolupament.
 const corsOptions = {
     origin: function (origin, callback) {
-        // Permitir solicitudes sin origin (como Postman) o desde localhost
         if (!origin || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
             return callback(null, true);
         }
         if (process.env.ORIGIN_URL && origin === process.env.ORIGIN_URL) {
             return callback(null, true);
         }
-        callback(null, true); // Permisivo por defecto para evitar bloqueos
+        callback(null, true);
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true
@@ -40,10 +38,9 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 
-// Servir la carpeta public com a base per a tot
+// Mapeig de directoris estàtics per exposar els actius multimèdia.
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Rutes específiques per a carpetes de fotos (opcional però ajuda a clarificar)
 app.use('/foto_mapa', express.static(path.join(__dirname, 'public/foto_mapa')));
 app.use('/fotos_actuals', express.static(path.join(__dirname, 'public/fotos_actuals')));
 app.use('/fotos_historiques', express.static(path.join(__dirname, 'public/fotos_historiques')));
@@ -52,9 +49,8 @@ app.use('/assets', express.static(path.join(__dirname, 'public/assets')));
 app.use('/Cromos', express.static(path.join(__dirname, 'public/Cromos')));
 
 
-// La separem del servidor per poder fer tests sense aixecar el servidor real
+// Encapsula el muntatge de rutes per facilitar la injecció de middlewares estructurats (ex: control horari).
 function configurarRutes(middlewareHorari) {
-    // Rutes que NO necessiten control d'horari
     app.use('/api/usuari', require('./src/routes/usuari'));
     app.use('/api/social', require('./src/routes/social'));
     app.use('/api/peticions', require('./src/routes/peticions'));
@@ -84,7 +80,6 @@ async function startServer() {
         await connectDB();
         console.log("MongoDB Connectat correctament");
 
-        // Afegir 'ordre: 0' a documents antics que no el tinguin
         const { Lloc } = require('./src/models/index');
         const result = await Lloc.updateMany(
           { ordre: { $exists: false } }, 

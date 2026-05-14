@@ -12,7 +12,7 @@ function calcularNivell(cromos) {
     return "Explorador Novell";
 }
 
-// 3. ACTUALITZAR BIOGRAFIA I ROL 
+// PUT /usuari/update: Actualitza les dades bàsiques del perfil (nom, biografia) i recalcula el nivell d'explorador basant-se en l'inventari.
 router.put('/update', async (req, res) => {
     try {
         const { perfilId, nouNom, novaBio } = req.body;
@@ -24,7 +24,6 @@ router.put('/update', async (req, res) => {
         if (nouNom) perfil.nom_usuari = nouNom;
         if (novaBio !== undefined) perfil.biografia = novaBio;
 
-        // Actualitzem punts: 1 cromo = 1 punt
         perfil.punts = perfil.inventari_cromos.length;
         perfil.nivell = calcularNivell(perfil.punts);
 
@@ -36,7 +35,7 @@ router.put('/update', async (req, res) => {
     }
 });
 
-// 4. AFREGR CROMO (Pujada de nivell automàtica)
+// PUT /usuari/afegir-cromo: Insereix un nou cromo a l'inventari del perfil i executa l'algorisme de progressió de nivell.
 router.put('/afegir-cromo', async (req, res) => {
     try {
         const { perfilId, nouCromo } = req.body;
@@ -45,13 +44,8 @@ router.put('/afegir-cromo', async (req, res) => {
         }
         const perfil = await Perfil.findById(perfilId);
 
-        // Afegim el cromo
         perfil.inventari_cromos.push(nouCromo);
-
-        // 1 cromo = 1 punt
         perfil.punts = perfil.inventari_cromos.length;
-
-        // Calculem el nou nivell amb la funció d'abalt
         perfil.nivell = calcularNivell(perfil.punts);
 
         await perfil.save();
@@ -62,7 +56,7 @@ router.put('/afegir-cromo', async (req, res) => {
     }
 });
 
-// A. ENVIAR SOL·LICITUD D'AMISTAT (Corregit)
+// POST /usuari/sollicitud-amistat: Gestiona l'enviament de peticions d'amistat, inicialitzant els arrays d'estat si estan buits.
 router.post('/sollicitud-amistat', async (req, res) => {
     try {
         const { de_perfil_id, de_nom, per_a_perfil_id } = req.body;
@@ -71,7 +65,6 @@ router.post('/sollicitud-amistat', async (req, res) => {
 
         if (!perfilDesti) return res.status(404).json({ message: "Perfil no trobat" });
 
-        // INICIALITZACIÓ SEGURA: Si no existeix l'array, el creem buit
         if (!perfilDesti.sollicituds_pendents) {
             perfilDesti.sollicituds_pendents = [];
         }
@@ -79,7 +72,6 @@ router.post('/sollicitud-amistat', async (req, res) => {
             perfilDesti.amics = [];
         }
 
-        // Ara ja podem comprovar sense por a l'error 500
         if (perfilDesti.amics.includes(de_perfil_id)) {
             return res.status(400).json({ message: "Ja sou amics" });
         }
@@ -105,6 +97,7 @@ router.post('/sollicitud-amistat', async (req, res) => {
     }
 });
 
+// POST /usuari/acceptar-amistat: Vincula bidireccionalment dos perfils com a amics i neteja les sol·licituds pendents prèvies.
 router.post('/acceptar-amistat', async (req, res) => {
     try {
         const { el_meu_perfil_id, id_nou_amic_perfil } = req.body;
@@ -116,12 +109,10 @@ router.post('/acceptar-amistat', async (req, res) => {
             return res.status(404).json({ message: "Un dels perfils no existeix" });
         }
 
-        // 1. Inicialització de seguretat (evita l'error 500 si l'array no existeix)
         if (!jo.amics) jo.amics = [];
         if (!ell.amics) ell.amics = [];
         if (!jo.sollicituds_pendents) jo.sollicituds_pendents = [];
 
-        // 2. Afegir-nos mútuament si no som amics ja
         if (!jo.amics.includes(id_nou_amic_perfil)) {
             jo.amics.push(id_nou_amic_perfil);
         }
@@ -129,8 +120,6 @@ router.post('/acceptar-amistat', async (req, res) => {
             ell.amics.push(el_meu_perfil_id);
         }
 
-        // 3. Netejar la sol·licitud pendent
-        // Fem servir .toString() perquè els IDs de Mongo són objectes, no strings directes
         jo.sollicituds_pendents = jo.sollicituds_pendents.filter(
             s => s.id_perfil && s.id_perfil.toString() !== id_nou_amic_perfil.toString()
         );
@@ -145,10 +134,9 @@ router.post('/acceptar-amistat', async (req, res) => {
     }
 });
 
-// OBTENIR PERFIL PER ID (Amb el nom dels amics carregat)
+// GET /usuari/:id: Retorna el document de perfil poblat amb dades bàsiques de contacte de l'usuari arrel i el llistat d'amics.
 router.get('/:id', async (req, res) => {
     try {
-        // Validació de l'ID amb Mongoose per evitar que el servidor peti
         if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ message: "ID d'usuari no vàlid" });
         }
@@ -167,7 +155,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// ELIMINAR COMPTE (BORRAT TOTAL)
+// DELETE /usuari/:id: Executa la purga global d'un usuari (perfil, publicacions, imatges associades en disc, ressenyes i peticions).
 router.delete('/:id', async (req, res) => {
     try {
         const perfilId = req.params.id;
@@ -180,7 +168,6 @@ router.delete('/:id', async (req, res) => {
 
         const usuariId = perfil.usuari_id;
 
-        // 1. Eliminar archivos de Posts
         const posts = await Post.find({ id_usuari: perfilId });
         for (const post of posts) {
             if (post.imatges_post && post.imatges_post.length > 0) {
@@ -199,7 +186,6 @@ router.delete('/:id', async (req, res) => {
             }
         }
 
-        // 2. Eliminar archivos de Verificación
         const usuari = await Usuari.findById(usuariId);
         if (usuari && usuari.verificacio_imatge) {
             const fullPath = path.join(__dirname, '../../public', usuari.verificacio_imatge);
@@ -208,24 +194,20 @@ router.delete('/:id', async (req, res) => {
             }
         }
 
-        // 3. Eliminar registros de la DB
         await Post.deleteMany({ id_usuari: perfilId });
         await Ressenya.deleteMany({ id_usuari: perfilId });
         await PeticioRuta.deleteMany({ id_usuari: perfilId });
 
-        // 4. Limpiar referencias de amigos
         await Perfil.updateMany(
             { amics: perfilId },
             { $pull: { amics: perfilId } }
         );
         
-        // 5. Limpiar solicitudes pendientes
         await Perfil.updateMany(
             { "sollicituds_pendents.id_perfil": perfilId },
             { $pull: { sollicituds_pendents: { id_perfil: perfilId } } }
         );
 
-        // 6. Eliminar Perfil y Usuario
         await Perfil.findByIdAndDelete(perfilId);
         await Usuari.findByIdAndDelete(usuariId);
 
@@ -236,7 +218,7 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-// MARCAR LORE INICIAL COM A VIST
+// PUT /usuari/marcar-lore-vist/:id: Actualitza la bandera (flag) d'estat d'introducció (lore) al perfil indicant que l'usuari ja ha passat el tutorial inicial.
 router.put('/marcar-lore-vist/:id', async (req, res) => {
     try {
         const perfilId = req.params.id;

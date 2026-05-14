@@ -3,7 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const { Lloc } = require('../models/index');
 
-// 1. Obtenir tots els llocs (Punts del mapa)
+// GET /mapa/punts: Retorna el llistat complet de localitzacions ordenat per la propietat 'ordre', incloent els personatges associats.
 router.get('/punts', async (req, res) => {
     try {
 
@@ -15,7 +15,7 @@ router.get('/punts', async (req, res) => {
     }
 });
 
-// 2. Obtenir un sol lloc per ID
+// GET /mapa/punts/:id: Retorna el document complet d'una localització específica mitjançant el seu ObjectId.
 router.get('/punts/:id', async (req, res) => {
     try {
         if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -34,7 +34,7 @@ router.get('/punts/:id', async (req, res) => {
     }
 });
 
-// 3. CREAR un nou lloc
+// POST /mapa/punts: Crea una nova localització al sistema amb les dades proporcionades al cos de la petició.
 router.post('/punts', async (req, res) => {
     try {
         const nouLloc = new Lloc(req.body);
@@ -46,13 +46,12 @@ router.post('/punts', async (req, res) => {
     }
 });
 
-// 4. ACTUALITZAR un lloc existent
+// PUT /mapa/punts/:id: Actualitza els atributs d'una localització existent aplicant restriccions per protegir els camps immutables.
 router.put('/punts/:id', async (req, res) => {
     try {
         if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ error: "ID no vàlid" });
         }
-        // Netejar camps immutables que podrien bloquejar l'actualització
         const dadesActualitzacio = { ...req.body };
         delete dadesActualitzacio._id;
         delete dadesActualitzacio.__v;
@@ -67,8 +66,6 @@ router.put('/punts/:id', async (req, res) => {
             return res.status(404).json({ error: "Lloc no trobat" });
         }
 
-        // La petició ja és 'aprovada' des que es va acceptar, no cal sincronitzar més
-
         console.log(`[Mapa] Lloc ${req.params.id} actualitzat: ${llocActualitzat.punts_missio.length} punts_missio desats.`);
         res.json(llocActualitzat);
     } catch (error) {
@@ -80,7 +77,7 @@ router.put('/punts/:id', async (req, res) => {
     }
 });
 
-// 5. ELIMINAR un lloc
+// DELETE /mapa/punts/:id: Elimina permanentment una localització del sistema a partir del seu ObjectId.
 router.delete('/punts/:id', async (req, res) => {
     try {
         if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -94,7 +91,7 @@ router.delete('/punts/:id', async (req, res) => {
     }
 });
 
-// 6. Obtenir ressenyes d'un lloc
+// GET /mapa/punts/:id/ressenyes: Llista cronològicament les ressenyes associades a una localització, incloent dades del perfil d'usuari.
 router.get('/punts/:id/ressenyes', async (req, res) => {
     try {
         if (!req.params.id || !mongoose.Types.ObjectId.isValid(req.params.id)) {

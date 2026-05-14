@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { Usuari, Perfil } = require('../models');
 
-// 1. FUNCIÓ PER AL REGISTRE
+// POST /auth/registre: Crea un nou Usuari i el seu Perfil per defecte. Processa la verificació d'edat.
 async function ferRegistre(peticio, resposta) {
     try {
         const { correu, contrasenya, nom_usuari, verificacio_imatge, es_major_confirmada } = peticio.body;
@@ -76,7 +76,7 @@ async function ferRegistre(peticio, resposta) {
     }
 }
 
-// 2. FUNCIÓ PER AL LOGIN 
+// POST /auth/login: Autentica un usuari comprovant credencials i l'estat de verificació.
 async function ferLogin(peticio, resposta) {
     try {
         const { correu, contrasenya } = peticio.body;
@@ -107,7 +107,6 @@ async function ferLogin(peticio, resposta) {
             verificacio_estat: compte.verificacio_estat
         };
 
-        // Ens assegurem que el camp existeixi per a usuaris antics
         if (usuariSessio.lore_inicial_vist === undefined) {
             usuariSessio.lore_inicial_vist = false;
         }

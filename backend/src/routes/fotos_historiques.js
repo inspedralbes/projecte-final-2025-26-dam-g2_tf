@@ -9,7 +9,7 @@ function filtrarImatges(fitxers) {
     return fitxers.filter(f => extensionsValides.includes(path.extname(f).toLowerCase()));
 }
 
-// Llegeix recursivament una carpeta i retorna totes les imatges amb la seva ruta
+// Recorre el sistema de fitxers de forma recursiva per extreure les rutes i metadades de les imatges.
 function llegirRecursiu(baseDir, subPath, resultat) {
     const carpetaActual = path.join(baseDir, subPath);
     const items = fs.readdirSync(carpetaActual);
@@ -32,7 +32,7 @@ function llegirRecursiu(baseDir, subPath, resultat) {
     }
 }
 
-// GET /api/fotos-historiques/totes — llista totes les fotos de fotos_historiques/ i subcarpetes
+// GET /fotos-historiques/totes: Obté un llistat complet dels fitxers d'imatge vàlids explorant recursivament el directori local.
 router.get('/totes', function (req, res) {
     const base = path.join(__dirname, '../../public/fotos_historiques');
 

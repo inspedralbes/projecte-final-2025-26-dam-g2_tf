@@ -5,7 +5,7 @@ const fs = require('fs');
 
 const extensionsValides = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
 
-// GET /api/cromos/totes — llista tots els cromos disponibles
+// GET /cromos/totes: Obté un llistat dels fitxers d'imatge vàlids disponibles al directori local de cromos.
 router.get('/totes', function (req, res) {
     let base = path.join(__dirname, '../../public/Cromos');
 
