@@ -344,9 +344,12 @@ Esquemes definits a: `backend/src/models/index.js`
 ### Diagrama d'Activitat
 ![Diagrama d'Activitat](./diagrames/diagrama-activitat.png)
 
+
 ### Diagrama de Base de Dades
 ![Diagrama de Base de Dades](./diagrames/diagrama_bd.png)
 
 ### Flux de Pantalles
 📄 [Flux de Pantalles (PDF)](./diagrames/Flux%20de%20Pantalles.pdf)
+
+Demo:   https://drive.google.com/file/d/1D9yYe8ZAUiyYibALjy0bfN736tjsxKbO/view?usp=sharing 
 
