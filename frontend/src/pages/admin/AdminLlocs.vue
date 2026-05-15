@@ -142,6 +142,7 @@ const resetForm = () => ({
 
 const form = ref(resetForm());
 
+// GET /api/mapa/punts: Obté tots els llocs d'interès
 const cargarDatos = async () => {
   try {
     const res = await fetch(PATH);
@@ -174,6 +175,7 @@ const prepararEdicion = (item) => {
   mostrarForm.value = true;
 };
 
+// POST/PUT /api/mapa/punts: Crea o actualitza un lloc
 const guardarLloc = async (datos) => {
   try {
     const payload = { 
@@ -201,6 +203,7 @@ const eliminarLloc = (id) => {
   mostrarConfirm.value = true;
 };
 
+// DELETE /api/mapa/punts/:id: Elimina un lloc permanentment
 const confirmarEliminar = async () => {
   if (!idAEliminar.value) return;
   
@@ -221,6 +224,7 @@ const confirmarEliminar = async () => {
   }
 };
 
+// PATCH /admin/llocs/:id/restriccio: Activa/desactiva la restricció horària
 const toggleRestricció = async (item) => {
   const horariActual = item.control_horari || { actiu: false, hora_inici: 22, hora_fi: 7 };
   const nouActiu = !horariActual.actiu;
@@ -240,6 +244,7 @@ const toggleRestricció = async (item) => {
   }
 };
 
+// PATCH /admin/llocs/:id/estat: Modifica l'estat i ordre
 const canviarEstat = async (item) => {
   try {
     const res = await fetch(`${API_URL}/api/admin/llocs/${item._id}/estat`, {
@@ -264,18 +269,16 @@ const handleDragStart = (index) => {
 const handleDrop = (destiIndex) => {
   if (dragStartIndex.value === null || dragStartIndex.value === destiIndex) return;
   
-  // Moure element dins de l'array
   const [itemMogut] = llista.value.splice(dragStartIndex.value, 1);
   llista.value.splice(destiIndex, 0, itemMogut);
   dragStartIndex.value = null;
 
-  // Sincronitzar amb el backend
   actualitzarOrdreTotal();
 };
 
+// PUT /admin/llocs/reordenar: Actualitza en bloc l'ordre dels llocs
 const actualitzarOrdreTotal = async () => {
   try {
-    // Actualitzar els números d'ordre basant-se en la nova posició
     const llocsPerEnviar = llista.value.map((item, index) => {
       item.ordre = index + 1;
       return { id: item._id, ordre: item.ordre };
@@ -286,7 +289,6 @@ const actualitzarOrdreTotal = async () => {
       body: JSON.stringify({ llocs: llocsPerEnviar })
     });
     if (res.ok) {
-      // Forçar re-render de la llista per mostrar els nous números
       llista.value = [...llista.value];
     } else {
       const errorData = await res.json();

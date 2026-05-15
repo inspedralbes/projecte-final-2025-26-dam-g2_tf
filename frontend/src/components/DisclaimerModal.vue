@@ -55,25 +55,19 @@ import { ref, onMounted } from 'vue';
 
 const emit = defineEmits(['acceptat']);
 
-// Estat per controlar la visibilitat del modal
 const visible = ref(true);
 
-/**
- * Desa l'acceptació al localStorage i tanca el modal
- */
+// Registra l'acceptació en l'emmagatzematge local per persistir l'estat en futures sessions.
 const acceptar = () => {
   localStorage.setItem('disclaimer_acceptat', 'true');
   visible.value = false;
   emit('acceptat');
 };
 
-/**
- * En muntar el component, comprovem si l'usuari ja ha acceptat prèviament
- */
+// Verifica l'estat previ d'acceptació durant la inicialització per determinar la visibilitat del modal.
 onMounted(() => {
   const acceptat = localStorage.getItem('disclaimer_acceptat');
   
-  // Si no existeix la clau al navegador, mostrem el modal obligatori
   if (acceptat) {
     visible.value = false;
     emit('acceptat');
@@ -84,7 +78,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Estils per a la barra de desplaçament personalitzada amb els colors del projecte */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
@@ -100,7 +93,6 @@ onMounted(() => {
   background: #bc85ab;
 }
 
-/* Animacions d'entrada senzilles per a Tailwind */
 .animate-in {
   animation: fadeIn 0.3s ease-out;
 }

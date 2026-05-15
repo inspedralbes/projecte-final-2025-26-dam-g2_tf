@@ -1,3 +1,4 @@
+// Composable: Control de l'estat global del modal d'avisos i confirmacions.
 import { ref } from 'vue';
 
 const modalVisible = ref(false);
@@ -15,7 +16,7 @@ let modalResolve = null;
 export function useCustomModal() {
   const mostrarModal = (options) => {
     return new Promise((resolve) => {
-      // Restore default values for missing options
+      // Assignació de valors per defecte a les opcions omeses
       const defaults = {
         isAlert: false,
         icon: 'warning',

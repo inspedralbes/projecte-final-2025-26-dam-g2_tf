@@ -4,7 +4,7 @@
     style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #402749; z-index: 9999;"
     :style="{ opacity: fadeOut ? 0 : 1, transition: 'opacity 0.4s ease-out' }"
   >
-    <!-- Brújula -->
+    <!-- Renderització: Animació SVG de la brúixola inicial -->
     <div 
       v-if="!compassHidden"
       class="compass-container" 
@@ -16,7 +16,7 @@
       />
     </div>
 
-    <!-- Título del juego -->
+    <!-- Renderització: Títol corporatiu sincronitzat -->
     <div 
       v-if="showTitle" 
       class="game-title"
@@ -41,7 +41,7 @@ const compassHidden = ref(false);
 const showTitle = ref(false);
 const titleFadeOut = ref(false);
 
-// Responsive size
+// Càlcul reactiu de dimensions per a adaptabilitat (viewport).
 const compassSize = computed(() => {
   if (typeof window !== 'undefined') {
     return Math.min(window.innerWidth * 0.8, 400);
@@ -52,38 +52,25 @@ const compassSize = computed(() => {
 const emit = defineEmits(['splash-complete']);
 
 onMounted(() => {
-  // 1. Zoom in inicial de la brújula
-  setTimeout(() => {
-    startZoom.value = true;
-  }, 100);
+  // Orquestració cronològica: Seqüència d'animacions d'entrada (brúixola -> títol -> fade-out global)
+  setTimeout(() => startZoom.value = true, 100);
+  setTimeout(() => roseSpinning.value = true, 700);
+  setTimeout(() => compassFadeOut.value = true, 2200);
   
-  // 2. Las aspas empiezan a girar
   setTimeout(() => {
-    roseSpinning.value = true;
-  }, 700);
-  
-  // 3. La brújula empieza a desvanecerse
-  setTimeout(() => {
-    compassFadeOut.value = true;
-  }, 2200);
+    compassHidden.value = true;
+    showTitle.value = true;
+  }, 2800);
 
-  // 4. El título aparece justo cuando la brújula se ha ido por completo
-  setTimeout(() => {
-    compassHidden.value = true; // Ocultar brújula
-    showTitle.value = true;     // Mostrar título
-  }, 2800); // 2200ms + 600ms de animación de salida
-
-  // 5. El título y el fondo se desvanecen juntos para entrar al juego
   setTimeout(() => {
     titleFadeOut.value = true;
     fadeOut.value = true;
   }, 4100);
 
-  // 6. Finalizar splash y dar paso al juego (emisión más temprana para evitar pausa)
   setTimeout(() => {
     showSplash.value = false;
     emit('splash-complete');
-  }, 4400); // Solo 300ms después de empezar el fundido
+  }, 4400);
 });
 </script>
 

@@ -79,33 +79,28 @@ const router = useRouter()
 const route = useRoute()
 const { mostrarModal: showCustomModal } = useAlertModal()
 
-// Variables reactives per guardar l'estat
 const codigoSala = ref('')
 const mostrarModal = ref(false)
 const mensajeModal = ref('')
 const submensajeModal = ref('')
 
-// Funció per crear una sala (anar a la sala d'espera amb mode crear)
 function crearSala() {
   router.push({ name: 'sala-espera', params: { id: 'crear' }, query: { idLloc: route.params.id } })
 }
 
-// Funció per unir-se si l'usuari ha escrit un codi
 function unirseSala() {
   if (!codigoSala.value) return; 
   router.push({ name: 'sala-espera', params: { id: codigoSala.value } })
 }
 
-// Funció que es crida en prémer "Som-hi" al modal 
 function confirmarInicio() {
   mostrarModal.value = false
   irAlJuego()
 }
 
-// Aquesta funció és la que realment ens porta a la pantalla del mapa
+// POST /api/sessionsJoc/crear: Crea una nova sessió de joc per l'usuari
 async function irAlJuego() {
   try {
-    // 1. Recuperem l'ID del perfil 
     const dadesUsuari = JSON.parse(localStorage.getItem('usuari') || '{}');
     const perfilId = dadesUsuari._id;
 
@@ -119,7 +114,6 @@ async function irAlJuego() {
         return router.push('/login');
     }
 
-    // 2. Creem la sessió real a la base de dades
     const API_URL = BASE_API_URL;
     const resposta = await fetch(`${API_URL}/api/sessionsJoc/crear`, {
 
@@ -141,7 +135,6 @@ async function irAlJuego() {
 
 
 
-    // 3. Anem al mapa amb l'ID de la SESSIÓ
     router.push({ name: 'mapa-joc', params: { id: sessioNova._id } });
 
   } catch (error) {

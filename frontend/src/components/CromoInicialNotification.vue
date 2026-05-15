@@ -2,10 +2,9 @@
   <transition name="cromo-fade">
     <div v-if="visible" class="cromo-notification-overlay">
       <div class="cromo-content-wrapper">
-        <!-- Ambient Glow -->
         <div class="ambient-glow"></div>
 
-        <!-- The Card -->
+        <!-- Renderització: Imatge central amb animació 3D i reflexos -->
         <div class="cromo-card-outer" :class="{ 'reveal': reveal }">
           <div class="cromo-card-inner">
             <div class="card-shine"></div>
@@ -19,7 +18,6 @@
           </div>
         </div>
 
-        <!-- Text Content -->
         <div class="cromo-text-area" :class="{ 'reveal': reveal }">
           <h2 class="cromo-title">El teu primer cromo</h2>
           <p class="cromo-description">
@@ -54,7 +52,6 @@ const onImageLoad = () => {
 };
 
 onMounted(() => {
-  // Fallback reveal
   setTimeout(() => {
     reveal.value = true;
   }, 1000);
@@ -69,8 +66,8 @@ const onAccept = () => {
 .cromo-notification-overlay {
   position: fixed;
   inset: 0;
-  z-index: 2000; /* Higher than regular overlays */
-  background: rgba(26, 14, 46, 0.95); /* Consistent with SobreLore background */
+  z-index: 2000;
+  background: rgba(26, 14, 46, 0.95);
   backdrop-filter: blur(15px);
   display: flex;
   align-items: center;
@@ -108,7 +105,7 @@ const onAccept = () => {
 }
 
 .cromo-card-outer {
-  width: 180px; /* Smaller as requested */
+  width: 180px;
   aspect-ratio: 3/4.5;
   border-radius: 12px;
   position: relative;
@@ -192,7 +189,7 @@ const onAccept = () => {
 }
 
 .cromo-title {
-  font-family: 'Georgia', serif; /* Cohesion with SobreLore */
+  font-family: 'Georgia', serif;
   font-size: 1.75rem;
   font-weight: 400;
   color: #fff;
@@ -203,14 +200,14 @@ const onAccept = () => {
 
 .cromo-description {
   font-family: 'Inter', sans-serif;
-  color: rgba(212, 168, 199, 0.9); /* Subtler purple-white */
+  color: rgba(212, 168, 199, 0.9);
   font-size: 0.95rem;
   line-height: 1.5;
   margin-bottom: 30px;
 }
 
 .btn-action {
-  background: #bc85ab; /* Brand color */
+  background: #bc85ab;
   color: #fff;
   border: none;
   border-radius: 12px;
@@ -234,7 +231,6 @@ const onAccept = () => {
   transform: translateY(0);
 }
 
-/* Base Transitions */
 .cromo-fade-enter-active, .cromo-fade-leave-active {
   transition: opacity 0.8s ease;
 }

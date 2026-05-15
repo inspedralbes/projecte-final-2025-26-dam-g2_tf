@@ -112,8 +112,10 @@
 import { useRouter } from 'vue-router';
 const router = useRouter();
 
+// Navegació programàtica entre rutes d'administració
 const irA = (ruta) => router.push(ruta);
 
+// Tanca la sessió eliminant dades locals i redirigeix a l'inici
 const logout = () => {
   localStorage.clear();
   window.location.href = '/'; 

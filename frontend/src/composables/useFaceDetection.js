@@ -1,33 +1,28 @@
 import { ref, nextTick } from 'vue';
 import { BASE_API_URL } from '../utils/url';
 
-// Patró del projecte per a la URL de l'API (útil si hostegem models o fem crides)
+// Constants: Integració base d'API.
 const API_URL = BASE_API_URL;
 
-/**
- * Composable per gestionar la detecció facial amb face-api.js
- * Dissenyat per funcionar tant en local com en producció (servidor)
- */
+// Composable: Integració del model d'IA de client per a l'anàlisi biomètric (face-api.js).
 export function useFaceDetection() {
-  // Estat de la verificació
+  // Estat reactiu
   const pasVerificacio = ref(false);
   const analitzant = ref(false);
   const analitzantFinal = ref(false);
   const edatDetectada = ref(null);
   const faceApiLlesta = ref(false);
-  
-  // Referències als elements DOM
+
+  // Referències DOM
   const videoRef = ref(null);
   const canvasRef = ref(null);
-  
-  // Variables internes no reactives
+
+  // Variables internes (memòria)
   let mediaStream = null;
   let loopDeteccio = null;
   let historialEdats = [];
 
-  /**
-   * Carrega dinàmicament el script de face-api.js si no existeix
-   */
+  // Lògica d'inicialització: Injecció asíncrona de dependències del CDN.
   const carregarScriptIA = () => {
     return new Promise((resolve, reject) => {
       if (window.faceapi) {
@@ -43,27 +38,21 @@ export function useFaceDetection() {
     });
   };
 
-  /**
-   * Inicialitza l'API i carrega els models necessaris
-   */
+  // Lògica d'inicialització: Càrrega de xarxes neuronals pre-entrenades.
   const handleFaceApiLoaded = async () => {
     if (faceApiLlesta.value) return;
-    
+
     try {
-      // 1. Assegurem que el script estigui carregat
       await carregarScriptIA();
-      
-      // 2. Carreguem els models
-      // Utilitzem el CDN de vladmandic que és molt més fiable per als models
       const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
-      
+
       await Promise.all([
         faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
         faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
         faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
         faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL)
       ]);
-      
+
       faceApiLlesta.value = true;
       console.log("IA Facial a punt (Models carregats)");
     } catch (err) {
@@ -71,9 +60,7 @@ export function useFaceDetection() {
     }
   };
 
-  /**
-   * Atura el loop de detecció facial
-   */
+  // Control de flux: Interrupció de l'anàlisi recursiu.
   const aturarLoopDeteccio = () => {
     if (loopDeteccio) {
       clearTimeout(loopDeteccio);
@@ -81,9 +68,7 @@ export function useFaceDetection() {
     }
   };
 
-  /**
-   * Atura la càmera i neteja el stream
-   */
+  // Maquinari: Alliberament dels recursos de captura de vídeo.
   const aturarCamera = () => {
     aturarLoopDeteccio();
     if (mediaStream) {
@@ -92,15 +77,13 @@ export function useFaceDetection() {
     }
   };
 
-  /**
-   * Inicia el loop de detecció en bucle
-   */
+  // Lògica de control: Execució de la inferència sobre l'esquema de vídeo actiu.
   const iniciarLoopDeteccio = () => {
     if (loopDeteccio) return;
-    
+
     const runDeteccio = async () => {
       if (!videoRef.value || !pasVerificacio.value || analitzantFinal.value) return;
-      
+
       try {
         const detection = await faceapi.detectSingleFace(videoRef.value, new faceapi.TinyFaceDetectorOptions())
           .withFaceLandmarks()
@@ -109,25 +92,23 @@ export function useFaceDetection() {
         if (detection) {
           historialEdats.push(detection.age);
           if (historialEdats.length > 5) historialEdats.shift();
-          
+
           const mitjana = historialEdats.reduce((a, b) => a + b, 0) / historialEdats.length;
           edatDetectada.value = mitjana;
         }
       } catch (err) {
         console.warn("Error en loop de detecció facial:", err);
       }
-      
+
       if (pasVerificacio.value && !analitzantFinal.value) {
         loopDeteccio = setTimeout(runDeteccio, 500);
       }
     };
-    
+
     runDeteccio();
   };
 
-  /**
-   * Activa la càmera de l'usuari
-   */
+  // Maquinari: Sol·licitud de permisos d'accés i muntatge del flux de vídeo.
   const iniciarCamera = async () => {
     await nextTick();
     try {
@@ -135,23 +116,22 @@ export function useFaceDetection() {
         throw new Error("El teu navegador no suporta l'accés a la càmera o estàs en una connexió no segura (HTTP).");
       }
       if (mediaStream) aturarCamera();
-      
-      const constraints = { 
-        video: { 
+
+      const constraints = {
+        video: {
           facingMode: 'user',
           width: { ideal: 640 },
           height: { ideal: 480 }
-        } 
+        }
       };
 
       try {
         mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       } catch (err) {
         console.warn("Failing back to default camera constraints:", err);
-        // Intentem sense facingMode i sense resolució ideal
         mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
       }
-      
+
       if (videoRef.value) {
         videoRef.value.srcObject = mediaStream;
         videoRef.value.onloadedmetadata = () => {
@@ -165,18 +145,16 @@ export function useFaceDetection() {
     }
   };
 
-  /**
-   * Captura el frame actual i confirma els resultats
-   */
+  // Exportació de dades: Extracció del fotograma final i delegació d'inferència de suport.
   const confirmarScanneig = async () => {
     if (!videoRef.value || analitzantFinal.value) return null;
-    
+
     analitzantFinal.value = true;
     analitzant.value = true;
 
     try {
       let edatEstimada = edatDetectada.value;
-      
+
       if (canvasRef.value) {
         const canvas = canvasRef.value;
         canvas.width = videoRef.value.videoWidth;
@@ -184,27 +162,25 @@ export function useFaceDetection() {
         canvas.getContext('2d').drawImage(videoRef.value, 0, 0);
         const imatgeBase64 = canvas.toDataURL('image/jpeg', 0.8);
 
-        // Si no s'ha detectat edat encara, intentem fer-ho amb la imatge capturada
         if (!edatEstimada && faceApiLlesta.value) {
-            try {
-                const detection = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions())
-                  .withFaceLandmarks()
-                  .withAgeAndGender();
-                if (detection) {
-                    edatEstimada = detection.age;
-                }
-            } catch (e) {
-                console.warn("No s'ha pogut forçar la detecció", e);
+          try {
+            const detection = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions())
+              .withFaceLandmarks()
+              .withAgeAndGender();
+            if (detection) {
+              edatEstimada = detection.age;
             }
+          } catch (e) {
+            console.warn("No s'ha pogut forçar la detecció", e);
+          }
         }
-        
-        // Si tot i així no tenim edat, la definim a 17 perquè passi per verificació manual
+
         if (!edatEstimada) {
-            edatEstimada = 17;
+          edatEstimada = 17;
         }
 
         aturarCamera();
-        
+
         return {
           edatEstimada,
           imatgeBase64,
@@ -212,7 +188,7 @@ export function useFaceDetection() {
           massaJove: edatEstimada < 15
         };
       }
-      
+
       aturarCamera();
       return { edatEstimada: edatEstimada || 17, esMajor: (edatEstimada || 17) >= 18 };
 
@@ -232,17 +208,17 @@ export function useFaceDetection() {
     analitzantFinal,
     edatDetectada,
     faceApiLlesta,
-    
+
     // Refs
     videoRef,
     canvasRef,
-    
+
     // Mètodes
     handleFaceApiLoaded,
     iniciarCamera,
     aturarCamera,
     confirmarScanneig,
-    
+
     // Constants
     API_URL
   };

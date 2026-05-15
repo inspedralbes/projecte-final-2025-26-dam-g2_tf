@@ -121,6 +121,7 @@ const { mostrarModal } = useCustomModal();
 const peticions = ref([]);
 const peticionSeleccionada = ref(null);
 
+// GET /api/admin/peticions: Obté les peticions pendents
 const cargarPeticiones = async () => {
   try {
     const res = await fetch(`${API_URL}/api/admin/peticions`);
@@ -134,6 +135,7 @@ const cargarPeticiones = async () => {
   }
 };
 
+// PUT /api/peticions/:id o /api/admin/peticions/:id: Gestiona l'estat de la petició
 const votar = async (peticion, nouEstat) => {
   
   const id = peticion._id || peticion.id;
@@ -152,8 +154,6 @@ const votar = async (peticion, nouEstat) => {
   if (!isConfirmat) return;
   
   try {
-    // Per a 'aprovada', usem la ruta de peticions que crea el lloc
-    // Per a 'rebutjada', usem la ruta d'admin
     const url = nouEstat === 'aprovada' 
       ? `${API_URL}/api/peticions/${id}`
       : `${API_URL}/api/admin/peticions/${id}`;
@@ -177,9 +177,9 @@ const votar = async (peticion, nouEstat) => {
 };
 
 const colorEstado = (s) => {
-  if (s === 'pendent') return 'bg-yellow-100 text-yellow-800'; // Amarillo
-  if (s === 'aprovada') return 'bg-green-100 text-green-800'; // Verd
-  if (s === 'rebutjada') return 'bg-red-100 text-red-800'; // Rojo
+  if (s === 'pendent') return 'bg-yellow-100 text-yellow-800';
+  if (s === 'aprovada') return 'bg-green-100 text-green-800';
+  if (s === 'rebutjada') return 'bg-red-100 text-red-800';
   return 'bg-gray-100 text-gray-400';
 };
 

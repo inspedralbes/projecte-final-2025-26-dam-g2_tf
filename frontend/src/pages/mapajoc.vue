@@ -286,15 +286,13 @@ export default {
 
   async mounted() {
     try {
-      // 1. Busquem la SESSIÓ o el LLOC per saber què mostrar
+      // GET /api/sessionsJoc/:id: Verifica si l'ID correspon a una sessió de joc
       let sessio = null;
-      let idRealMonument = this.idLloc; // Per defecte assumim que l'ID és del monument
-
+      let idRealMonument = this.idLloc;
       try {
         const respSessio = await fetch(this.baseApi + '/api/sessionsJoc/' + this.idLloc);
         if (respSessio.ok) {
           sessio = await respSessio.json();
-          // id_lloc_desti pot ser un objecte populat { _id, carta_lore, nom } o un string ID simple
           const desti = sessio.id_lloc_desti;
           idRealMonument = (desti && typeof desti === 'object') ? desti._id : desti;
         }
@@ -302,29 +300,26 @@ export default {
         console.warn("No s'ha pogut verificar la sessió, intentant carregar com a lloc directament.");
       }
 
-      // 2. Carreguem les dades del monument (punts, foto, etc.)
+      // GET /api/mapa/punts/:id: Obté les dades del monument (punts, imatge, etc.)
       const resposta = await fetch(this.baseApi + '/api/mapa/punts/' + idRealMonument);
       if (!resposta.ok) throw new Error("No s'ha pogut carregar el lloc (ID: " + idRealMonument + ")");
       const lloc = await resposta.json();
 
-      // 3. Guardem l'ID real del monument per a la càmera
       this.llocRealId = lloc._id;
 
-      // 4. Configurem la imatge i els punts com abans
+      // Construeix la ruta de la imatge del mapa
       const nomImatge = lloc.foto_mapa
         ? lloc.foto_mapa
         : 'mapa_' + lloc.nom.toLowerCase().replace(/\s+/g, '') + '.jpg';
-
       this.urlFinal = this.baseApi + '/foto_mapa/' + nomImatge;
+
       this.puntsMissio = lloc.punts_missio || [];
 
-      // 4. Temporitzador
       let limitFinal = null;
 
       if (sessio) {
           console.log("[Mapa] Sessió trobada:", sessio._id, "Temps límit:", sessio.temps_limit);
-          this.sessioId = sessio._id; // Assignem sessioId ja que tenim sessió
-          // Si hi ha sessió, busquem el jugador i el seu temps limit
+          this.sessioId = sessio._id;
           const userStr = localStorage.getItem('usuari');
           const user = userStr ? JSON.parse(userStr) : {};
           const perfilId = user._id || null;
@@ -385,8 +380,6 @@ export default {
           console.warn("[Mapa] No s'ha pogut carregar la sessió. El temporitzador podria no funcionar.");
       }
 
-      // Si no hi ha límit de la sessió ni del jugador (fallback lloc directe), 
-      // o si per algun motiu limitFinal és null, provem un últim fallback de 60min
       if (!limitFinal) {
           console.warn("[Mapa] No s'ha trobat un límit de temps. Aplicant fallback de 60 minuts.");
           limitFinal = new Date(Date.now() + 60 * 60 * 1000).toISOString();
@@ -394,17 +387,13 @@ export default {
       
       this.iniciarTemporitzador(limitFinal);
 
-      // 4. Temporitzador ja s'ha iniciat individualment a dalt si existeix myPlayer
-      // o a nivell de sessio si no hi ha myPlayer encara.
-      // S'evita duplicar la crida aquí per no sobreescriure la penalització.
-
     } catch (error) {
       console.error('Error carregant el mapa:', error);
     }
 
-    // 5. Connectem al socket i ens unim a la room de la partida
-    const sessioId = this.idLloc; // route.params.id és el sessioId
+    const sessioId = this.idLloc; 
     if (sessioId) {
+      // Socket: connecta i uneix a la room de la sessió per rebre events en temps real
       this._socket = io(this.baseApi);
       this._socket.on('connect', () => {
         this._socket.emit('join-game-room', sessioId);
@@ -422,22 +411,19 @@ export default {
         this.isTimeout = dades.timeout || false;
 
         if (this.isTimeout) {
-          this.faseDerrota = 1; // Policia
+          this.faseDerrota = 1; 
         } else {
-          // Si no és timeout, algú ha guanyat.
-          // Comprovem si el meu grup ha guanyat (en mode grup o grups)
           const tipus = dades.tipus_partida ? dades.tipus_partida.toLowerCase() : 'individual';
           const guanyadorGrupId = dades.guanyadorGrupId;
           
           let joGuanyo = false;
           if (tipus === 'grup') {
-            joGuanyo = true; // En mode grup, tothom guanya quan el capità acaba
+            joGuanyo = true; 
           } else if (tipus === 'grups') {
             joGuanyo = (this.meuGrupId === guanyadorGrupId);
           }
 
           if (joGuanyo) {
-            // REDIRIGIM A REVELACIÓ DE CROMO
             this.$router.push({
               name: 'revelacio-cromo',
               params: { id: dades.id_lloc || this.llocRealId },
@@ -447,7 +433,6 @@ export default {
               }
             });
           } else {
-            // Hem perdut (individual o un altre grup)
             this.faseDerrota = 2;
             this.mostrarGameOver = true;
           }
@@ -456,11 +441,9 @@ export default {
       });
 
       this._socket.on('punt-aconseguit', (dades) => {
-        // No mostrem la notificació al propi jugador
         const userStr = localStorage.getItem('usuari');
         const user = userStr ? JSON.parse(userStr) : {};
         if (dades.nomUsuari === user.nom_usuari) {
-          // Si som nosaltres, només actualitzem el marcador visualment
           if (dades.idPunt && !this.puntsCompletatsIds.includes(dades.idPunt)) {
             this.puntsCompletatsIds.push(dades.idPunt);
             const totalMeusPunts = this.puntsAssignatsIds.length > 0 ? this.puntsAssignatsIds.length : this.puntsMissio.length;
@@ -500,7 +483,6 @@ export default {
 
   methods: {
     anarAHome() {
-      // Usamos el ID del lloc para ir a valorar
       this.$router.push('/valorar-lloc/' + this.llocRealId);
     },
 
@@ -521,15 +503,13 @@ export default {
       this.fotoActual = null;
       this.modalVisible = true;
 
-      // Intentem carregar la foto actual associada al punt
-      // Si el punt té una imatge_referencia pròpia l'usem, sinó la del lloc
       if (punt.imatge_referencia) {
         this.fotoActual = punt.imatge_referencia.startsWith('http')
           ? punt.imatge_referencia
           : this.baseApi + punt.imatge_referencia;
       } else {
-        // Podem mostrar la imatge de referència del lloc com a fallback
         try {
+          // GET /api/mapa/punts/:id: Obté les dades d'un lloc
           const resposta = await fetch(this.baseApi + '/api/mapa/punts/' + this.llocRealId);
           const lloc = await resposta.json();
           if (lloc.imatge_referencia) {
@@ -546,7 +526,6 @@ export default {
       this.puntSeleccionat = null;
     },
 
-    // Quan premen "FER LA FOTO" dins del modal d'un punt concret
     anarACameraDesPunt() {
       this.modalVisible = false;
       this.$router.push({
@@ -575,7 +554,6 @@ export default {
             
             if (diferencia <= 0) {
                 clearInterval(this.intervalTimer);
-                // Si el temps s'esgota localment, mostrem el Game Over de Timeout
                 if (!this.mostrarGameOver && this.faseDerrota === 0) {
                     this.isTimeout = true;
                     this.faseDerrota = 1;
@@ -619,6 +597,7 @@ export default {
         const user = userStr ? JSON.parse(userStr) : {};
         const perfilId = user._id || null;
 
+        // PATCH /api/sessionsJoc/:id/usar-pista: Consumeix una pista del jugador
         const resposta = await fetch(`${this.baseApi}/api/sessionsJoc/${this.sessioId}/usar-pista`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -629,7 +608,6 @@ export default {
         if (resposta.ok) {
           this.pistes_gastades = dades.pistes_gastades;
           this.pistesRevelades.add(this.puntSeleccionat._id.toString());
-          // Actualitzem el temporitzador amb el nou límit
           if (dades.nou_temps_limit) {
             this.iniciarTemporitzador(dades.nou_temps_limit);
           }

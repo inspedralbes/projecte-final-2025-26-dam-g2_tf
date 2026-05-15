@@ -91,12 +91,10 @@ if (resultat.success) {
         });
       }
 
-      // 1. Actualitzem l'estat global de l'auth (composable)
       login(resultat.usuari);
 
-      // 2. Lògica de redireccionament segons el rol guardat a la BD
+      // Control d'accés: Ruteig asíncron segons rol administratiu o d'usuari estàndard.
       if (resultat.usuari.rol === 'admin') {
-        // Guardem la sessió d'admin segons l'estructura que demana el teu router.js
         const dadesSessio = {
           rol: 'admin',
           id: resultat.usuari._id,
@@ -105,10 +103,8 @@ if (resultat.success) {
         localStorage.setItem('admin_session', JSON.stringify(dadesSessio));
         
         emit('tancar');
-        // Redirigim a la pantalla d'escriptori per a l'administrador [cite: 23, 111, 112]
         router.push({ name: 'admin-dashboard' });
       } else {
-        // Redirigim a la pantalla de l'app mòbil per a l'usuari [cite: 24]
         emit('tancar');
         router.push({ name: 'home' }); 
       }

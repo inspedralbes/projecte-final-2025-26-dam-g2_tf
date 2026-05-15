@@ -254,9 +254,9 @@ const tabs = [
   { id: 'propostes', label: 'PROPOSTES' }
 ];
 
-// 4. LES MEVES PROPOSTES
 const mevesPeticions = ref([]);
 
+// GET /api/peticions/meves: Obté les peticions de l'usuari
 async function fetchMevesPeticions() {
   try {
     const usuari = JSON.parse(localStorage.getItem('usuari'));
@@ -266,7 +266,6 @@ async function fetchMevesPeticions() {
     });
     if (res.ok) {
       const data = await res.json();
-      // Mapegem 'estat_validacio' a 'estat' per compatibilitat amb el template
       mevesPeticions.value = data.map(p => ({
         ...p,
         estat: p.estat_validacio || p.estat || 'pendent'
@@ -277,8 +276,8 @@ async function fetchMevesPeticions() {
   }
 }
 
-// 1. CARREGAR MIS POSTS
 const misPosts = ref([]);
+// GET /api/social/posts: Obté els posts de l'usuari
 async function carregarMisPosts() {
   try {
     const res = await fetch(`${API_URL}/api/social/posts`);
@@ -291,7 +290,7 @@ async function carregarMisPosts() {
   }
 }
 
-// 2. GUARDAR BIOGRAFIA A LA BD
+// PUT /api/usuari/update: Actualitza la biografia
 async function guardarBio() {
   try {
     const res = await fetch(`${API_URL}/api/usuari/update`, {
@@ -319,7 +318,7 @@ async function guardarBio() {
   }
 }
 
-// 3. ELIMINAR POST
+// DELETE /api/social/posts/:id: Elimina un post
 async function eliminarPost(postId) {
   const isConfirmed = await mostrarModal({
     isAlert: false,
@@ -337,6 +336,7 @@ async function eliminarPost(postId) {
   }
 }
 
+// POST /api/usuari/acceptar-amistat: Accepta sol·licitud d'amistat
 async function acceptarAmic(solicitud) {
   try {
     const res = await fetch(`${API_URL}/api/usuari/acceptar-amistat`, {
@@ -367,12 +367,12 @@ async function acceptarAmic(solicitud) {
   }
 }
 
-// 4. TANCAR SESSIÓ — Usa el composable per netejar l'estat global
 function tancarSessio() {
   logout(); 
   window.location.href = '/'; 
 }
 
+// DELETE /api/usuari/:id: Elimina el compte de l'usuari
 async function eliminarCompte() {
   const isConfirmed = await mostrarModal({
     isAlert: false,
@@ -412,19 +412,16 @@ async function eliminarCompte() {
     });
   }
 }
-// Retorna la URL completa de la imatge del cromo
 function imatgeCromo(src) {
   return netejarUrl(src);
 }
 
-// INICI
 onMounted(async () => {
   const saved = localStorage.getItem('usuari');
   if (saved) {
     const localUser = JSON.parse(saved);
     
     try {
-        // Fem servir el GET per ID per tenir les dades més recents (amics, sol·licituds...)
         const res = await fetch(`${API_URL}/api/usuari/${localUser._id}`);
         if (res.ok) {
             const freshData = await res.json();

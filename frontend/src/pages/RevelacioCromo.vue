@@ -75,12 +75,10 @@ const cromoFlipped = ref(false);
 const readyToShow = ref(false);
 const isLeaving = ref(false);
 
-// Obtenim les dades de la query
 const idLloc = route.params.id;
 let imatgeCromo = route.query.imatge || '';
 const nomLloc = route.query.nom || 'Ruta Completada';
 
-// Normalització del path per si de cas
 if (imatgeCromo && !imatgeCromo.startsWith('/') && !imatgeCromo.includes('/')) {
     imatgeCromo = '/Cromos/' + imatgeCromo;
 }
@@ -105,7 +103,6 @@ onMounted(() => {
         return;
     }
     
-    // Artificial delay for smoother transition
     setTimeout(() => {
         readyToShow.value = true;
     }, 1500);

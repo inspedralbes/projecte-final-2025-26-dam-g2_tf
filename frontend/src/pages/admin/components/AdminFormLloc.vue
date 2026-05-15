@@ -87,7 +87,6 @@
             </div>
           </div>
 
-          <!-- SECCIÓ LORE -->
           <div class="bg-amber-50 border-2 border-amber-100 rounded-2xl p-4 mt-2">
             <h3 class="text-[11px] font-black text-amber-600 uppercase tracking-widest mb-3">📜 Carta de Lore</h3>
             <p class="text-[10px] text-amber-500 mb-3">Escull la carta que apareixerà a l'sobre quan els jugadors comencin la partida en aquesta ruta.</p>
@@ -119,7 +118,6 @@
             <h3 class="text-sm font-black text-purple-400 uppercase tracking-widest">Punts de Missió ({{ form.punts_missio.length }})</h3>
           </div>
 
-          <!-- Imatge del mapa per clicar -->
           <div v-if="form.foto_mapa" class="mb-4">
             <p class="text-xs text-gray-400 mb-2 font-bold uppercase">📍 Fes clic a la imatge per afegir un punt</p>
             <div
@@ -133,7 +131,6 @@
                 @click="clicAlMapa"
                 alt="Mapa"
               />
-              <!-- Marcadors sobre la imatge -->
               <div
                 v-for="(punt, i) in form.punts_missio"
                 :key="i"
@@ -150,7 +147,6 @@
               <input v-model="puntPendent.nom_punt" placeholder="Nom del punt (ex: Façana principal)" class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm mb-2 outline-none" />
               <textarea v-model="puntPendent.pista" placeholder="💡 Pista per trobar el punt... (Cost: 1 pista)" class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm mb-2 italic outline-none" rows="2"></textarea>
 
-              <!-- Selector d'imatge -->
               <div class="mb-3">
                 <label class="text-[10px] font-bold text-purple-400 uppercase mb-1 block">Imatge del punt</label>
                 <select v-model="puntPendent.imatge_referencia" class="w-full border-2 border-gray-100 p-2 rounded-xl text-sm outline-none bg-white">
@@ -162,7 +158,6 @@
                 </div>
               </div>
 
-              <!-- Associar a un personatge -->
               <div class="mb-3 p-3 border-2 border-purple-100 rounded-xl bg-white">
                 <label class="text-[10px] font-bold text-purple-400 uppercase mb-2 block">Associat a un personatge?</label>
                 <div class="flex gap-3 mb-2">
@@ -190,7 +185,6 @@
                     >{{ p.nom }}</option>
                   </select>
 
-                  <!-- Previsualitzacio del personatge seleccionat -->
                   <div v-if="puntPendent.personatge_id" class="mt-2 flex items-center gap-3 p-2 bg-purple-50 rounded-xl border border-purple-100">
                     <img
                       v-if="personatgeSeleccionat(puntPendent.personatge_id).imatge"
@@ -231,7 +225,6 @@
             ⚠️ Afegeix el nom del fitxer de <strong>Foto Mapa</strong> a dalt per poder col·locar els punts visualment.
           </div>
 
-          <!-- Llista de punts amb opció d'editar nom/pista i eliminar -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div v-for="(punt, i) in form.punts_missio" :key="i" class="p-4 border-2 border-gray-50 rounded-2xl bg-white relative group">
               <button @click="eliminarPunt(i)" type="button" class="absolute top-2 right-2 text-gray-300 hover:text-red-500 font-bold">×</button>
@@ -240,7 +233,6 @@
                 <input v-model="punt.nom_punt" placeholder="Nom del punt" class="flex-1 font-bold text-sm border-b outline-none" />
               </div>
               <textarea v-model="punt.pista" placeholder="💡 Pista per trobar el punt..." class="w-full text-xs italic text-gray-500 outline-none mb-2 border-b border-gray-100" rows="1"></textarea>
-              <!-- Selector d'imatge per punt guardat -->
               <div class="mt-1 mb-2">
                 <label class="text-[9px] font-bold text-purple-400 uppercase mb-1 block">🖼️ Imatge del punt</label>
                 <select v-model="punt.imatge_referencia" class="w-full border border-gray-200 p-1.5 rounded-lg text-xs outline-none bg-gray-50">
@@ -251,7 +243,6 @@
                   <img :src="baseApi + punt.imatge_referencia" class="w-full max-h-24 object-cover" alt="Imatge assignada" />
                 </div>
               </div>
-              <!-- Foto històrica per la contraportada -->
               <div class="mt-1 mb-2">
                 <label class="text-[9px] font-bold text-amber-500 uppercase mb-1 block">📸 Foto Històrica</label>
                 <select v-model="punt.foto_historica" class="w-full border border-gray-200 p-1.5 rounded-lg text-xs outline-none bg-gray-50">
@@ -263,7 +254,6 @@
                 </div>
               </div>
 
-              <!-- Text històric per la contraportada -->
               <div class="mt-1 mb-2">
                 <label class="text-[9px] font-bold text-amber-500 uppercase mb-1 block">📜 Text Històric</label>
                 <textarea v-model="punt.text_historic" placeholder="Text històric del punt..." class="w-full border border-gray-200 p-1.5 rounded-lg text-xs outline-none" rows="2"></textarea>
@@ -271,7 +261,6 @@
 
               <p class="text-[10px] text-gray-400">X: {{ punt.posicio_x?.toFixed(1) }}% / Y: {{ punt.posicio_y?.toFixed(1) }}%</p>
 
-              <!-- Personatge associat -->
               <div class="mt-2 pt-2 border-t border-gray-50">
                 <label class="text-[9px] font-bold text-purple-400 uppercase mb-1 block">Personatge associat</label>
                 <select v-model="punt.personatge_id" class="w-full border border-gray-200 p-1.5 rounded-lg text-xs outline-none bg-gray-50">
@@ -358,9 +347,9 @@ const props = defineProps({
 
 const emit = defineEmits(['save', 'eliminar']);
 
-// Clonar los datos iniciales para que el formulario sea independiente
+// Clona les dades inicials per crear un estat independent al formulari
 const form = ref(JSON.parse(JSON.stringify(props.datosIniciales)));
-const formOriginal = ref(""); // Ho guardarem com a string per comparar fàcilment
+const formOriginal = ref("");
 
 const prepararFormulari = (dades) => {
   const clon = JSON.parse(JSON.stringify(dades));
@@ -370,7 +359,7 @@ const prepararFormulari = (dades) => {
       personatge_id: (p.personatge_id && typeof p.personatge_id === 'object') ? p.personatge_id._id : p.personatge_id
     }));
   }
-  // Assegurem que control_horari té sempre els camps del nou model
+  // Garanteix l'estructura del model per al control horari
   clon.control_horari = {
     actiu: clon.control_horari?.actiu ?? false,
     hora_inici: clon.control_horari?.hora_inici ?? "22:00",
@@ -379,11 +368,10 @@ const prepararFormulari = (dades) => {
   return clon;
 };
 
-// Inicialització
 form.value = prepararFormulari(props.datosIniciales);
 formOriginal.value = JSON.stringify(form.value);
 
-// Actualitzar el formulario si los props cambian (al cambiar de lloc)
+// Sincronitza el formulari si les dades d'entrada canvien
 watch(() => props.datosIniciales, (val) => {
   form.value = prepararFormulari(val);
   formOriginal.value = JSON.stringify(form.value);
@@ -404,6 +392,7 @@ const inputCoordenadas = ref(`${form.value.lat}, ${form.value.lng}`);
 let map = null;
 let marker = null;
 
+// Inicialitza i configura el mapa interactiu de Leaflet
 const initMapa = async () => {
   await nextTick();
   if (map) map.remove();
@@ -426,6 +415,7 @@ const afegirTag = (e) => {
 const eliminarTag = (index) => form.value.tags.splice(index, 1);
 const eliminarPunt = (index) => form.value.punts_missio.splice(index, 1);
 
+// Calcula i guarda la posició d'un nou punt sobre la imatge del mapa
 function clicAlMapa(event) {
   if (puntPendent.value) return;
   var img = imatgeMapaRef.value;
@@ -452,7 +442,7 @@ function confirmarPunt() {
   puntPendentEsPersonatge.value = false;
 }
 
-// Retorna el personatge de la llista a partir del seu _id
+// Cerca i retorna les dades d'un personatge pel seu identificador
 function personatgeSeleccionat(id) {
   var trobat = personatgesDisponibles.value.find(function(p) {
     const targetId = (id && typeof id === 'object') ? id._id : id;
@@ -461,6 +451,7 @@ function personatgeSeleccionat(id) {
   return trobat || { nom: '', descripcio: '', imatge: '' };
 }
 
+// Converteix i aplica l'entrada de coordenades manuals al mapa
 function procesarCoordenadas() {
   const partes = inputCoordenadas.value.split(/[\s,]+/);
   const lat = parseFloat(partes[0]);
@@ -473,6 +464,7 @@ function procesarCoordenadas() {
   }
 }
 
+// Emet l'esdeveniment de guardat amb les dades del formulari
 function enviarFormulario() {
   emit('save', { ...form.value });
 }

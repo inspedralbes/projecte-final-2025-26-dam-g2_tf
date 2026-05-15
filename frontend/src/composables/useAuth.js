@@ -1,11 +1,9 @@
-// useAuth.js — Composable compartit per a l'autenticació
-// L'estat es defineix FORA de la funció perquè sigui global (singleton)
+// Composable: Gestió centralitzada de l'estat d'autenticació (patró Singleton).
 import { ref } from 'vue';
 
-// Estat reactiu global — compartit entre tots els components que importin useAuth
 const usuari = ref(null);
 
-// Inicialitzar des de localStorage (només la primera vegada)
+// Hidratació inicial de l'estat des de l'emmagatzematge local persistit.
 try {
     const guardat = localStorage.getItem('usuari');
     if (guardat) {

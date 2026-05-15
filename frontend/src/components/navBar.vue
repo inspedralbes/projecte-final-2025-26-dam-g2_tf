@@ -1,3 +1,4 @@
+<!-- Component UI: Barra de navegació inferior persistent per a l'aplicació mòbil -->
 <template>
   <div class="fixed bottom-0 z-50 w-full bg-[#402749] border-t border-[#804f7f] left-1/2 -translate-x-1/2">
 
@@ -60,7 +61,8 @@ const peticionsPendentsCount = ref(0);
 let intervalId = null;
 
 let lastErrorTime = 0;
-const ERROR_COOLDOWN = 30000; // 30 segundos entre reintentos tras error
+// Constants: Temps de mitigació per a reintents de xarxa fallits.
+const ERROR_COOLDOWN = 30000;
 
 async function carregarPeticionsPendents() {
   if (!usuari.value) {
@@ -72,7 +74,7 @@ async function carregarPeticionsPendents() {
     if (res.ok) {
       const dades = await res.json();
       peticionsPendentsCount.value = dades.sollicituds_pendents?.length || 0;
-      lastErrorTime = 0; // Resetear si hay éxito
+      lastErrorTime = 0;
     }
   } catch (err) {
     const now = Date.now();
@@ -83,6 +85,7 @@ async function carregarPeticionsPendents() {
   }
 }
 
+// Cicle de vida: Inicialització de l'enquesta periòdica (polling) de l'estat d'usuari.
 onMounted(() => {
   carregarPeticionsPendents();
   intervalId = setInterval(carregarPeticionsPendents, 15000);

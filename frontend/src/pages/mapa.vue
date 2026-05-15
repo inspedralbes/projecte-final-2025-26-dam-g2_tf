@@ -101,6 +101,7 @@ async function iniciarMapa(lat, lng) {
 
 async function carregarPuntsDeLaBD() {
   try {
+    // GET /api/mapa/punts: Llista de punts actius del mapa
     const resposta = await fetch(`${API_URL}/api/mapa/punts`);
     let llocs = await resposta.json();
     llocs = llocs.filter(lloc => lloc.estat !== 'desactivat');

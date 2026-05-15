@@ -68,11 +68,7 @@ const API_URL = BASE_API_URL;
 const resultatsSessio = ref([]);
 const puntuacio = ref(0);
 
-/**
- * Ordena els jugadors per:
- * 1. Nombre de fotos completades (descendent) — qui ha completat més té millor posició
- * 2. En empat, precisió mitjana (descendent) — qui té millor precisió guanya
- */
+// Ordena jugadors per fotos completades i precisió mitjana
 function compararJugadors(a, b) {
   const fotesA = (a.punts_completats || []).length;
   const fotesB = (b.punts_completats || []).length;
@@ -80,6 +76,7 @@ function compararJugadors(a, b) {
   return (b.exactitud_media || 0) - (a.exactitud_media || 0);
 }
 
+// GET /api/sessionsJoc/:id: Obté resultats de la sessió
 async function carregarResultats() {
   const sId = route.params.sala || route.params.id;
   if (!sId) return;

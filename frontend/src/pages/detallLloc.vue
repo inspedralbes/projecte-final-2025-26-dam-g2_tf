@@ -144,7 +144,7 @@ const { obrirModal } = useLoginModal();
 
 const API_URL = BASE_API_URL;
 
-// Comprova si la ruta està bloquejada en funció de l'hora actual
+// Verifica els horaris de disponibilitat de la ruta
 const esBloqueig = computed(() => {
   if (!lloc.value) return false;
   const horari = lloc.value.control_horari;
@@ -158,11 +158,9 @@ const esBloqueig = computed(() => {
   const minutsInici = hInici * 60 + mInici;
   const minutsFi = hFi * 60 + mFi;
 
-  // Cas nocturn: el bloqueig travessa la mitjanit (ex: 22:30 → 07:30)
   if (minutsInici > minutsFi) {
     return minutsActuals >= minutsInici || minutsActuals < minutsFi;
   }
-  // Cas diürn: bloqueig dins del mateix dia (ex: 13:00 → 17:00)
   return minutsActuals >= minutsInici && minutsActuals < minutsFi;
 });
 
@@ -201,11 +199,12 @@ function comencarJoc() {
 
 onMounted(async () => {
   try {
+    // GET /api/mapa/punts: Obté tots els llocs i filtra per ID de ruta
     const response = await fetch(`${API_URL}/api/mapa/punts`);
     const dades = await response.json();
     lloc.value = dades.find(item => item._id === route.params.id);
     
-    // Carregar ressenyes
+    // GET /api/social/lloc/:id/ressenyes: Llista de ressenyes del lloc
     const resRessenyes = await fetch(`${API_URL}/api/mapa/punts/${route.params.id}/ressenyes`);
     if (resRessenyes.ok) {
       ressenyes.value = await resRessenyes.json();

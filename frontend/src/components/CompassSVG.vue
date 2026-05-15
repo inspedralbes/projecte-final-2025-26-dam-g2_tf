@@ -1,3 +1,4 @@
+<!-- Component UI: Element SVG de la brúixola animada per l'efecte de selecció de destinació sorpresa -->
 <template>
   <svg 
     :width="size" 

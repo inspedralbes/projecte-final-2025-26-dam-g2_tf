@@ -427,7 +427,6 @@ const subPestanyaAmics = ref('llista');
 const categories = ['Tots', 'Industrial', 'Gòtic', 'Parcs', 'Graffiti', 'Misteri'];
 const filtreActiu = ref('Tots');
 
-// --- Custom Modal Logic ---
 const customModal = ref({ show: false, type: 'alert', title: '', message: '', onConfirm: null, onCancel: null });
 function showCustomAlert(message, title = 'Avís') {
   customModal.value = { show: true, type: 'alert', title, message, onConfirm: null, onCancel: null };
@@ -446,7 +445,6 @@ function handleModalCancel() {
   if (cb) cb();
 }
 
-// Post creation refs
 const nouPostText = ref('');
 const nouPostImatges = ref([]);
 const nouPostUbicacio = ref('');
@@ -456,12 +454,10 @@ const mostrantUbicacioInput = ref(false);
 const publicant = ref(false);
 const fileInput = ref(null);
 
-// Feed refs
 const posts = ref([]);
 const mostrantComentaris = ref(null);
 const comentarisInputs = ref({});
 
-// Amics refs
 const amics = ref([]);
 const usernameCerca = ref('');
 const resultatsCerca = ref([]);
@@ -477,6 +473,7 @@ const actualitzarUsuari = (dadesUsuari) => {
   login(dadesUsuari);
 };
 
+// GET /api/social/posts: Llistat de publicacions
 async function carregarPosts() {
   try {
     const res = await fetch(`${API_URL}/api/social/posts?tag=${filtreActiu.value !== 'Tots' ? filtreActiu.value : ''}`);
@@ -487,6 +484,7 @@ async function carregarPosts() {
   }
 }
 
+// POST /api/social/posts: Publica un nou post
 async function publicarPost() {
   if (!usuari.value) {
     obrirModal('Inicia sessió per poder publicar a la comunitat!');
@@ -558,6 +556,7 @@ watch(usuari, (nou) => {
   }
 });
 
+// GET /api/social/leaderboard/global: Rànquing d'usuaris
 async function carregarRanking() {
   carregantRanking.value = true;
   try {
@@ -571,6 +570,7 @@ async function carregarRanking() {
 }
 
 
+// GET /api/usuari/:id: Obté peticions pendents de l'usuari
 async function carregarPeticionsPendents() {
   if (!usuari.value) return;
   carregantPeticions.value = true;
@@ -587,6 +587,7 @@ async function carregarPeticionsPendents() {
   }
 }
 
+// POST /api/social/peticions/:accio: Accepta o rebutja sol·licitud
 async function gestionarSolicitud(req, accio) {
   try {
     const res = await fetch(`${API_URL}/api/social/peticions/${accio}`, {
@@ -630,6 +631,7 @@ function visitarPerfil(item) {
   }
 }
 
+// POST /api/social/posts/:id/like: Afegeix o treu un like
 async function ferLike(postId) {
   if (!usuari.value) {
     obrirModal('Inicia sessió per poder donar likes!');
@@ -653,6 +655,7 @@ function toggleComentaris(postId) {
   mostrantComentaris.value = mostrantComentaris.value === postId ? null : postId;
 }
 
+// POST /api/social/posts/:id/comentari: Afegeix un comentari
 async function enviarComentari(postId) {
   const text = comentarisInputs.value[postId];
   if (!text || !text.trim() || !usuari.value) return;
@@ -679,6 +682,7 @@ async function enviarComentari(postId) {
   } catch (err) { console.error("Error enviant comentari:", err); }
 }
 
+// DELETE /api/social/posts/:id: Elimina un post
 async function eliminarPost(postId) {
   showCustomConfirm('Vols eliminar aquest post?', async () => {
     try {
@@ -715,6 +719,7 @@ function eliminarTag(idx) { nouPostTags.value.splice(idx, 1); }
 
 function reportarLloc(post) { showCustomAlert(`Reportat: ${post.nom_usuari || 'post'}`); }
 
+// POST /api/social/posts/:id/comentari/:id/report: Reporta un comentari
 async function reportarComentari(postId, comentari) {
   if (!usuari.value) { obrirModal('Inicia sessió per poder reportar contingut.'); return; }
   showCustomConfirm(`Vols marcar el comentari de "${comentari.nom_usuari}" com a inapropiat?`, async () => {
@@ -729,6 +734,7 @@ async function reportarComentari(postId, comentari) {
   });
 }
 
+// POST /api/social/posts/:id/report: Reporta un post
 async function reportarPostSencer(post) {
   if (!usuari.value) { obrirModal('Inicia sessió per poder reportar contingut.'); return; }
   showCustomConfirm(`Vols reportar la publicació de "${post.nom_usuari}" per contingut inapropiat?`, async () => {
@@ -743,6 +749,7 @@ async function reportarPostSencer(post) {
   });
 }
 
+// GET /api/usuari/:id: Obté llista d'amics
 async function carregarAmics() {
   if (!usuari.value) return;
   try {
@@ -762,6 +769,7 @@ function calcularNivell(cromos) {
   return "Explorador Novell";
 }
 
+// GET /api/social/search?username=: Cercador d'usuaris
 async function cercarUsuari() {
   if (!usernameCerca.value) {
     resultatsCerca.value = [];
@@ -782,6 +790,7 @@ async function cercarUsuari() {
   }
 }
 
+// POST /api/social/peticions/enviar: Envia sol·licitud d'amistat
 async function enviarSolicitud(target) {
   if (!usuari.value) return;
   try {
@@ -809,8 +818,7 @@ function convidarPartida(amic) {
   showCustomAlert(`Invitació enviada a ${amic.nom_usuari} (Funcionalitat en desenvolupament amb WebSockets)`);
 }
 
-// --- FUNCIONS PER ELIMINAR AMICS (COPIA AIXÒ) ---
-
+// POST /api/social/amics/eliminar: Elimina un amic
 const eliminarAmic = async (idAmic) => {
   try {
     const res = await fetch(`${API_URL}/api/social/amics/eliminar`, {
@@ -823,7 +831,6 @@ const eliminarAmic = async (idAmic) => {
     });
 
     if (res.ok) {
-      // Filtrem la llista localment perquè l'amic desaparegui al moment
       amics.value = amics.value.filter(a => a._id !== idAmic);
       showCustomAlert("Amic eliminat correctament.");
     } else {
@@ -842,7 +849,6 @@ const confirmarEliminarAmic = (amic) => {
   );
 };
 
-// --- FI DELS CANVIS ---
 </script>
 
 <style scoped>

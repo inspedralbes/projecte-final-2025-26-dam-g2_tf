@@ -1,8 +1,6 @@
 <template>
   <div class="album-stage">
-    <!-- ELIMINADO: background-environment - causaba el espacio gris -->
-
-    <!-- Main Container - Pushed up -->
+    <!-- Renderització: Contenidor principal per al llibre animat amb PageFlip -->
     <div class="book-workspace">
       <div 
         class="book-wrapper" 
@@ -14,17 +12,14 @@
       </div>
     </div>
 
-    <!-- Hidden source pages - Use visibility hidden instead of display none to allow measurements if needed -->
+    <!-- Pre-càrrega estructural: Manté el DOM ocult però avaluable en dimensions per l'API de PageFlip -->
     <div style="position: absolute; visibility: hidden; pointer-events: none; z-index: -1; height: 0; overflow: hidden;">
       <div ref="pagesContainer">
-        <!-- FRONT COVER -->
         <div class="page cover front" data-density="hard">
           <div class="cover-skin" :style="{ backgroundImage: `url(${netejarUrl(API_URL + '/portada.png')})` }">
-            <!-- Removed overlays to show the full portada image -->
           </div>
         </div>
 
-        <!-- CROMO PAGES -->
         <div
           v-for="(cromo, idx) in allPages"
           :key="'p' + idx"
@@ -60,12 +55,10 @@
               </div>
             </template>
             <template v-else>
-              <!-- Blank page with just texture -->
             </template>
           </div>
         </div>
 
-        <!-- BACK COVER -->
         <div class="page cover back" data-density="hard">
           <div class="cover-skin"></div>
         </div>
@@ -159,12 +152,10 @@ async function initPageFlip() {
     return;
   }
 
-  // Wait for Vue to render the hidden pages from the props
   await nextTick();
 
   const pages = Array.from(pagesContainer.value.children);
   if (pages.length === 0) {
-    // If no pages yet, try again in a moment
     triggerInit(100);
     return;
   }
@@ -179,27 +170,22 @@ async function initPageFlip() {
   let pW, pH;
 
   if (vW < 600) {
-    // Mobile: mantener el comportamiento actual
     pW = Math.floor(vW * 0.44);
     pH = Math.floor(pW * 1.35);
   } else {
-    // Desktop: hacer el libro más compacto
-    const maxWidth = vW * 0.6; // Máximo ancho disponible
-    const maxHeight = vH * 0.65; // Máximo alto disponible
+    const maxWidth = vW * 0.6;
+    const maxHeight = vH * 0.65;
     
-    // Calcular basándose en el ratio
-    pH = Math.min(maxHeight, 500); // Altura máxima
+    pH = Math.min(maxHeight, 500);
     pW = Math.floor(pH / 1.35);
     
-    // Si es muy ancho, ajustar
     if (pW * 2 > maxWidth) {
-      pW = Math.floor(maxWidth / 2.2); // Dejar margen
+      pW = Math.floor(maxWidth / 2.2);
       pH = Math.floor(pW * 1.35);
     }
   }
 
   try {
-    // Robust check for PageFlip
     let PageFlipClass = PageFlip;
     
     if (typeof PageFlipClass === 'undefined' && window.St && window.St.PageFlip) {
@@ -235,11 +221,9 @@ async function initPageFlip() {
         isFlipping.value = e.data === 'flipping';
       });
 
-      // MAKE VISIBLE
       bookElement.value.style.visibility = 'visible';
       console.log("DiariExploracio: Book is now visible");
 
-      // Automatic opening effect
       openTimeout = setTimeout(() => {
         if (pageFlipInstance && currentPage.value === 0) {
           try {
@@ -292,7 +276,6 @@ watch(() => props.cromos, () => {
   padding: 2rem 0;
 }
 
-/* WORKSPACE */
 .book-workspace {
   position: relative;
   z-index: 10;
@@ -321,7 +304,6 @@ watch(() => props.cromos, () => {
   overflow: hidden;
 }
 
-/* COVER */
 .cover {
   background-color: #03162c;
 }
@@ -401,7 +383,6 @@ watch(() => props.cromos, () => {
 .bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
 .br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
 
-/* PARCHMENT */
 .parchment {
   background-color: transparent;
   box-shadow: none;
@@ -474,7 +455,7 @@ watch(() => props.cromos, () => {
 }
 
 .photo-sheen {
-  display: none; /* Removed to keep photo pure as requested */
+  display: none;
 }
 
 .dust-texture {
@@ -588,7 +569,6 @@ watch(() => props.cromos, () => {
   .book-title { font-size: 18px; }
 }
 
-/* Reset PageFlip defaults */
 :deep(.stf__block) { background: transparent !important; }
 :deep(.stf__parent) { overflow: visible !important; }
 </style>

@@ -180,7 +180,6 @@ const API_URL = BASE_API_URL;
 const router = useRouter();
 const { login } = useAuth();
 
-  // Estats reactius
   const textBusqueda = ref('');
 const totsElsLlocs = ref([]);
 const mostrarFiltros = ref(false);
@@ -197,7 +196,7 @@ onMounted(() => {
  
 });
 
-// Obté les dades de l'API al carregar la pàgina
+// GET /api/cercador: Obté llista de llocs disponibles
 async function carregarDades() {
   try {
     const resposta = await fetch(`${API_URL}/api/cercador`);    if (!resposta.ok) throw new Error('Error en carregar dades');
@@ -220,14 +219,13 @@ async function carregarDades() {
   }
 }
 
-// Lògica per triar un destí aleatori amb animació
+// GET /api/cercador/aleatori: Obté destí aleatori
 async function seleccionarDestiSorpresa() {
   if (animantSorpresa.value) return;
 
   try {
     const dadesPromise = fetch(`${API_URL}/api/cercador/aleatori`).then(res => res.json());
 
-    // Només usem fotos de llocs actius per l'animació
     const fotosDisponibles = totsElsLlocs.value
       .filter(l => l.estat === 'actiu' && l.imatge)
       .map(l => l.imatge);
@@ -251,7 +249,6 @@ async function seleccionarDestiSorpresa() {
 
     fotosAnimacio.value = [...baseFotos, imatgeFinal];
 
-    // Control de l'animació de scroll vertical
     setTimeout(() => {
       const alcadaVisor = 256;      const desplacamentTotal = (fotosAnimacio.value.length - 1) * alcadaVisor;
       estilScroll.value = { 
@@ -259,7 +256,6 @@ async function seleccionarDestiSorpresa() {
       };
     }, 100);
 
-    // Redirecció en acabar l'animació
     setTimeout(() => {
       anarALloc(llocEscollit._id);
     }, 3500);
@@ -274,14 +270,12 @@ function handleImgError(e) {
   e.target.src = placeholderImage;
 }
 
-// Filtra i ordena els barris únics de la llista
 const llistaBarris = computed(() => {
   const barris = totsElsLlocs.value
     .map(lloc => lloc.barri)
     .filter(barri => barri && barri !== 'Desconegut');
   return [...new Set(barris)].sort();});
 
-// Càlcul dinàmic dels llocs segons els filtres aplicats
 const llocsFiltrats = computed(() => {
   return totsElsLlocs.value.filter(lloc => {
     const busqueda = textBusqueda.value.toLowerCase();

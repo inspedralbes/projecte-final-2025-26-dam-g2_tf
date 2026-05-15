@@ -1,35 +1,28 @@
 <template>
-  <!-- Overlay de fons: s'activa quan obert és true -->
   <Transition name="modal-fade">
     <div
       v-if="obert"
       class="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       @click.self="tancarModal"
     >
-      <!-- Fons difuminat amb degradat -->
       <div class="absolute inset-0 bg-gradient-to-br from-[#402749]/80 to-[#1a0a1f]/90 backdrop-blur-md"></div>
 
-      <!-- Targeta principal del modal -->
       <Transition name="modal-slide">
         <div
           v-if="obert"
           class="relative w-full max-w-sm bg-white rounded-[32px] shadow-2xl overflow-hidden"
         >
-          <!-- Capçalera decorativa amb gradient -->
           <div class="bg-gradient-to-br from-[#402749] via-[#5d3962] to-[#804f7f] p-8 pb-12 text-white text-center relative overflow-hidden">
-            <!-- Cercles decoratius de fons -->
             <div class="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full"></div>
             <div class="absolute -bottom-4 -left-6 w-24 h-24 bg-[#f5cbdd]/10 rounded-full"></div>
             <div class="absolute top-4 left-8 w-12 h-12 bg-white/5 rounded-full"></div>
 
-            <!-- Icona -->
             <div class="relative mx-auto mb-4 w-20 h-20 bg-white/20 rounded-full flex items-center justify-center border-4 border-white/30 shadow-lg">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-[#f5cbdd]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
               </svg>
             </div>
 
-            <!-- Títol i subtítol -->
             <h2 class="text-2xl font-black uppercase tracking-tight relative">
               {{ esRegistre ? 'Benvingut!' : 'Hola, explorador!' }}
             </h2>
@@ -40,17 +33,14 @@
             </p>
           </div>
 
-          <!-- Ondulació decorativa entre capçalera i formulari -->
           <div class="bg-gradient-to-br from-[#402749] via-[#5d3962] to-[#804f7f]">
             <svg viewBox="0 0 400 40" preserveAspectRatio="none" class="w-full h-8 block">
               <path d="M0,0 C100,40 300,40 400,0 L400,40 L0,40 Z" fill="white"/>
             </svg>
           </div>
 
-          <!-- Cos del modal: formulari -->
           <div class="bg-white px-8 pb-8 -mt-1">
 
-            <!-- Selector Login / Registre -->
             <div class="flex bg-[#f5cbdd]/30 rounded-2xl p-1 mb-6">
               <button
                 @click="esRegistre = false; error = ''"
@@ -68,10 +58,9 @@
               </button>
             </div>
 
-            <!-- Formulari -->
+            <!-- Control d'accés: Formulari principal -->
             <form @submit.prevent="executarAccio" class="space-y-4">
 
-              <!-- Camp nom d'usuari (només en registre) -->
               <Transition name="field-slide">
                 <div v-if="esRegistre" class="relative">
                   <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
@@ -89,7 +78,6 @@
                 </div>
               </Transition>
 
-              <!-- Camp correu -->
               <div class="relative">
                 <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                   <svg class="w-4 h-4 text-[#9f6795]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -105,7 +93,6 @@
                 />
               </div>
 
-              <!-- Camp contrasenya -->
               <div class="relative">
                 <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                   <svg class="w-4 h-4 text-[#9f6795]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -121,7 +108,6 @@
                 />
               </div>
 
-              <!-- Missatge d'error -->
               <Transition name="error-fade">
                 <div v-if="error" class="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-2xl text-xs font-bold">
                   <span></span>
@@ -129,7 +115,6 @@
                 </div>
               </Transition>
 
-              <!-- Botó principal -->
               <button
                 v-if="!pasVerificacio || !esRegistre"
                 type="submit"
@@ -143,7 +128,7 @@
                 <span>{{ carregant ? 'Un moment...' : (esRegistre ? ' Continuar al Scanner' : 'Explorar ara') }}</span>
               </button>
 
-              <!-- Pas de Verificació Facial -->
+              <!-- Verificació de seguretat: Pas addicional d'IA per escaneig facial -->
               <div v-else class="space-y-4 animate-fade-in">
                 <div class="relative rounded-2xl overflow-hidden bg-black aspect-video border-2 border-[#bc85ab]">
                   <video ref="videoRef" autoplay playsinline class="w-full h-full object-cover mirror"></video>
@@ -188,7 +173,6 @@
               </div>
             </form>
 
-            <!-- Peu del modal: tancament -->
             <div class="mt-6 text-center">
               <p class="text-xs text-gray-400 font-medium">
                 {{ esRegistre ? 'Ja tens compte?' : 'Vols explorar sense compte?' }}
@@ -229,20 +213,18 @@ import { useFaceDetection } from '../composables/useFaceDetection';
 import { useCustomModal } from '../composables/useCustomModal';
 import DisclaimerModal from './DisclaimerModal.vue'; 
 
-// Obtenim l'estat global del modal
 const { obert, missatgePersonalitzat, rutaIntencio, tancarModal } = useLoginModal();
 
 const router = useRouter();
 const { login } = useAuth();
 
-// Lògica del Disclaimer a l'obrir
+// Validació legal prèvia a la presentació de les dades.
 watch(obert, (isObert) => {
   if (isObert && !localStorage.getItem('disclaimer_acceptat')) {
     mostrarDisclaimer.value = true;
   }
 });
 
-// Estat del formulari
 const esRegistre = ref(false);
 const nomPublic = ref('');
 const correu = ref('');
@@ -251,7 +233,7 @@ const error = ref('');
 const carregant = ref(false);
 const mostrarDisclaimer = ref(false); 
 
-// Lògica de Verificació Facial d'IA
+// API d'anàlisi biomètric.
 const {
   pasVerificacio,
   analitzant,
@@ -334,7 +316,6 @@ async function registrarFinal(esMajor, imatge) {
          message: 'T\'has registrat correctament, benvingut!'
       });
 
-      // Si està aprovat, procedim normalment
       login(resultat.usuari);
       tancarModal();
       router.push({ name: 'mapa' });
@@ -353,18 +334,13 @@ function continuarDiferit() {
   mostrarDisclaimer.value = false;
 }
 
-/**
- * Executa el login o registre depenent de l'estat del formulari
- */
+// Control d'accés: Orquestra el flux d'autenticació/registre tenint en compte validacions d'edat i avís legal.
 async function executarAccio() {
-  // 1. Control del Disclaimer
   if (!localStorage.getItem('disclaimer_acceptat')) {
     mostrarDisclaimer.value = true;
     return; 
   }
 
-  // 2. Control de la Càmera (Aquesta part faltava al teu últim missatge)
-  // Si és registre i encara no estem al pas de verificació, activem la càmera
   if (esRegistre.value && !pasVerificacio.value) {
     const { mostrarModal } = useCustomModal();
     await mostrarModal({
@@ -403,16 +379,12 @@ async function executarAccio() {
     const resultat = await resposta.json();
 
     if (resultat.success) {
-      // Actualitzem l'estat global d'autenticació
       login(resultat.usuari);
 
-      // Guardem la ruta d'intencio ABANS de tancar el modal (tancarModal la neteja)
       const rutaAnar = rutaIntencio.value;
 
-      // Tanquem el modal
       tancarModal();
 
-      // Redirigim segons el rol i la ruta d'intenció
       if (resultat.usuari.rol === 'admin') {
         const dadesSessio = {
           rol: 'admin',
@@ -422,13 +394,10 @@ async function executarAccio() {
         localStorage.setItem('admin_session', JSON.stringify(dadesSessio));
         router.push({ name: 'admin-dashboard' });
       } else if (rutaAnar && rutaAnar.name) {
-        // Redirigim l'usuari a la ruta que volia visitar originalment
         router.push(rutaAnar);
       } else if (esRegistre.value) {
-          // Si és registre i no hi ha ruta d'intenció, anem al mapa o perfil
           router.push('/mapa');
       }
-      // Si no hi havia ruta d'intenció, simplement tanquem el modal i deixem l'usuari on era
 
     } else {
       error.value = resultat.message || "Comprova les teves dades i torna-ho a intentar";
@@ -451,7 +420,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* Animació d'entrada del fons */
 .modal-fade-enter-active,
 .modal-fade-leave-active {
   transition: opacity 0.35s ease;
@@ -461,7 +429,6 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-/* Animació de lliscament de la targeta (des de baix en mòbil) */
 .modal-slide-enter-active {
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -477,7 +444,6 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-/* Animació del camp nom (apareix/desapareix en registre) */
 .field-slide-enter-active,
 .field-slide-leave-active {
   transition: all 0.3s ease;
@@ -496,7 +462,6 @@ onUnmounted(() => {
   transform: translateY(0);
 }
 
-/* Animació del missatge d'error */
 .error-fade-enter-active,
 .error-fade-leave-active {
   transition: all 0.25s ease;

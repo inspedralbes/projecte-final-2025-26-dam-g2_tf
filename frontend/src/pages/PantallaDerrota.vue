@@ -2,20 +2,16 @@
   <Transition name="policia-entra">
     <div v-if="visible" class="derrota-pantalla">
 
-      <!-- Fons amb efecte de reixa -->
       <div class="derrota-reixes">
         <div v-for="i in 6" :key="i" class="reixa-barra"></div>
       </div>
 
-      <!-- Contingut principal -->
       <div class="derrota-inner">
 
-        <!-- Badge superior -->
         <div class="derrota-badge">
           <span class="derrota-badge-text">⏱️ TEMPS ESGOTAT</span>
         </div>
 
-        <!-- Carta del Policia -->
         <div class="derrota-carta-contenidor">
           <img
             :src="netejarUrl(baseApi + '/personatges/El policia.jpg')"
@@ -25,7 +21,6 @@
           <div class="derrota-carta-ombra"></div>
         </div>
 
-        <!-- Missatge principal -->
         <div class="derrota-missatge">
           <h1 class="derrota-titol">Has Perdut</h1>
           <p class="derrota-subtitol">
@@ -36,7 +31,6 @@
           </p>
         </div>
 
-        <!-- Botó -->
         <button @click="$emit('tornar-inici')" class="derrota-boto">
           TORNAR A L'INICI
         </button>
@@ -69,7 +63,6 @@ export default {
 </script>
 
 <style scoped>
-/* ── Layout principal ── */
 .derrota-pantalla {
   position: fixed;
   inset: 0;
@@ -81,7 +74,6 @@ export default {
   overflow: hidden;
 }
 
-/* ── Reixes decoratives al fons ── */
 .derrota-reixes {
   position: absolute;
   inset: 0;
@@ -107,7 +99,6 @@ export default {
   100% { opacity: 1; }
 }
 
-/* ── Contenidor interior ── */
 .derrota-inner {
   position: relative;
   z-index: 10;
@@ -120,7 +111,6 @@ export default {
   max-width: 360px;
 }
 
-/* ── Badge ── */
 .derrota-badge {
   background: rgba(255, 60, 60, 0.15);
   border: 1px solid rgba(255, 80, 80, 0.4);
@@ -142,7 +132,6 @@ export default {
   text-transform: uppercase;
 }
 
-/* ── Carta del policia ── */
 .derrota-carta-contenidor {
   position: relative;
   width: min(230px, 60vw);
@@ -182,7 +171,6 @@ export default {
   filter: blur(10px);
 }
 
-/* ── Missatge ── */
 .derrota-missatge {
   text-align: center;
   display: flex;
@@ -228,7 +216,6 @@ export default {
   letter-spacing: 0.04em;
 }
 
-/* ── Botó ── */
 .derrota-boto {
   width: 100%;
   padding: 16px;
@@ -261,7 +248,6 @@ export default {
   transform: scale(0.97);
 }
 
-/* ── Transició d'entrada ── */
 .policia-entra-enter-active {
   transition: opacity 0.5s ease;
 }

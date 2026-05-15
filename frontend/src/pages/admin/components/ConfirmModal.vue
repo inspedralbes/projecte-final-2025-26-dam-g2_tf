@@ -5,16 +5,13 @@
       class="fixed inset-0 z-[10000] flex items-center justify-center p-4"
       @click.self="tancar"
     >
-      <!-- Background Overlay -->
       <div class="absolute inset-0 bg-[#402749]/60 backdrop-blur-sm"></div>
 
-      <!-- Modal Card -->
       <Transition name="modal-slide">
         <div
           v-if="obert"
           class="relative w-full max-w-sm bg-white rounded-[32px] shadow-2xl overflow-hidden border border-gray-100"
         >
-          <!-- Header/Icon Area -->
           <div class="p-8 pb-4 text-center">
             <div class="mx-auto mb-4 w-20 h-20 bg-red-50 rounded-full flex items-center justify-center border-4 border-red-100 shadow-sm">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -30,7 +27,6 @@
             </p>
           </div>
 
-          <!-- Actions -->
           <div class="p-8 pt-4 space-y-3">
             <button
               @click="confirmar"
@@ -52,6 +48,7 @@
 </template>
 
 <script setup>
+// Propietats per configurar l'estat i el text del modal
 defineProps({
   obert: Boolean,
   titol: {
@@ -64,6 +61,7 @@ defineProps({
   }
 });
 
+// Gestió d'esdeveniments cap al component pare
 const emit = defineEmits(['confirm', 'close']);
 
 const tancar = () => emit('close');

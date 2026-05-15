@@ -105,19 +105,19 @@ export default {
         console.error("Error parsejant dades de la carta:", e);
       }
     }
-    
-    // Si no hi ha dades al localStorage o el sessioId no coincideix, intentem carregar de l'API
-    await this.carregarPersonatgeDeAPI();
+    if (!this.personatge) {
+      await this.carregarPersonatgeDeAPI();
+    }
   },
   methods: {
     netejarUrl,
+    // GET /api/sessionsJoc/:id: Obté dades de la sessió per la carta de personatge
     async carregarPersonatgeDeAPI() {
       try {
         console.log("[CartaPersonatge] Intentant carregar de l'API per a la sessió:", this.sessioId);
         const res = await fetch(`${this.baseUrl}/api/sessionsJoc/${this.sessioId}`);
         if (res.ok) {
           const sessio = await res.json();
-          // Busquem quin personatge té assignat l'usuari actual en aquesta sessió
           const userStr = localStorage.getItem('usuari');
           const userObj = userStr ? JSON.parse(userStr) : {};
           const perfilId = userObj._id;

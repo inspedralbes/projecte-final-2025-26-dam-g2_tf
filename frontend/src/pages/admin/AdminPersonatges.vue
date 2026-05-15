@@ -4,7 +4,6 @@
 
     <main class="flex-1 p-6 md:p-10">
 
-      <!-- CAPCALERA -->
       <header class="mb-10 animate-fade-in">
         <div class="flex items-center gap-3 mb-2">
     
@@ -14,7 +13,6 @@
         </div>
       </header>
 
-      <!-- FORMULARI AFEGIR / EDITAR -->
       <section class="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 mb-10 animate-fade-in">
         <h2 class="text-lg font-black text-[#402749] mb-6 uppercase tracking-widest text-xs">
           {{ editantId ? 'Editant Personatge' : 'Nou Personatge' }}
@@ -22,7 +20,6 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-          <!-- Nom -->
           <div class="flex flex-col gap-1">
             <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Nom *</label>
             <input
@@ -33,7 +30,6 @@
             />
           </div>
 
-          <!-- Imatge -->
           <div class="flex flex-col gap-1">
             <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Imatge</label>
             <div class="flex items-center gap-3">
@@ -46,7 +42,6 @@
             </div>
           </div>
 
-          <!-- Descripcio (full width) -->
           <div class="flex flex-col gap-1 md:col-span-2">
             <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Descripció</label>
             <textarea
@@ -59,16 +54,13 @@
 
         </div>
 
-        <!-- Previsualitzacio imatge -->
         <div v-if="previsualitzacioImatge" class="mt-4 flex items-center gap-4">
           <img :src="previsualitzacioImatge" class="w-24 h-24 object-contain rounded-2xl border-2 border-[#bc85ab] shadow-md" alt="Previsualitzacio" />
           <button @click="eliminarFotoSeleccionada" class="text-xs text-red-400 hover:text-red-600 font-bold transition-colors">Treure foto</button>
         </div>
 
-        <!-- Missatge d'error -->
         <p v-if="missatgeError" class="mt-3 text-red-500 text-xs font-bold">{{ missatgeError }}</p>
 
-        <!-- Botons -->
         <div class="flex gap-3 mt-6">
           <button
             @click="guardarPersonatge"
@@ -87,7 +79,6 @@
         </div>
       </section>
 
-      <!-- LLISTAT DE PERSONATGES -->
       <section class="animate-fade-in">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-[10px] font-black uppercase tracking-widest text-gray-400">
@@ -100,7 +91,6 @@
           </button>
         </div>
 
-        <!-- Estat buit -->
         <div v-if="personatges.length === 0 && !estaCarregant" class="flex flex-col items-center justify-center py-24 text-center">
           <div class="bg-white p-8 rounded-full shadow-xl mb-6 ring-8 ring-purple-50">
             <svg class="w-16 h-16 text-[#bc85ab]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,14 +101,12 @@
           <p class="text-gray-400 text-sm max-w-xs mx-auto">Crea el primer personatge usant el formulari de dalt.</p>
         </div>
 
-        <!-- Grid de personatges -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           <div
             v-for="p in personatges"
             :key="p._id"
             class="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden flex flex-col group hover:shadow-xl transition-all duration-300"
           >
-            <!-- Imatge -->
             <div class="relative w-full h-44 bg-gradient-to-br from-[#f5cbdd] to-[#bc85ab] overflow-hidden">
               <img
                 v-if="p.imatge"
@@ -133,7 +121,6 @@
               </div>
             </div>
 
-            <!-- Info -->
             <div class="p-4 flex-1 flex flex-col">
               <h3 class="font-black text-[#402749] text-sm mb-1 truncate">{{ p.nom }}</h3>
               <p class="text-xs text-gray-400 leading-relaxed flex-1 line-clamp-3">
@@ -142,7 +129,6 @@
               <p class="text-[9px] font-mono text-gray-300 mt-3">{{ new Date(p.data_creacio).toLocaleDateString() }}</p>
             </div>
 
-            <!-- Accions -->
             <div class="flex border-t border-gray-50">
               <button
                 @click="editarPersonatge(p)"
@@ -172,7 +158,6 @@ import AdminNav from './components/AdminNav.vue';
 import { useCustomModal } from '../../composables/useCustomModal';
 import { BASE_API_URL } from '../../utils/url';
 
-// URL del backend: usa la variable d'entorn si existeix, si no usa localhost per desenvolupament
 const API_URL = BASE_API_URL;
 const { mostrarModal } = useCustomModal();
 
@@ -183,13 +168,12 @@ const editantId = ref(null);
 const missatgeError = ref('');
 const previsualitzacioImatge = ref('');
 
-// Variables del formulari separades (estil junior, sense objecte anidado)
 const formNom = ref('');
 const formDescripcio = ref('');
 const formImatgeBase64 = ref('');
 const formNomFitxer = ref('');
 
-// Carrega tots els personatges del backend
+// GET /api/personatges: Obté la llista de personatges
 async function carregarPersonatges() {
   estaCarregant.value = true;
   try {
@@ -205,7 +189,6 @@ async function carregarPersonatges() {
   estaCarregant.value = false;
 }
 
-// Quan l'usuari selecciona una foto, la convertim a base64 per enviar-la al backend
 function onFotoSeleccionada(event) {
   var fitxer = event.target.files[0];
   if (!fitxer) return;
@@ -226,7 +209,7 @@ function eliminarFotoSeleccionada() {
   previsualitzacioImatge.value = '';
 }
 
-// Guarda o actualitza un personatge
+// POST/PUT /api/personatges: Crea o actualitza un personatge
 async function guardarPersonatge() {
   missatgeError.value = '';
 
@@ -249,14 +232,12 @@ async function guardarPersonatge() {
   try {
     var res;
     if (editantId.value) {
-      // Actualitzar personatge existent
       res = await fetch(API_URL + '/api/personatges/' + editantId.value, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
     } else {
-      // Crear nou personatge
       res = await fetch(API_URL + '/api/personatges', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -273,7 +254,6 @@ async function guardarPersonatge() {
         var dades = await res.json();
         missatgeError.value = dades.message || 'Error en guardar el personatge.';
       } else {
-        // Si no és JSON, probablement és un error del servidor o del proxy (ex: 413 Payload Too Large)
         if (res.status === 413) {
           missatgeError.value = 'La imatge és massa gran. Intenta-ho amb una foto més petita.';
         } else {
@@ -289,7 +269,6 @@ async function guardarPersonatge() {
   estaGuardant.value = false;
 }
 
-// Omple el formulari amb les dades del personatge a editar
 function editarPersonatge(p) {
   editantId.value = p._id;
   formNom.value = p.nom;
@@ -304,11 +283,10 @@ function editarPersonatge(p) {
     previsualitzacioImatge.value = '';
   }
 
-  // Fem scroll cap amunt per veure el formulari
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Elimina un personatge
+// DELETE /api/personatges/:id: Elimina un personatge
 async function eliminarPersonatge(p) {
   const isConfirmed = await mostrarModal({ isAlert: false, title: 'Confirmació', message: 'Segur que vols eliminar "' + p.nom + '"?' });
   if (!isConfirmed) return;

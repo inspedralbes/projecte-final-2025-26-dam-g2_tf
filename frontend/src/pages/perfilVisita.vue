@@ -102,6 +102,7 @@ onMounted(async () => {
   comprovarEstatAmistat();
 });
 
+// GET /api/usuari/:id: Obté dades del perfil
 async function carregarDadesPerfil(id) {
   try {
     const res = await fetch(`${API_URL}/api/usuari/${id}`);
@@ -112,13 +113,9 @@ async function carregarDadesPerfil(id) {
 function comprovarEstatAmistat() {
   if (!usuariLoguejat.value || !user.value) return;
   
-  // Declaramos miId UNA SOLA VEZ
   const miId = String(usuariLoguejat.value._id || usuariLoguejat.value.id);
-  
-  // RESET: Antes de comprobar, ponemos el estado por defecto
   estatAmistat.value = 'cap'; 
 
-  // 1. Comprobar si ya son amigos
   const sonAmics = user.value.amics?.some(amic => {
     const idAmic = (amic && typeof amic === 'object') ? String(amic._id || amic.id) : String(amic);
     return idAmic === miId;
@@ -129,7 +126,6 @@ function comprovarEstatAmistat() {
     return; 
   } 
   
-  // 2. Comprobar si hay solicitud enviada por MÍ a este perfil
   const solicitudPendiente = user.value.sollicituds_pendents?.some(s => 
     String(s.id_perfil) === miId
   );
@@ -138,6 +134,7 @@ function comprovarEstatAmistat() {
     estatAmistat.value = 'pendent';
   }
 }
+// POST /api/usuari/sollicitud-amistat: Envia petició d'amistat
 async function gestionarAmistat() {
   if (estatAmistat.value !== 'cap') return;
 
@@ -166,13 +163,8 @@ async function gestionarAmistat() {
 }
 watch(() => route.params.id, async (newId) => { 
   if (newId) {
-    // 2. Ponemos await para que no compruebe la amistad hasta tener los datos
     await carregarDadesPerfil(newId); 
-    
-    // 3. Opcional: limpiar estado antes de comprobar
     estatAmistat.value = 'cap'; 
-    
-    // 4. Ahora sí, con los datos nuevos en 'user.value', comprobamos
     comprovarEstatAmistat();
   }
 });

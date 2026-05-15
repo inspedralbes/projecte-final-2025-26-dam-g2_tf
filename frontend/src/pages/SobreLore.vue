@@ -126,25 +126,17 @@ export default {
     };
   },
   async mounted() {
-    // 1. Carreguem el lore (API) i el sobre (Imatges crítiques)
     await this.prepararEscena();
-    
-    // 2. Mostrem l'escena del sobre
     this.recursosCarregats = true;
 
-    // 3. Animació d'entrada del títol
     setTimeout(() => { this.mostrarTitol = true; }, 300);
-    
-    // 4. Carreguem la carta pesada en segon pla
     this.carregarCartaEnBackground();
   },
   methods: {
     async prepararEscena() {
-      // Pre-carregar l'imatge del sobre tancat (el primer que es veu)
       const imgTancat = new Image();
       imgTancat.src = netejarUrl(this.baseUrl + '/assets/Sobre/Sobre Tancat.png');
       
-      // Esperem a que el sobre tancat estigui llest per no mostrar res buit
       try {
         if (imgTancat.decode) await imgTancat.decode();
         else await new Promise(r => imgTancat.onload = r);
@@ -152,12 +144,10 @@ export default {
         console.warn('[SobreLore] Error carregant sobre:', e);
       }
 
-      // El sobre obert el carreguem sense esperar-lo (background)
       const imgSobre = new Image();
       imgSobre.src = netejarUrl(this.baseUrl + '/assets/Sobre/Sobre_Obert.png');
       if (imgSobre.decode) imgSobre.decode().catch(() => {});
 
-      // Pre-carregar el cromo inicial
       if (this.sessioId === 'inicial') {
         const imgCromo = new Image();
         imgCromo.src = netejarUrl('/CromoInicial.jpg');
@@ -165,6 +155,7 @@ export default {
       }
     },
 
+    // GET /api/sessionsJoc/:id: Obté les dades de la sessió
     async carregarCartaEnBackground() {
       let url = '';
       if (this.sessioId === 'inicial') {
@@ -185,7 +176,6 @@ export default {
 
       if (url) {
         this.cartaLoreUrl = url;
-        // La imatge es carregarà via l'element <img> amb @load
       }
     },
 
@@ -201,6 +191,7 @@ export default {
         if (usuariRaw) {
           const usuari = JSON.parse(usuariRaw);
           try {
+            // PUT /api/usuari/marcar-lore-vist/:id: Marca el lore com a vist
             await fetch(`${this.baseUrl}/api/usuari/marcar-lore-vist/${usuari._id}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' }
@@ -212,7 +203,6 @@ export default {
             console.error('[SobreLore] Error marcant lore inicial:', e);
           }
         }
-        // Mostrem la notificació immediatament
         this.mostrarNotificacioCromo = true;
         return;
       }

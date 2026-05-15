@@ -226,7 +226,6 @@ const socketId = ref('');
 const locationCoords = ref(null);
 const adrecaInici = ref('');
 
-// Recuperar usuari del localStorage o usar un per defecte
 const userStr = localStorage.getItem('usuari');
 const user = userStr ? JSON.parse(userStr) : { nom_usuari: 'Convidat' };
 const nomUsuari = user.nom_usuari || 'Convidat';
@@ -259,7 +258,6 @@ async function compartirInvitacio() {
             url: url
         }).catch(err => console.log('Error compartint', err));
     } else {
-        // Fallback: copiar al porta-retalls
         navigator.clipboard.writeText(url);
         await mostrarModal({ isAlert: true, icon: 'success', title: 'Enllaç copiat', message: 'Enllaç copiat al porta-retalls!' });
     }
@@ -283,10 +281,8 @@ function obrirGoogleMaps() {
 function generarGrups() {
     let list = [...players.value];
     
-    // Si és mode 'Individual', no cal fer res amb grups
     if (selectedMode.value === 'Individual') return [];
 
-    // Si és mode 'Grup' (un sol mòbil), el creador ha de ser el capità
     if (selectedMode.value === 'Grup') {
         const creator = list.find(p => p.id === socket.value.id) || list[0];
         return [{
@@ -298,7 +294,6 @@ function generarGrups() {
         }];
     }
 
-    // Per al mode 'Grups' (minigrups), barregem per fer equips aleatoris
     for (let i = list.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [list[i], list[j]] = [list[j], list[i]];
@@ -368,7 +363,6 @@ async function confirmarModeIComencar() {
         await mostrarModal({ isAlert: true, message: 'Si us plau, selecciona una durada per a la partida.' });
         return;
     }
-    // Validació de límit de jugadors per al mode grup (màxim 5)
     if (selectedMode.value === 'Grup' && players.value.length > 5) {
         await mostrarModal({ isAlert: true, message: 'El mode grup (un sol mòbil) només permet un màxim de 5 jugadors.' });
         return;
@@ -388,7 +382,7 @@ async function confirmarModeIComencar() {
 onMounted(() => {
   console.log('[SalaEspera] Iniciant socket a:', API_URL);
   socket.value = io(API_URL, {
-      transports: ['websocket', 'polling'], // Forçar websocket primer però permetre fallback
+      transports: ['websocket', 'polling'],
       reconnectionAttempts: 5
   });
 
@@ -440,6 +434,7 @@ onMounted(() => {
       if (data && data.idLloc) {
           currentIdLloc.value = data.idLloc;
           try {
+              // GET /api/mapa/punts/:id: Obté dades del lloc
               const res = await fetch(`${API_URL}/api/mapa/punts/${data.idLloc}`);
               const lloc = await res.json();
               if (lloc) {
@@ -449,14 +444,9 @@ onMounted(() => {
                   if (lloc.ubicacio && lloc.ubicacio.coordinates) {
                       locationCoords.value = lloc.ubicacio.coordinates;
                   }
-                  // Precarrega la carta de lore del lloc
-                  if (lloc.carta_lore) {
-                      const img = new Image();
-                      img.src = `${API_URL}${lloc.carta_lore}`;
-                  }
               }
           } catch (e) {
-              // Silenciar error en producció o deixar log mínim
+              console.error('Error carregant lloc:', e);
           }
       }
   });
@@ -470,17 +460,10 @@ onMounted(() => {
     loading.value = false;
   });
 
-  /*socket.value.on('game-started', () => {
-      // Redirigir al joc, per exemple al mapa
-      router.push({ name: 'mapa' });
-  }); */
-
   socket.value.on('carta-personatge', function(dades) {
     console.log('Carta de personatge rebuda:', dades);
-    // Guardem la info al localStorage per a la següent pàgina
     localStorage.setItem('carta_personatge_actual', JSON.stringify(dades));
 
-    // Precarrega la imatge del personatge
     if (dades.personatge && dades.personatge.imatge) {
         const img = new Image();
         img.src = dades.personatge.imatge;
@@ -505,11 +488,10 @@ onMounted(() => {
     if (mode.toLowerCase() === 'individual' || isUserCapita) {
         router.push('/sobre-lore/' + dades.sessioId);
     } else {
-        // Els acompanyants es queden a la sala d'espera amb el missatge especial
         gameStarted.value = true;
         loading.value = false;
         showModeSelection.value = false;
-        error.value = ""; // Netejem possibles errors previs
+        error.value = "";
     }
   });
 
@@ -542,13 +524,10 @@ onMounted(() => {
         }
       });
     } else {
-      // Hem perdut (un altre grup ha guanyat)
       showGameOver.value = true;
     }
   });
 
-  // PRECARREGA D'IMATGES CRÍTIQUES
-  // Mentre els jugadors esperen, descarreguem les imatges pesades per a que no hi hagi lag després
   const imatgesAPrecarregar = [
     `${API_URL}/assets/Sobre/Sobre Tancat.png`,
     `${API_URL}/assets/Sobre/Sobre_Obert.png`,

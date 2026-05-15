@@ -21,17 +21,13 @@ const videoRef = ref(null);
 const canvasRef = ref(null);
 const carregant = ref(false);
 
-// Imatge de referència del punt concret (es carrega al mounted des del backend)
 const imatgePunt = ref(null);
 
-// Fotos genèriques (fallback quan no hi ha punt específic)
 const fotosActuals = ref([]);
 const indexFotoActual = ref(0);
 let stream = null;
-let socketJoc = null; // Socket per rebre l'event game-over de la resta de jugadors
+let socketJoc = null;
 
-
-// Modal cromo
 const modalDades = ref({ 
   nom_lloc: '', 
   imatge_historica: '', 
@@ -43,7 +39,6 @@ const modalDades = ref({
   completat_tot: false 
 });
 
-// Notificació de guanyador (per als jugadors que no han acabat o timeout)
 const mostrarNotificacioGuanyador = ref(false);
 const nomGuanyador = ref('');
 const sessioIdGuanyador = ref('');
@@ -52,10 +47,9 @@ const cardDefeatFlipped = ref(false);
 const faseDerrota = ref(0);
 const cardDefeatFlippedBig = ref(false);
 const notificacioPunt = ref(null);
-const tipusPartida = ref(''); // 'individual', 'grup', 'grups'
+const tipusPartida = ref('');
 const meuGrupId = ref(null);
 
-// Temporitzador
 const tempsRestant = ref(null);
 const mostrarModal = ref(false);
 const cardGirada = ref(false);
@@ -66,8 +60,8 @@ let notificationTimeout = null;
 onMounted(async () => {
   const codi_sala = route.params.codi_sala;
   
-  // 0. Connectem el socket immediatament per no perdre events
   if (codi_sala) {
+    // Socket: connecta a la room de la sessió per rebre events game-over i punt-aconseguit
     socketJoc = io(API_URL);
     socketJoc.on('connect', () => {
       socketJoc.emit('join-game-room', codi_sala);
@@ -78,7 +72,6 @@ onMounted(async () => {
       console.log('[Càmera] Game-over rebut:', dades);
       const meuId = usuari.value?._id?.toString();
       
-      // Si sóc el guanyador, ja estic gestionant el meu propi final a tancarModal() o al processament de la foto
       if (meuId && dades.guanyadorId && meuId === dades.guanyadorId.toString()) return;
 
       sessioIdGuanyador.value = dades.sessioId || codi_sala;
@@ -86,9 +79,8 @@ onMounted(async () => {
       isTimeout.value = dades.timeout || false;
       
       if (isTimeout.value) {
-        faseDerrota.value = 1; // Policia
+        faseDerrota.value = 1;
       } else {
-        // Si no és timeout, comprovem si el meu grup ha guanyat
         const tipus = dades.tipus_partida ? dades.tipus_partida.toLowerCase() : 'individual';
         const guanyadorGrupId = dades.guanyadorGrupId;
         
@@ -130,14 +122,12 @@ onMounted(async () => {
     });
   }
 
-  // 1. Carreguem la sessió per saber el temps límit
   if (codi_sala) {
     try {
         const respSessio = await fetch(`${API_URL}/api/sessionsJoc/${codi_sala}`);
         if (respSessio.ok) {
             const sessio = await respSessio.json();
             
-            // Busquem el temporitzador individual
             const meuId = usuari.value?._id?.toString();
             let me = null;
             if (sessio.jugadors && meuId) {
@@ -156,7 +146,6 @@ onMounted(async () => {
     }
   }
 
-  // 1. Carreguem la imatge de referència del punt clicat des del backend
   if (idLloc && idPuntParam) {
     try {
       const respLloc = await fetch(`${API_URL}/api/mapa/punts/${idLloc}`);
@@ -170,7 +159,6 @@ onMounted(async () => {
     }
   }
 
-  // 2. Si no hi ha imatge específica del punt, carreguem les genèriques com a fallback
   if (!imatgePunt.value) {
     try {
       const resposta = await fetch(`${API_URL}/api/fotos-actuals`);
@@ -204,7 +192,6 @@ onMounted(async () => {
     }
   }
 
-  // S'ha mogut la inicialització del socket a l'inici de l'onMounted
 });
 
 function anarAHome() {
@@ -241,7 +228,6 @@ function iniciarTemporitzador(tempsLimit) {
         
         if (diferencia <= 0) {
             clearInterval(intervalTimer);
-            // Si el temps s'esgota localment, mostrem la notificació de Timeout
             if (!mostrarNotificacioGuanyador.value && faseDerrota.value === 0) {
                 isTimeout.value = true;
                 faseDerrota.value = 1;
@@ -285,10 +271,8 @@ function tancarModal() {
   console.log('[Càmera] tancarModal | imatge_cromo:', modalDades.value.imatge_cromo);
 
   if (modalDades.value.completat_tot) {
-    // Si ha completat tot, anem a la pàgina de revelació
     let pathCromo = modalDades.value.imatge_cromo;
     
-    // Si tenim un nom de fitxer però no la ruta completa, l'arreglem
     if (pathCromo && !pathCromo.startsWith('/') && !pathCromo.includes('/')) {
         pathCromo = '/Cromos/' + pathCromo;
     }
@@ -312,6 +296,7 @@ function tancarModal() {
   }
 }
 
+// Captura la imatge del video i inicia la validació
 async function executarTotElProces() {
   if (!videoRef.value || !canvasRef.value || carregant.value) return;
 
@@ -326,6 +311,7 @@ async function executarTotElProces() {
   await enviarDadesAlBackend(imatgeEnText);
 }
 
+// POST /api/validar-foto: Valida la imatge capturada amb l'API
 async function enviarDadesAlBackend(imatgeEnText) {
   const idLloc = route.params.id;
   const perfilId = usuari.value?._id;
@@ -334,7 +320,6 @@ async function enviarDadesAlBackend(imatgeEnText) {
 
   console.log("DADES QUE ESTEM A PUNT D'ENVIAR:", { idLloc, perfilId, codi_sala, idPunt });
 
-  // Validació prèvia al frontend
   if (!imatgeEnText) { await showCustomModal({ isAlert: true, message: "Error: No s'ha capturat la imatge." }); return; }
   if (!idLloc) { await showCustomModal({ isAlert: true, message: "Error: Falta l'ID del Lloc a la URL." }); return; }
   if (!perfilId) { await showCustomModal({ isAlert: true, message: "Error: No s'ha trobat el perfil de l'usuari (estàs loguejat?)." }); return; }
@@ -354,7 +339,6 @@ async function enviarDadesAlBackend(imatgeEnText) {
       })
     };
 
-    // Fem la petició al backend
     const resposta = await fetch(`${API_URL}/api/validar-foto`, paquet);
     const dades = await resposta.json();
 
@@ -375,7 +359,6 @@ async function enviarDadesAlBackend(imatgeEnText) {
       };
       cardGirada.value = false;
       mostrarModal.value = true;
-      // Si hi ha foto històrica, girem la carta automàticament després de 600ms
       if (dades.foto_historica) {
         setTimeout(() => { cardGirada.value = true; }, 600);
       }

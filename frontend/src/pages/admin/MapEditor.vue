@@ -9,7 +9,6 @@
       <p>Fes clic a la imatge per afegir un punt. Els marcadors es desaran automàticament.</p>
     </div>
 
-    <!-- Mapa clicable -->
     <div class="contenidor-mapa" ref="contenidorRef">
       <img
         v-if="urlMapa"
@@ -21,7 +20,6 @@
       />
       <p v-else class="carregant">Carregant el mapa...</p>
 
-      <!-- Marcadors existents -->
       <div
         v-for="(punt, index) in puntsMissio"
         :key="index"
@@ -33,7 +31,6 @@
         <button class="marcador-eliminar" @click.stop="eliminarPunt(index)">✕</button>
       </div>
 
-      <!-- Punt nou pendent de confirmar -->
       <div
         v-if="puntNou"
         class="marcador marcador-nou"
@@ -43,7 +40,6 @@
       </div>
     </div>
 
-    <!-- Formulari nou punt -->
     <div v-if="puntNou" class="formulari-nou-punt">
       <h3>Nou punt: ({{ puntNou.posicio_x.toFixed(1) }}%, {{ puntNou.posicio_y.toFixed(1) }}%)</h3>
 
@@ -57,7 +53,6 @@
         <textarea v-model="puntNou.pista" placeholder="Ex: Busca la torre central o descobreix el detall amagat..." rows="2"></textarea>
       </div>
 
-      <!-- Selector d'imatge de referència -->
       <div class="camp">
         <label>Imatge de referència</label>
         <select v-model="puntNou.imatge_referencia">
@@ -70,7 +65,6 @@
         </select>
       </div>
 
-      <!-- Previsualització de la imatge seleccionada -->
       <div v-if="puntNou.imatge_referencia" class="preview-imatge">
         <img :src="baseApi + puntNou.imatge_referencia" alt="Previsualització" />
         <p class="preview-nom">{{ nomFoto(puntNou.imatge_referencia) }}</p>
@@ -84,7 +78,6 @@
         <button class="btn-cancel" @click="cancellarPunt">✕ Cancel·lar</button>
       </div>
 
-      <!-- Selector de personatge -->
       <div class="camp mt-4 pt-4 border-t border-white/10">
         <label>Associar a un personatge</label>
         <select v-model="puntNou.personatge_id">
@@ -97,7 +90,6 @@
         </select>
       </div>
 
-      <!-- Previsualització del personatge seleccionat -->
       <div v-if="puntNou.personatge_id" class="preview-personatge">
         <img
           v-if="personatgeSeleccionat(puntNou.personatge_id).imatge"
@@ -111,7 +103,6 @@
       </div>
     </div>
 
-    <!-- Llista de punts guardats -->
     <div class="llista-punts" v-if="puntsMissio.length > 0">
       <h3>Punts guardats ({{ puntsMissio.length }})</h3>
       <div v-for="(punt, index) in puntsMissio" :key="index" class="punt-item">
@@ -129,7 +120,6 @@
           alt="Imatge del punt"
         />
         
-        <!-- Badge personatge -->
         <div v-if="punt.personatge_id" class="badge-personatge" :title="personatgeSeleccionat(punt.personatge_id).nom">
           👤 {{ personatgeSeleccionat(punt.personatge_id).nom }}
         </div>
@@ -178,14 +168,12 @@ export default {
         : 'mapa_' + lloc.nom.toLowerCase().replace(/\s+/g, '') + '.jpg';
       this.urlMapa = this.baseApi + '/foto_mapa/' + nomImatge;
       this.puntsMissio = (lloc.punts_missio || []).map(p => {
-        // Assegurar que personatge_id és l'ID per al select, no l'objecte poblat
         const pId = (p.personatge_id && typeof p.personatge_id === 'object') 
           ? p.personatge_id._id 
           : p.personatge_id;
         return { ...p, personatge_id: pId || null };
       });
 
-      // Carreguem totes les fotos de totes les subcarpetes
       await this.carregarFotos();
       await this.carregarPersonatges();
     } catch (err) {
@@ -194,12 +182,12 @@ export default {
   },
 
   methods: {
+    // GET /api/fotos-actuals/totes: Obté imatges del mapa
     async carregarFotos() {
       try {
         const resposta = await fetch(this.baseApi + '/api/fotos-actuals/totes');
         if (!resposta.ok) return;
         const dades = await resposta.json();
-        // Cada element ja té { nom, carpeta, path }
         this.fotosDisponibles = dades.fotos || [];
       } catch (err) {
         console.error('Error carregant fotos:', err);
@@ -210,6 +198,7 @@ export default {
       return path ? path.split('/').pop() : '';
     },
 
+    // GET /api/personatges: Obté llista de personatges
     async carregarPersonatges() {
       try {
         const resposta = await fetch(this.baseApi + '/api/personatges');
@@ -256,6 +245,7 @@ export default {
       this.puntsMissio.splice(index, 1);
     },
 
+    // PUT /api/mapa/punts/:id: Desa tots els punts del mapa
     async desarTot() {
       this.desant = true;
       this.missatgeDesar = '';

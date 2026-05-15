@@ -1,13 +1,12 @@
 <template>
   <div class="relative">
-    <!-- Si NO hi ha usuari: botó d'iniciar sessió (obre el LoginModal global) -->
+    <!-- Control d'accés: Mostra l'entrada a l'autenticació quan no hi ha sessió activa -->
     <button
       v-if="!usuari"
       @click="obrirLoginModal"
       class="group relative w-11 h-11 rounded-2xl bg-gradient-to-br from-[#402749] via-[#5d3962] to-[#804f7f] flex items-center justify-center text-white shadow-lg shadow-[#402749]/20 hover:shadow-[#804f7f]/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-90 transition-all duration-300 border border-white/10"
       title="Iniciar sessió"
     >
-      <!-- Efecte de brillantor al hover -->
       <div class="absolute inset-0 rounded-2xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" class="w-5 h-5 relative z-10 text-[#f5cbdd]">
@@ -15,7 +14,7 @@
       </svg>
     </button>
 
-    <!-- Si SÍ hi ha usuari: botó d'avatar que va al perfil -->
+    <!-- Control d'accés: Mostra l'avatar de l'usuari amb enllaç al perfil en cas d'estar autenticat -->
     <button
       v-else
       @click="router.push('/perfil')"
@@ -26,7 +25,6 @@
         {{ (usuari.nom_usuari || usuari.nom || '?').charAt(0).toUpperCase() }}
       </div>
       
-      <!-- Overay subtil al hover -->
       <div class="absolute inset-0 bg-[#402749]/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
     </button>
   </div>

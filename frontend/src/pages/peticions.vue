@@ -78,7 +78,6 @@ const { obrirModal } = useLoginModal();
 
 const isSubmitting = ref(false);
 
-// --- Custom Modal Logic ---
 const customModal = ref({ show: false, title: '', message: '' });
 function showCustomAlert(message, title = 'Avís') {
   customModal.value = { show: true, title, message };
@@ -151,6 +150,7 @@ function getLocation() {
   });
 }
 
+// POST /api/peticions: Crea una nova petició de ruta
 async function submitForm() {
   if (!form.value.id_usuari) {
     obrirModal('Inicia sessió primer!');

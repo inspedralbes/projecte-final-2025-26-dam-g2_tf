@@ -48,5 +48,6 @@
 </template>
 
 <script setup>
+// Dashboard principal: Accessos a l'administració
 import AdminNav from './components/AdminNav.vue';
 </script>

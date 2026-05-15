@@ -1,3 +1,4 @@
+<!-- Component UI: Finestra emergent genèrica amb suport per alertes i confirmacions -->
 <template>
   <Transition name="modal-fade">
     <div v-if="show" class="fixed inset-0 z-[9999] flex items-center justify-center p-4" @click.self="cancel">
@@ -48,18 +49,22 @@
 </template>
 
 <script setup>
+// Props: Definició de l'estat i contingut del modal genèric
 const props = defineProps({
   show: { type: Boolean, default: false },
   isAlert: { type: Boolean, default: false },
-  icon: { type: String, default: 'warning' }, // warning, success, trash, info
+  // Valors permesos: 'warning', 'success', 'trash', 'info'
+  icon: { type: String, default: 'warning' },
   title: { type: String, default: 'Atenció' },
   message: { type: String, default: '' },
   confirmText: { type: String, default: 'D\'acord' },
   cancelText: { type: String, default: 'Cancel·lar' }
 });
 
+// Emits: Esdeveniments de resolució del modal
 const emit = defineEmits(['confirm', 'cancel']);
 
+// Mètodes d'interacció
 const confirm = () => emit('confirm');
 const cancel = () => {
   if (!props.isAlert) {

@@ -97,6 +97,7 @@ const imatgeLloc = ref('');
 onMounted(async () => {
   if (idLloc) {
     try {
+      // GET /api/mapa/punts/:id: Obté el nom i la imatge del lloc per mostrar a la pantalla
       const resp = await fetch(`${API_URL}/api/mapa/punts/${idLloc}`);
       if (resp.ok) {
         const lloc = await resp.json();
@@ -121,6 +122,7 @@ function seleccionarEstrella(val) {
   rating.value = val;
 }
 
+// POST /api/social/ressenyes: Crea una nova ressenya
 async function enviarValoracio() {
   if (rating.value === 0) {
     await mostrarModal({ isAlert: true, message: "Si us plau, selecciona almenys una estrella per valorar." });
@@ -129,7 +131,6 @@ async function enviarValoracio() {
 
   const idUsuari = usuari.value?._id;
   if (!idUsuari) {
-    // Si l'usuari no està loguejat (hauria d'estar-ho però per prevenció)
     router.push({ name: 'home' });
     return;
   }

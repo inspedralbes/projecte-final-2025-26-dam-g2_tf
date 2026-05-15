@@ -37,7 +37,6 @@
         </div>
       </header>
 
-      <!-- Notificació Toast Custom -->
       <Transition name="toast-fade">
         <div v-if="notificacio" class="fixed top-6 right-6 z-[100] flex items-center gap-3 bg-white border-2 border-[#402749] px-6 py-4 rounded-2xl shadow-2xl animate-fade-in shadow-[#402749]/20">
           <div class="w-8 h-8 rounded-full bg-[#f5cbdd] flex items-center justify-center">
@@ -47,7 +46,6 @@
         </div>
       </Transition>
 
-      <!-- Modal de Confirmació Custom -->
       <Transition name="modal-fade">
         <div v-if="confirmacioPendents" class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div class="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl border-2 border-[#402749] animate-modal-bounce">
@@ -193,7 +191,6 @@
         </div>
       </section>
 
-      <!-- SECCIÓ VERIFICACIÓ D'IDENTITAT -->
       <section v-if="tabActual === 'identitats'" class="animate-fade-in">
         <div v-if="identitatsPendents.length === 0" class="flex flex-col items-center justify-center py-24 text-center">
             <div class="bg-white p-8 rounded-full shadow-xl mb-6 ring-8 ring-blue-50">
@@ -361,13 +358,13 @@ const ressenyesFiltrades = computed(() => {
   });
 });
 
+// GET /api/social/admin/posts i altres: Obté llistats de moderació
 const cargarDatos = async () => {
   estaCarregant.value = true;
   try {
     const resPosts = await fetch(`${API_URL}/api/social/admin/posts`);
     if (resPosts.ok) {
         const dades = await resPosts.json();
-        // FILTRE: Mostrem el post si ell mateix està reportat O si té algun comentari reportat
         posts.value = dades.filter(p => 
            p.reportat === true || 
            (p.comentaris && p.comentaris.some(c => c.reportat === true))
@@ -416,6 +413,7 @@ const executarConfirmacio = () => {
   }
 };
 
+// PUT /api/social/admin/posts/:id/revisat: Valida post
 const marcarRevisat = (postId) => {
   demanarConfirmacio("Validar Post", "Segur que vols marcar aquest post com a segur?", async () => {
     try {
@@ -424,7 +422,6 @@ const marcarRevisat = (postId) => {
         headers: { 'Content-Type': 'application/json' }
       });
       if (response.ok) {
-        // Re-filtrem localment: si no queden comentaris reportats, treiem el post
         const post = posts.value.find(p => p._id === postId);
         if (post) post.reportat = false;
         actualitzarLlistaLocal(postId);
@@ -434,6 +431,7 @@ const marcarRevisat = (postId) => {
   });
 };
 
+// PUT /api/social/admin/posts/:postId/comentaris/:comId/revisat: Valida comentari
 const validarComentari = async (postId, comentariId) => {
   try {
     const response = await fetch(`${API_URL}/api/social/admin/posts/${postId}/comentaris/${comentariId}/revisat`, {
@@ -452,12 +450,12 @@ const validarComentari = async (postId, comentariId) => {
 
 const actualitzarLlistaLocal = (postId) => {
   const post = posts.value.find(p => p._id === postId);
-  // Si el post ja no està reportat I no té comentaris reportats, l'eliminem de la vista de moderació
   if (post && !post.reportat && !post.comentaris.some(c => c.reportat)) {
     posts.value = posts.value.filter(p => p._id !== postId);
   }
 };
 
+// DELETE /api/social/posts/:id: Elimina post
 const eliminarPost = (postObj) => {
   demanarConfirmacio("🚨 Eliminar Post", "Aquesta acció esborrarà el post de forma permanent. Estàs segur?", async () => {
     try {
@@ -476,6 +474,7 @@ const eliminarPost = (postObj) => {
   });
 };
 
+// DELETE /api/social/posts/:postId/comentari/:comId: Elimina comentari
 const eliminarComentari = (postId, comentariId) => {
   demanarConfirmacio("Eliminar Comentari", "Segur que vols esborrar aquest comentari?", async () => {
     try {
@@ -494,6 +493,7 @@ const eliminarComentari = (postId, comentariId) => {
   });
 };
 
+// PUT /api/verificacio/decidir/:id: Decideix sobre identitat
 const decidirIdentitat = (userId, estat) => {
   const titol = estat === 'aprovat' ? "Aprovar Identitat" : "Rebutjar i Esborrar";
   const msj = estat === 'aprovat' ? "S'activarà el compte de l'usuari definitivament." : "S'esborrarà l'usuari i totes les seves dades per ser menor o incomplir les regles.";
@@ -513,6 +513,7 @@ const decidirIdentitat = (userId, estat) => {
   });
 };
 
+// DELETE /api/social/admin/ressenyes/:id: Elimina ressenya
 const eliminarRessenya = async (resObj) => {
   const isConfirmed = await mostrarModal({ isAlert: false, title: 'Confirmació', message: 'Eliminar ressenya?' });
   if (!isConfirmed) return;

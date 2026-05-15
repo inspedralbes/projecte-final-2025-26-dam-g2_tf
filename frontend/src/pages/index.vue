@@ -89,14 +89,13 @@ const llistaLlocs = ref([]);
 const activeIndex = ref(0);
 const scrollContainer = ref(null);
 
-// Vigilem si l'usuari canvia (per exemple en fer login/registre)
 watch(usuari, (nouUsuari) => {
   if (nouUsuari && nouUsuari.lore_inicial_vist === false) {
     router.push('/sobre-lore/inicial');
   }
 }, { immediate: true });
 
-// Comprova si una ruta està bloquejada en aquest moment
+// Verifica disponibilitat de la ruta segons horari
 const esBloqueig = (lloc) => {
   const horari = lloc?.control_horari;
   if (!horari?.actiu) return false;
@@ -117,20 +116,18 @@ const API_URL = BASE_API_URL;
 
 onMounted(async () => {
   try {
+    // GET /api/mapa/punts: Obté totes les rutes actives per mostrar al carrusel
     const resposta = await fetch(`${API_URL}/api/mapa/punts`);
     
-    // Si la respuesta no es un JSON (es el error 404 de Nginx), lanzamos error
     const contentType = resposta.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
       throw new Error("El servidor no ha enviat JSON (comprova Nginx)");
     }
 
     const dades = await resposta.json();
-    // mapa/punts ja ve ordenat per 'ordre' del backend
     llistaLlocs.value = dades.filter(lloc => lloc.estat !== 'desactivat');
   } catch (err) {
     console.error("Error cargando rutas:", err);
-    // Inicializamos como array vacío para que el v-for no explote
     llistaLlocs.value = []; 
   }
 });
