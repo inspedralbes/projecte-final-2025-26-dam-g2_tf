@@ -54,9 +54,16 @@
         </div>
 
         <div v-if="isCreator && !showModeSelection" class="mt-10">
-            <button @click="showModeSelection = true" class="w-full bg-white text-[#1a0e2e] font-black py-5 rounded-2xl shadow-2xl active:scale-95 transition-all uppercase tracking-[0.2em] text-xs">
+            <button 
+              @click="showModeSelection = true" 
+              :disabled="players.length < 2"
+              class="w-full bg-white text-[#1a0e2e] font-black py-5 rounded-2xl shadow-2xl active:scale-95 transition-all uppercase tracking-[0.2em] text-xs disabled:opacity-30 disabled:cursor-not-allowed"
+            >
                  COMENÇAR PARTIDA
             </button>
+            <p v-if="players.length < 2" class="text-[9px] text-white/30 uppercase tracking-[0.2em] mt-4 font-bold">
+              Es necessiten almenys 2 jugadors per començar
+            </p>
         </div>
 
         <div v-if="isCreator && showModeSelection" class="mt-8 bg-[#402749]/40 border border-white/20 rounded-[2.5rem] p-8 text-left backdrop-blur-xl shadow-2xl">
@@ -364,6 +371,10 @@ watch(selectedMode, (newMode) => {
 });
 
 async function confirmarModeIComencar() {
+    if (players.value.length < 2) {
+        await mostrarModal({ isAlert: true, message: 'Es necessiten almenys 2 jugadors per començar la partida.' });
+        return;
+    }
     if (!selectedDuration.value) {
         await mostrarModal({ isAlert: true, message: 'Si us plau, selecciona una durada per a la partida.' });
         return;
