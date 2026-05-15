@@ -1,19 +1,6 @@
 <template>
   <div class="min-h-screen bg-[#1a0e2e] flex items-center justify-center p-4 text-white font-outfit">
     <div class="bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-[40px] shadow-2xl w-full max-w-lg text-center relative">
-      <h1 class="text-3xl font-black mb-8 text-white tracking-tight italic">
-        <span v-if="!showModeSelection">Sala d'Espera</span>
-        <span v-else>Configuració de la Partida</span>
-        <div v-if="roomCode && !showModeSelection" class="mt-6">
-          <span class="text-[#bc85ab] block text-5xl font-mono font-black tracking-[0.2em] mb-4 drop-shadow-lg">{{ roomCode }}</span>
-          <button 
-            @click="compartirInvitacio" 
-            class="bg-white/10 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all flex items-center gap-2 mx-auto border border-white/10 hover:bg-white/20"
-          >
-            <span>🔗</span> COMPARTIR INVITACIÓ
-          </button>
-        </div>
-      </h1>
 
       <!-- PANTALLA D'ESPERA PER ACOMPANYANTS (MODE GRUP) -->
       <Transition name="fade">
