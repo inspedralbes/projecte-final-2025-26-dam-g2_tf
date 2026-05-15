@@ -27,6 +27,10 @@
 
 ![alt text](<image-removebg-preview (1).png>) ![alt text](image-removebg-preview.png)
 
+ **DEMO DEL PROJECTE:** [`Vídeo-Demo del Projecte`](https://drive.google.com/file/d/1D9yYe8ZAUiyYibALjy0bfN736tjsxKbO/view?usp=sharing )
+
+**Fluxe de l’aplicació:** [`Fluxe de l’aplicació`](./doc/resum_2526_Grup2ProjecteNorth.pdf)
+
 ## Característiques Principals
 
 * **Mapa Interactiu:** Visualització de POIs amb Leaflet i geolocalització en temps real.
@@ -56,9 +60,9 @@ El sistema utilitza una arquitectura de microserveis orquestrada per Docker, amb
 
 ## Documentació i Gestió
 
-* **Prototip Gràfic:** [Figma - Projecte North]()
-* **Gestió de Tasques:** [Taiga Backlog]()
-* **URL de Producció:** [https://north.dam.inspedralbes.cat](https://north.dam.inspedralbes.cat)
+* **Prototip Gràfic:** [Figma - Projecte North](https://www.figma.com/design/ZWvk9y8fxNVV3Vw7hg25Gw/Proyecto-Final?node-id=0-1&t=s7b8GKnuTR6dvyrY-1)
+* **Gestió de Tasques:** [Taiga Backlog](https://tree.taiga.io/project/mxrta22-brujula-projecte-final/backlog)
+* **URL de Producció:** [north.dam.inspedralbes.cat](https://north.dam.inspedralbes.cat)
 
 ## Documentació Tècnica
 

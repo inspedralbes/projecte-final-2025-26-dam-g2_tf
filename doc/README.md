@@ -350,6 +350,3 @@ Esquemes definits a: `backend/src/models/index.js`
 
 ### Flux de Pantalles
 📄 [Flux de Pantalles (PDF)](./diagrames/Flux%20de%20Pantalles.pdf)
-
-Demo:   https://drive.google.com/file/d/1D9yYe8ZAUiyYibALjy0bfN736tjsxKbO/view?usp=sharing 
-
