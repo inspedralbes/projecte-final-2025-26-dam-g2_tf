@@ -1,19 +1,6 @@
 <template>
   <div class="min-h-screen bg-[#1a0e2e] flex items-center justify-center p-4 text-white font-outfit">
     <div class="bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-[40px] shadow-2xl w-full max-w-lg text-center relative">
-      <h1 class="text-3xl font-black mb-8 text-white tracking-tight italic">
-        <span v-if="!showModeSelection">Sala d'Espera</span>
-        <span v-else>Configuració de la Partida</span>
-        <div v-if="roomCode && !showModeSelection" class="mt-6">
-          <span class="text-[#bc85ab] block text-5xl font-mono font-black tracking-[0.2em] mb-4 drop-shadow-lg">{{ roomCode }}</span>
-          <button 
-            @click="compartirInvitacio" 
-            class="bg-white/10 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all flex items-center gap-2 mx-auto border border-white/10 hover:bg-white/20"
-          >
-            <span>🔗</span> COMPARTIR INVITACIÓ
-          </button>
-        </div>
-      </h1>
 
       <!-- PANTALLA D'ESPERA PER ACOMPANYANTS (MODE GRUP) -->
       <Transition name="fade">
@@ -54,9 +41,16 @@
         </div>
 
         <div v-if="isCreator && !showModeSelection" class="mt-10">
-            <button @click="showModeSelection = true" class="w-full bg-white text-[#1a0e2e] font-black py-5 rounded-2xl shadow-2xl active:scale-95 transition-all uppercase tracking-[0.2em] text-xs">
+            <button 
+              @click="showModeSelection = true" 
+              :disabled="players.length < 2"
+              class="w-full bg-white text-[#1a0e2e] font-black py-5 rounded-2xl shadow-2xl active:scale-95 transition-all uppercase tracking-[0.2em] text-xs disabled:opacity-30 disabled:cursor-not-allowed"
+            >
                  COMENÇAR PARTIDA
             </button>
+            <p v-if="players.length < 2" class="text-[9px] text-white/30 uppercase tracking-[0.2em] mt-4 font-bold">
+              Es necessiten almenys 2 jugadors per començar
+            </p>
         </div>
 
         <div v-if="isCreator && showModeSelection" class="mt-8 bg-[#402749]/40 border border-white/20 rounded-[2.5rem] p-8 text-left backdrop-blur-xl shadow-2xl">
@@ -359,6 +353,10 @@ watch(selectedMode, (newMode) => {
 });
 
 async function confirmarModeIComencar() {
+    if (players.value.length < 2) {
+        await mostrarModal({ isAlert: true, message: 'Es necessiten almenys 2 jugadors per començar la partida.' });
+        return;
+    }
     if (!selectedDuration.value) {
         await mostrarModal({ isAlert: true, message: 'Si us plau, selecciona una durada per a la partida.' });
         return;
