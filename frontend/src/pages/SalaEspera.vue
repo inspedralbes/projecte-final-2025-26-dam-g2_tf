@@ -25,6 +25,15 @@
 
       <div v-else-if="!gameStarted">
 
+        <div v-if="roomCode" class="mb-10">
+          <h2 class="text-xs font-black text-white/40 uppercase tracking-[0.3em] mb-6">Codi de la Sala</h2>
+          <div class="bg-white/5 p-6 rounded-[2rem] border border-white/5 flex items-center justify-center">
+            <span class="text-4xl font-black tracking-[0.2em] text-white font-mono uppercase">
+              {{ roomCode }}
+            </span>
+          </div>
+        </div>
+
         <div v-if="!showModeSelection" class="mb-10">
           <h2 class="text-xs font-black text-white/40 uppercase tracking-[0.3em] mb-6">Jugadors Connectats</h2>
           <ul class="space-y-3">
