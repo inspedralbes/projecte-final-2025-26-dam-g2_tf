@@ -27,7 +27,7 @@
 
 ![alt text](<image-removebg-preview (1).png>) ![alt text](image-removebg-preview.png)
 
-**ANUNCI DE NORTH:** (https://youtu.be/LYxOGJ71YcE)
+**ANUNCI DE NORTH:** [`Vídeo d'anunci de North`](https://youtu.be/LYxOGJ71YcE)
 
  **DEMO DEL PROJECTE:** [`Vídeo-Demo del Projecte`](https://drive.google.com/file/d/1D9yYe8ZAUiyYibALjy0bfN736tjsxKbO/view?usp=sharing )
 
